@@ -1,11 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
+import { RequireAuth } from "@/components/RequireAuth";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Calendar, Brain, Target, TrendingUp, Clock, BookOpen, Sparkles, Plus, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard")({
+  head: () => ({ meta: [{ title: "Dashboard — Nexoras" }, { name: "description", content: "Your AI-powered student dashboard." }] }),
+  component: DashboardPage,
+});
+
+function DashboardPage() {
+  return (
+    <RequireAuth>
+      <Dashboard />
+    </RequireAuth>
+  );
+}
   head: () => ({ meta: [{ title: "Dashboard — Nexoras" }, { name: "description", content: "Your AI-powered student dashboard." }] }),
   component: Dashboard,
 });
