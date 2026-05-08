@@ -68,7 +68,7 @@ function Dashboard() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-muted-foreground">Welcome back</p>
-              <h1 className="font-display text-3xl font-bold">Good evening, <span className="text-gradient">Alex</span></h1>
+              <h1 className="font-display text-3xl font-bold">Welcome, <span className="text-gradient">{name}</span></h1>
             </div>
             <Button className="bg-gradient-primary text-primary-foreground shadow-glow">
               <Plus className="h-4 w-4" /> New AI plan
