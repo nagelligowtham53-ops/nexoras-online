@@ -19,9 +19,6 @@ function DashboardPage() {
     </RequireAuth>
   );
 }
-  head: () => ({ meta: [{ title: "Dashboard — Nexoras" }, { name: "description", content: "Your AI-powered student dashboard." }] }),
-  component: Dashboard,
-});
 
 const sidebarItems = [
   { icon: Brain, label: "Overview", active: true },
