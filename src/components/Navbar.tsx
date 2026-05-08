@@ -18,6 +18,13 @@ const links = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  async function handleSignOut() {
+    await signOut();
+    toast.success("Signed out");
+    navigate({ to: "/" });
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full">
