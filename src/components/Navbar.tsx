@@ -54,14 +54,27 @@ export function Navbar() {
                 className="w-full bg-transparent placeholder:text-muted-foreground/70 focus:outline-none"
               />
             </div>
-            <Link to="/login" className="hidden sm:inline-flex">
-              <Button variant="ghost" size="sm">Log in</Button>
-            </Link>
-            <Link to="/signup">
-              <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
-                Get Started
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/profile" className="hidden sm:inline-flex">
+                  <Button variant="ghost" size="sm"><UserIcon className="h-4 w-4" /> {user.email?.split("@")[0]}</Button>
+                </Link>
+                <Button onClick={handleSignOut} size="sm" variant="outline">
+                  <LogOut className="h-4 w-4" /> Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="hidden sm:inline-flex">
+                  <Button variant="ghost" size="sm">Log in</Button>
+                </Link>
+                <Link to="/signup">
+                  <Button size="sm" className="bg-gradient-primary text-primary-foreground hover:opacity-90 shadow-glow">
+                    Get Started
+                  </Button>
+                </Link>
+              </>
+            )}
             <button
               className="lg:hidden rounded-md p-2 text-muted-foreground hover:bg-secondary/60"
               onClick={() => setOpen(!open)}
