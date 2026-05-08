@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
+import { RequireAuth } from "@/components/RequireAuth";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Calendar, Brain, Target, TrendingUp, Clock, BookOpen, Sparkles, Plus, ArrowRight,
 } from "lucide-react";
@@ -7,8 +9,16 @@ import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Nexoras" }, { name: "description", content: "Your AI-powered student dashboard." }] }),
-  component: Dashboard,
+  component: DashboardPage,
 });
+
+function DashboardPage() {
+  return (
+    <RequireAuth>
+      <Dashboard />
+    </RequireAuth>
+  );
+}
 
 const sidebarItems = [
   { icon: Brain, label: "Overview", active: true },
@@ -19,6 +29,12 @@ const sidebarItems = [
 ];
 
 function Dashboard() {
+  const { user } = useAuth();
+  const name =
+    (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ||
+    user?.email?.split("@")[0] ||
+    "there";
+
   return (
     <PageShell>
       <div className="mx-auto max-w-7xl gap-6 px-4 py-8 lg:flex lg:px-8">
@@ -52,7 +68,7 @@ function Dashboard() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm text-muted-foreground">Welcome back</p>
-              <h1 className="font-display text-3xl font-bold">Good evening, <span className="text-gradient">Alex</span></h1>
+              <h1 className="font-display text-3xl font-bold">Welcome, <span className="text-gradient">{name}</span></h1>
             </div>
             <Button className="bg-gradient-primary text-primary-foreground shadow-glow">
               <Plus className="h-4 w-4" /> New AI plan
