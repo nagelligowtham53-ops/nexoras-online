@@ -8,11 +8,12 @@ export const Route = createFileRoute("/api/chat")({
     handlers: {
       POST: async ({ request }: { request: Request }) => {
         const apiKey = process.env.OPENAI_API_KEY;
+        console.log("[/api/chat] OPENAI_API_KEY present:", !!apiKey);
         if (!apiKey) {
-          return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
-            status: 500,
-            headers: { "content-type": "application/json" },
-          });
+          return new Response(
+            JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+            { status: 500, headers: { "content-type": "application/json" } },
+          );
         }
 
         let body: { messages?: ChatMessage[] };
@@ -33,13 +34,17 @@ export const Route = createFileRoute("/api/chat")({
           });
         }
 
-        // Cap message count and length for safety
         const safeMessages = messages.slice(-30).map((m) => ({
-          role: m.role === "assistant" ? "assistant" : m.role === "system" ? "system" : "user",
+          role:
+            m.role === "assistant"
+              ? "assistant"
+              : m.role === "system"
+                ? "system"
+                : "user",
           content: String(m.content ?? "").slice(0, 8000),
         }));
 
-        const input = [
+        const payloadMessages = [
           {
             role: "system" as const,
             content:
@@ -48,31 +53,47 @@ export const Route = createFileRoute("/api/chat")({
           ...safeMessages,
         ];
 
-        const upstream = await fetch("https://api.openai.com/v1/responses", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            input,
-            stream: true,
-          }),
-        });
+        let upstream: Response;
+        try {
+          upstream = await fetch("https://api.openai.com/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "gpt-4o-mini",
+              messages: payloadMessages,
+              stream: true,
+              max_tokens: 2048,
+            }),
+          });
+        } catch (err) {
+          console.error("[/api/chat] fetch to OpenAI failed:", err);
+          return new Response(
+            JSON.stringify({ error: "Failed to reach OpenAI" }),
+            { status: 502, headers: { "content-type": "application/json" } },
+          );
+        }
 
         if (!upstream.ok || !upstream.body) {
           const errText = await upstream.text().catch(() => "");
+          console.error(
+            `[/api/chat] OpenAI error ${upstream.status}:`,
+            errText.slice(0, 1000),
+          );
           return new Response(
             JSON.stringify({
               error: `OpenAI error (${upstream.status})`,
               details: errText.slice(0, 500),
             }),
-            { status: upstream.status, headers: { "content-type": "application/json" } },
+            {
+              status: upstream.status,
+              headers: { "content-type": "application/json" },
+            },
           );
         }
 
-        // Transform OpenAI Responses SSE -> plain text stream of delta tokens
         const reader = upstream.body.getReader();
         const decoder = new TextDecoder();
         const encoder = new TextEncoder();
@@ -80,6 +101,7 @@ export const Route = createFileRoute("/api/chat")({
         const stream = new ReadableStream({
           async start(controller) {
             let buffer = "";
+            let totalChars = 0;
             try {
               while (true) {
                 const { done, value } = await reader.read();
@@ -96,19 +118,20 @@ export const Route = createFileRoute("/api/chat")({
                   if (!data || data === "[DONE]") continue;
                   try {
                     const evt = JSON.parse(data);
-                    if (
-                      evt.type === "response.output_text.delta" &&
-                      typeof evt.delta === "string"
-                    ) {
-                      controller.enqueue(encoder.encode(evt.delta));
+                    const delta: string | undefined =
+                      evt?.choices?.[0]?.delta?.content;
+                    if (typeof delta === "string" && delta.length > 0) {
+                      totalChars += delta.length;
+                      controller.enqueue(encoder.encode(delta));
                     }
-                  } catch {
-                    // ignore non-JSON keepalives
+                  } catch (e) {
+                    console.warn("[/api/chat] non-JSON SSE line:", data.slice(0, 200));
                   }
                 }
               }
+              console.log(`[/api/chat] streamed ${totalChars} chars`);
             } catch (err) {
-              console.error("chat stream error:", err);
+              console.error("[/api/chat] stream error:", err);
             } finally {
               controller.close();
             }
