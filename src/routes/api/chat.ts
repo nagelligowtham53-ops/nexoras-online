@@ -7,11 +7,11 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
-        const apiKey = process.env.OPENAI_API_KEY;
-        console.log("[/api/chat] OPENAI_API_KEY present:", !!apiKey);
+        const apiKey = process.env.LOVABLE_API_KEY;
+        console.log("[/api/chat] LOVABLE_API_KEY present:", !!apiKey);
         if (!apiKey) {
           return new Response(
-            JSON.stringify({ error: "OPENAI_API_KEY not configured" }),
+            JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
             { status: 500, headers: { "content-type": "application/json" } },
           );
         }
@@ -55,23 +55,26 @@ export const Route = createFileRoute("/api/chat")({
 
         let upstream: Response;
         try {
-          upstream = await fetch("https://api.openai.com/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "Content-Type": "application/json",
+          upstream = await fetch(
+            "https://ai.gateway.lovable.dev/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Lovable-API-Key": apiKey,
+                "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-3-flash-preview",
+                messages: payloadMessages,
+                stream: true,
+              }),
             },
-            body: JSON.stringify({
-              model: "gpt-4o-mini",
-              messages: payloadMessages,
-              stream: true,
-              max_tokens: 2048,
-            }),
-          });
+          );
         } catch (err) {
-          console.error("[/api/chat] fetch to OpenAI failed:", err);
+          console.error("[/api/chat] fetch to Lovable AI failed:", err);
           return new Response(
-            JSON.stringify({ error: "Failed to reach OpenAI" }),
+            JSON.stringify({ error: "Failed to reach AI gateway" }),
             { status: 502, headers: { "content-type": "application/json" } },
           );
         }
@@ -79,14 +82,17 @@ export const Route = createFileRoute("/api/chat")({
         if (!upstream.ok || !upstream.body) {
           const errText = await upstream.text().catch(() => "");
           console.error(
-            `[/api/chat] OpenAI error ${upstream.status}:`,
+            `[/api/chat] gateway error ${upstream.status}:`,
             errText.slice(0, 1000),
           );
+          let userMsg = `AI error (${upstream.status})`;
+          if (upstream.status === 429)
+            userMsg = "Rate limit reached. Please try again in a moment.";
+          if (upstream.status === 402)
+            userMsg =
+              "AI credits exhausted. Add credits in Workspace Settings → Usage.";
           return new Response(
-            JSON.stringify({
-              error: `OpenAI error (${upstream.status})`,
-              details: errText.slice(0, 500),
-            }),
+            JSON.stringify({ error: userMsg, details: errText.slice(0, 500) }),
             {
               status: upstream.status,
               headers: { "content-type": "application/json" },
@@ -124,8 +130,8 @@ export const Route = createFileRoute("/api/chat")({
                       totalChars += delta.length;
                       controller.enqueue(encoder.encode(delta));
                     }
-                  } catch (e) {
-                    console.warn("[/api/chat] non-JSON SSE line:", data.slice(0, 200));
+                  } catch {
+                    // ignore non-JSON keepalive lines
                   }
                 }
               }
