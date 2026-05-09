@@ -8,6 +8,7 @@ import { toast } from "sonner";
 
 const links = [
   { to: "/dashboard", label: "Dashboard" },
+  { to: "/chat", label: "AI Chat" },
   { to: "/tools", label: "Study Tools" },
   { to: "/calculators", label: "Calculators" },
   { to: "/resume", label: "Resume" },
