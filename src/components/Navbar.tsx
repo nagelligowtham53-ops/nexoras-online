@@ -6,9 +6,21 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-const links = [
+const primaryLinks = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/chat", label: "AI Chat" },
+  { to: "/mock-interview", label: "Mock Interview" },
+  { to: "/crack-jee", label: "Crack JEE" },
+  { to: "/mock-tests", label: "Mock Tests" },
+  { to: "/practice", label: "Practice" },
+  { to: "/roadmaps", label: "Roadmaps" },
+] as const;
+
+const secondaryLinks = [
+  { to: "/future-careers", label: "Future Careers" },
+  { to: "/engineering-roadmaps", label: "Engineering" },
+  { to: "/competitive-exams", label: "Exams" },
+  { to: "/courses", label: "Courses" },
   { to: "/tools", label: "Study Tools" },
   { to: "/calculators", label: "Calculators" },
   { to: "/resume", label: "Resume" },
@@ -16,6 +28,8 @@ const links = [
   { to: "/blog", label: "Blog" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
+
+const allLinks = [...primaryLinks, ...secondaryLinks];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);

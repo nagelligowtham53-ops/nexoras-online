@@ -12,15 +12,24 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as MockTestsRouteImport } from './routes/mock-tests'
+import { Route as MockInterviewRouteImport } from './routes/mock-interview'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as FutureCareersRouteImport } from './routes/future-careers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CrackJeeRouteImport } from './routes/crack-jee'
+import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CompetitiveExamsRouteImport } from './routes/competitive-exams'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CareerRouteImport } from './routes/career'
 import { Route as CalculatorsRouteImport } from './routes/calculators'
@@ -42,6 +51,11 @@ const TermsRoute = TermsRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapsRoute = RoadmapsRouteImport.update({
+  id: '/roadmaps',
+  path: '/roadmaps',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResumeRoute = ResumeRouteImport.update({
@@ -69,9 +83,29 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PracticeRoute = PracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MockTestsRoute = MockTestsRouteImport.update({
+  id: '/mock-tests',
+  path: '/mock-tests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MockInterviewRoute = MockInterviewRouteImport.update({
+  id: '/mock-interview',
+  path: '/mock-interview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FutureCareersRoute = FutureCareersRouteImport.update({
+  id: '/future-careers',
+  path: '/future-careers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -79,14 +113,34 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
+  id: '/engineering-roadmaps',
+  path: '/engineering-roadmaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CrackJeeRoute = CrackJeeRouteImport.update({
+  id: '/crack-jee',
+  path: '/crack-jee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesRoute = CoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitiveExamsRoute = CompetitiveExamsRouteImport.update({
+  id: '/competitive-exams',
+  path: '/competitive-exams',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -132,15 +186,24 @@ export interface FileRoutesByFullPath {
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
   '/chat': typeof ChatRoute
+  '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/courses': typeof CoursesRoute
+  '/crack-jee': typeof CrackJeeRoute
   '/dashboard': typeof DashboardRoute
+  '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
+  '/mock-interview': typeof MockInterviewRoute
+  '/mock-tests': typeof MockTestsRoute
+  '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
+  '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
@@ -153,15 +216,24 @@ export interface FileRoutesByTo {
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
   '/chat': typeof ChatRoute
+  '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/courses': typeof CoursesRoute
+  '/crack-jee': typeof CrackJeeRoute
   '/dashboard': typeof DashboardRoute
+  '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
+  '/mock-interview': typeof MockInterviewRoute
+  '/mock-tests': typeof MockTestsRoute
+  '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
+  '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
@@ -175,15 +247,24 @@ export interface FileRoutesById {
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
   '/chat': typeof ChatRoute
+  '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/courses': typeof CoursesRoute
+  '/crack-jee': typeof CrackJeeRoute
   '/dashboard': typeof DashboardRoute
+  '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
+  '/mock-interview': typeof MockInterviewRoute
+  '/mock-tests': typeof MockTestsRoute
+  '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
+  '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
@@ -198,15 +279,24 @@ export interface FileRouteTypes {
     | '/calculators'
     | '/career'
     | '/chat'
+    | '/competitive-exams'
     | '/contact'
+    | '/courses'
+    | '/crack-jee'
     | '/dashboard'
+    | '/engineering-roadmaps'
     | '/forgot-password'
+    | '/future-careers'
     | '/login'
+    | '/mock-interview'
+    | '/mock-tests'
+    | '/practice'
     | '/pricing'
     | '/privacy'
     | '/profile'
     | '/reset-password'
     | '/resume'
+    | '/roadmaps'
     | '/signup'
     | '/terms'
     | '/tools'
@@ -219,15 +309,24 @@ export interface FileRouteTypes {
     | '/calculators'
     | '/career'
     | '/chat'
+    | '/competitive-exams'
     | '/contact'
+    | '/courses'
+    | '/crack-jee'
     | '/dashboard'
+    | '/engineering-roadmaps'
     | '/forgot-password'
+    | '/future-careers'
     | '/login'
+    | '/mock-interview'
+    | '/mock-tests'
+    | '/practice'
     | '/pricing'
     | '/privacy'
     | '/profile'
     | '/reset-password'
     | '/resume'
+    | '/roadmaps'
     | '/signup'
     | '/terms'
     | '/tools'
@@ -240,15 +339,24 @@ export interface FileRouteTypes {
     | '/calculators'
     | '/career'
     | '/chat'
+    | '/competitive-exams'
     | '/contact'
+    | '/courses'
+    | '/crack-jee'
     | '/dashboard'
+    | '/engineering-roadmaps'
     | '/forgot-password'
+    | '/future-careers'
     | '/login'
+    | '/mock-interview'
+    | '/mock-tests'
+    | '/practice'
     | '/pricing'
     | '/privacy'
     | '/profile'
     | '/reset-password'
     | '/resume'
+    | '/roadmaps'
     | '/signup'
     | '/terms'
     | '/tools'
@@ -262,15 +370,24 @@ export interface RootRouteChildren {
   CalculatorsRoute: typeof CalculatorsRoute
   CareerRoute: typeof CareerRoute
   ChatRoute: typeof ChatRoute
+  CompetitiveExamsRoute: typeof CompetitiveExamsRoute
   ContactRoute: typeof ContactRoute
+  CoursesRoute: typeof CoursesRoute
+  CrackJeeRoute: typeof CrackJeeRoute
   DashboardRoute: typeof DashboardRoute
+  EngineeringRoadmapsRoute: typeof EngineeringRoadmapsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  FutureCareersRoute: typeof FutureCareersRoute
   LoginRoute: typeof LoginRoute
+  MockInterviewRoute: typeof MockInterviewRoute
+  MockTestsRoute: typeof MockTestsRoute
+  PracticeRoute: typeof PracticeRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResumeRoute: typeof ResumeRoute
+  RoadmapsRoute: typeof RoadmapsRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
   ToolsRoute: typeof ToolsRoute
@@ -298,6 +415,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmaps': {
+      id: '/roadmaps'
+      path: '/roadmaps'
+      fullPath: '/roadmaps'
+      preLoaderRoute: typeof RoadmapsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resume': {
@@ -335,11 +459,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/practice': {
+      id: '/practice'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mock-tests': {
+      id: '/mock-tests'
+      path: '/mock-tests'
+      fullPath: '/mock-tests'
+      preLoaderRoute: typeof MockTestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mock-interview': {
+      id: '/mock-interview'
+      path: '/mock-interview'
+      fullPath: '/mock-interview'
+      preLoaderRoute: typeof MockInterviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/future-careers': {
+      id: '/future-careers'
+      path: '/future-careers'
+      fullPath: '/future-careers'
+      preLoaderRoute: typeof FutureCareersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -349,6 +501,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/engineering-roadmaps': {
+      id: '/engineering-roadmaps'
+      path: '/engineering-roadmaps'
+      fullPath: '/engineering-roadmaps'
+      preLoaderRoute: typeof EngineeringRoadmapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -356,11 +515,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/crack-jee': {
+      id: '/crack-jee'
+      path: '/crack-jee'
+      fullPath: '/crack-jee'
+      preLoaderRoute: typeof CrackJeeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses': {
+      id: '/courses'
+      path: '/courses'
+      fullPath: '/courses'
+      preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competitive-exams': {
+      id: '/competitive-exams'
+      path: '/competitive-exams'
+      fullPath: '/competitive-exams'
+      preLoaderRoute: typeof CompetitiveExamsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -422,15 +602,24 @@ const rootRouteChildren: RootRouteChildren = {
   CalculatorsRoute: CalculatorsRoute,
   CareerRoute: CareerRoute,
   ChatRoute: ChatRoute,
+  CompetitiveExamsRoute: CompetitiveExamsRoute,
   ContactRoute: ContactRoute,
+  CoursesRoute: CoursesRoute,
+  CrackJeeRoute: CrackJeeRoute,
   DashboardRoute: DashboardRoute,
+  EngineeringRoadmapsRoute: EngineeringRoadmapsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  FutureCareersRoute: FutureCareersRoute,
   LoginRoute: LoginRoute,
+  MockInterviewRoute: MockInterviewRoute,
+  MockTestsRoute: MockTestsRoute,
+  PracticeRoute: PracticeRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResumeRoute: ResumeRoute,
+  RoadmapsRoute: RoadmapsRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
   ToolsRoute: ToolsRoute,
