@@ -16,7 +16,7 @@ export const Route = createFileRoute("/api/chat")({
           );
         }
 
-        let body: { messages?: ChatMessage[] };
+        let body: { messages?: ChatMessage[]; system?: string; model?: string };
         try {
           body = await request.json();
         } catch {
@@ -44,14 +44,20 @@ export const Route = createFileRoute("/api/chat")({
           content: String(m.content ?? "").slice(0, 8000),
         }));
 
+        const systemPrompt =
+          typeof body.system === "string" && body.system.trim().length > 0
+            ? body.system.slice(0, 4000)
+            : "You are Nexoras AI, a friendly, expert study companion for students. Help with study planning, explaining concepts clearly, summarizing notes, exam prep, career advice, and motivation. Use concise markdown formatting with short paragraphs, bullet points, and code blocks when relevant.";
+
         const payloadMessages = [
-          {
-            role: "system" as const,
-            content:
-              "You are Nexoras AI, a friendly, expert study companion for students. Help with study planning, explaining concepts clearly, summarizing notes, exam prep, career advice, and motivation. Use concise markdown formatting with short paragraphs, bullet points, and code blocks when relevant.",
-          },
+          { role: "system" as const, content: systemPrompt },
           ...safeMessages,
         ];
+
+        const model =
+          typeof body.model === "string" && body.model.length > 0
+            ? body.model
+            : "google/gemini-3-flash-preview";
 
         let upstream: Response;
         try {
@@ -65,7 +71,7 @@ export const Route = createFileRoute("/api/chat")({
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
+                model,
                 messages: payloadMessages,
                 stream: true,
               }),

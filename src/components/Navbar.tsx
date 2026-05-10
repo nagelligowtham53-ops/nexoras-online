@@ -6,9 +6,21 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
-const links = [
+const primaryLinks = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/chat", label: "AI Chat" },
+  { to: "/mock-interview", label: "Mock Interview" },
+  { to: "/crack-jee", label: "Crack JEE" },
+  { to: "/mock-tests", label: "Mock Tests" },
+  { to: "/practice", label: "Practice" },
+  { to: "/roadmaps", label: "Roadmaps" },
+] as const;
+
+const secondaryLinks = [
+  { to: "/future-careers", label: "Future Careers" },
+  { to: "/engineering-roadmaps", label: "Engineering" },
+  { to: "/competitive-exams", label: "Exams" },
+  { to: "/courses", label: "Courses" },
   { to: "/tools", label: "Study Tools" },
   { to: "/calculators", label: "Calculators" },
   { to: "/resume", label: "Resume" },
@@ -16,6 +28,8 @@ const links = [
   { to: "/blog", label: "Blog" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
+
+const allLinks = [...primaryLinks, ...secondaryLinks];
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -33,13 +47,13 @@ export function Navbar() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
           <div className="flex items-center gap-8">
             <Logo />
-            <nav className="hidden items-center gap-1 lg:flex">
-              {links.map((l) => (
+            <nav className="hidden items-center gap-0.5 lg:flex">
+              {primaryLinks.map((l) => (
                 <Link
                   key={l.to}
                   to={l.to}
-                  className="rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
-                  activeProps={{ className: "rounded-md px-3 py-1.5 text-sm text-foreground bg-secondary/60" }}
+                  className="rounded-md px-2.5 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground xl:text-sm xl:px-3"
+                  activeProps={{ className: "rounded-md px-2.5 py-1.5 text-xs xl:text-sm xl:px-3 text-foreground bg-secondary/60" }}
                 >
                   {l.label}
                 </Link>
@@ -89,7 +103,7 @@ export function Navbar() {
         {open && (
           <div className="lg:hidden border-t border-border px-4 py-3">
             <nav className="grid gap-1">
-              {links.map((l) => (
+              {allLinks.map((l) => (
                 <Link
                   key={l.to}
                   to={l.to}
