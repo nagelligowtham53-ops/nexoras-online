@@ -36,6 +36,7 @@ import { Route as CalculatorsRouteImport } from './routes/calculators'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
 const ToolsRoute = ToolsRouteImport.update({
@@ -173,6 +174,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
+  id: '/api/generate-questions',
+  path: '/api/generate-questions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -208,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -238,6 +245,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -301,6 +310,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tools'
     | '/api/chat'
+    | '/api/generate-questions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -331,6 +341,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tools'
     | '/api/chat'
+    | '/api/generate-questions'
   id:
     | '__root__'
     | '/'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tools'
     | '/api/chat'
+    | '/api/generate-questions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -392,6 +404,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ToolsRoute: typeof ToolsRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -585,6 +598,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-questions': {
+      id: '/api/generate-questions'
+      path: '/api/generate-questions'
+      fullPath: '/api/generate-questions'
+      preLoaderRoute: typeof ApiGenerateQuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -624,7 +644,18 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ToolsRoute: ToolsRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
