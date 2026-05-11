@@ -91,19 +91,19 @@ function Dashboard() {
           {/* KPIs */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { icon: Clock, label: "Focus time today", value: "3h 42m", trend: "+12%" },
-              { icon: TrendingUp, label: "Weekly progress", value: "78%", trend: "+5%" },
-              { icon: Target, label: "Goals on track", value: "6 / 8", trend: "" },
-              { icon: Sparkles, label: "AI suggestions", value: "12 new", trend: "" },
+              { icon: Sparkles, label: "Total XP", value: String(stats?.xp ?? 0), trend: "" },
+              { icon: Flame, label: "Current streak", value: `${stats?.current_streak ?? 0} d`, trend: stats?.current_streak ? "🔥" : "" },
+              { icon: Trophy, label: "Tests taken", value: String(stats?.tests_taken ?? 0), trend: "" },
+              { icon: Target, label: "Longest streak", value: `${stats?.longest_streak ?? 0} d`, trend: "" },
             ].map((k) => (
-              <div key={k.label} className="glass rounded-2xl p-5">
+              <Link key={k.label} to="/achievements" className="glass rounded-2xl p-5 transition-colors hover:border-accent/40">
                 <div className="flex items-center justify-between">
                   <k.icon className="h-5 w-5 text-accent" />
                   {k.trend && <span className="text-xs text-accent">{k.trend}</span>}
                 </div>
                 <p className="mt-3 text-xs uppercase tracking-wider text-muted-foreground">{k.label}</p>
                 <p className="font-display text-2xl font-bold">{k.value}</p>
-              </div>
+              </Link>
             ))}
           </div>
 
