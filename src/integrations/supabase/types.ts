@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          badge_description: string | null
+          badge_key: string
+          badge_name: string
+          earned_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_key: string
+          badge_name: string
+          earned_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_key?: string
+          badge_name?: string
+          earned_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -35,6 +62,87 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      test_attempts: {
+        Row: {
+          attempted: number
+          correct: number
+          created_at: string
+          duration_seconds: number
+          exam_key: string
+          exam_name: string
+          id: string
+          max_score: number
+          score: number
+          subject_breakdown: Json
+          total_questions: number
+          user_id: string
+          wrong: number
+        }
+        Insert: {
+          attempted?: number
+          correct?: number
+          created_at?: string
+          duration_seconds?: number
+          exam_key: string
+          exam_name: string
+          id?: string
+          max_score?: number
+          score?: number
+          subject_breakdown?: Json
+          total_questions: number
+          user_id: string
+          wrong?: number
+        }
+        Update: {
+          attempted?: number
+          correct?: number
+          created_at?: string
+          duration_seconds?: number
+          exam_key?: string
+          exam_name?: string
+          id?: string
+          max_score?: number
+          score?: number
+          subject_breakdown?: Json
+          total_questions?: number
+          user_id?: string
+          wrong?: number
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          created_at: string
+          current_streak: number
+          last_active_date: string | null
+          longest_streak: number
+          tests_taken: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          tests_taken?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          last_active_date?: string | null
+          longest_streak?: number
+          tests_taken?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
         }
         Relationships: []
       }
