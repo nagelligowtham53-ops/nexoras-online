@@ -5,7 +5,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Calendar, Brain, Target, TrendingUp, Clock, BookOpen, Sparkles, Plus, ArrowRight, Flame, Trophy,
+  Calendar, Brain, Target, TrendingUp, BookOpen, Sparkles, Plus, ArrowRight, Flame, Trophy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
