@@ -32,6 +32,17 @@ const sidebarItems = [
 
 function Dashboard() {
   const { user } = useAuth();
+  const [stats, setStats] = useState<{ xp: number; current_streak: number; longest_streak: number; tests_taken: number } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let active = true;
+    supabase.from("user_stats").select("xp,current_streak,longest_streak,tests_taken").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+      if (active) setStats(data ?? { xp: 0, current_streak: 0, longest_streak: 0, tests_taken: 0 });
+    });
+    return () => { active = false; };
+  }, [user]);
+
   const name =
     (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ||
     user?.email?.split("@")[0] ||
