@@ -13,6 +13,7 @@ const primaryLinks = [
   { to: "/crack-jee", label: "Crack JEE" },
   { to: "/mock-tests", label: "Mock Tests" },
   { to: "/practice", label: "Practice" },
+  { to: "/achievements", label: "Achievements" },
   { to: "/roadmaps", label: "Roadmaps" },
 ] as const;
 
