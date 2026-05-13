@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { blogPosts } from "@/lib/blog-data";
 
-const BASE_URL = "https://nexoras.lovable.app";
+const BASE_URL = "https://nexoras.online";
 
 interface SitemapEntry {
   path: string;

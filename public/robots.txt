@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://nexoras.lovable.app/sitemap.xml
+Sitemap: https://nexoras.online/sitemap.xml
