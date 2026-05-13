@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Brain, Calendar, Calculator, FileText, Briefcase, BookOpen,
   Sparkles, ArrowRight, Check, Zap, Target, Rocket, GraduationCap,
+  Trophy, Map, Cpu, ListChecks, MessageSquare,
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { HeroOrbs } from "@/components/HeroOrbs";
