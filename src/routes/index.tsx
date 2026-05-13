@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Brain, Calendar, Calculator, FileText, Briefcase, BookOpen,
   Sparkles, ArrowRight, Check, Zap, Target, Rocket, GraduationCap,
+  Trophy, Map, Cpu, ListChecks, MessageSquare,
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { HeroOrbs } from "@/components/HeroOrbs";
@@ -165,6 +166,138 @@ function Home() {
               </div>
             </Link>
           ))}
+        </div>
+      </section>
+
+      {/* ECOSYSTEM — restored core student features */}
+      <section className="mx-auto max-w-7xl px-4 pb-4 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">The Nexoras Ecosystem</span>
+          <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            From JEE prep to your <span className="text-gradient">first job offer</span>
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Every tool a student needs — entrance exam prep, mock interviews, resume building,
+            career roadmaps and productivity — in one focused workspace.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-5 lg:grid-cols-2">
+          {/* JEE & ENTRANCE PREP */}
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                <Rocket className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-semibold">JEE & Entrance Prep</h3>
+                <p className="text-xs text-muted-foreground">Full-length simulations + topic-wise practice</p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              {[
+                { to: "/crack-jee", label: "Crack JEE Program" },
+                { to: "/mock-tests", label: "JEE Main Mocks" },
+                { to: "/mock-tests", label: "JEE Advanced Mocks" },
+                { to: "/competitive-exams", label: "EAMCET" },
+                { to: "/competitive-exams", label: "MHT CET" },
+                { to: "/competitive-exams", label: "BITSAT" },
+                { to: "/practice", label: "Practice Questions" },
+                { to: "/practice", label: "Previous Year Qs" },
+              ].map((x) => (
+                <Link key={x.label} to={x.to} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2 text-sm hover:border-accent hover:text-accent">
+                  <span>{x.label}</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* CAREER & INTERVIEWS */}
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                <Briefcase className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-semibold">Career & Interviews</h3>
+                <p className="text-xs text-muted-foreground">Land the role with AI-powered prep</p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              {[
+                { to: "/mock-interview", label: "AI Mock Interviews" },
+                { to: "/mock-interview", label: "HR Interview Practice" },
+                { to: "/resume", label: "Resume Builder" },
+                { to: "/roadmaps", label: "Career Roadmaps" },
+                { to: "/future-careers", label: "Future AI Careers" },
+                { to: "/engineering-roadmaps", label: "Engineering Branches" },
+                { to: "/career", label: "Skill Development" },
+                { to: "/career", label: "Career Guidance" },
+              ].map((x) => (
+                <Link key={x.label} to={x.to} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2 text-sm hover:border-accent hover:text-accent">
+                  <span>{x.label}</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* AI PRODUCTIVITY */}
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                <Brain className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-semibold">AI Productivity</h3>
+                <p className="text-xs text-muted-foreground">Plan, focus, and ship every week</p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              {[
+                { to: "/tools", label: "AI Study Planner" },
+                { to: "/dashboard", label: "Productivity Dashboard" },
+                { to: "/calculators", label: "Smart Calculators" },
+                { to: "/chat", label: "AI Chat" },
+                { to: "/courses", label: "Curated Courses" },
+                { to: "/tools", label: "All Features" },
+              ].map((x) => (
+                <Link key={x.label} to={x.to} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2 text-sm hover:border-accent hover:text-accent">
+                  <span>{x.label}</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* ACHIEVEMENTS & GROWTH */}
+          <div className="glass rounded-2xl p-6">
+            <div className="flex items-center gap-3">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
+                <Trophy className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h3 className="font-display text-lg font-semibold">Achievements & Growth</h3>
+                <p className="text-xs text-muted-foreground">XP, streaks and progress that compound</p>
+              </div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              {[
+                { to: "/achievements", label: "Achievements Dashboard" },
+                { to: "/achievements", label: "XP & Streaks" },
+                { to: "/roadmaps", label: "Learning Roadmaps" },
+                { to: "/future-careers", label: "Future Career Guide" },
+                { to: "/engineering-roadmaps", label: "Engineering Future" },
+                { to: "/blog", label: "Student Blog" },
+              ].map((x) => (
+                <Link key={x.label} to={x.to} className="flex items-center justify-between rounded-md border border-border bg-background/40 px-3 py-2 text-sm hover:border-accent hover:text-accent">
+                  <span>{x.label}</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
