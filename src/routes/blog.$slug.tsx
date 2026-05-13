@@ -76,12 +76,12 @@ function Article() {
         <p className="mt-4 text-lg text-muted-foreground">{post.description}</p>
 
         <div className="prose prose-invert mt-10 max-w-none space-y-5 text-base leading-relaxed text-foreground/90">
-          {post.content.map((block, i) => {
+          {post.content.map((block: BlogPost["content"][number], i: number) => {
             if (block.type === "h2") return <h2 key={i} className="mt-10 font-display text-2xl font-bold tracking-tight">{block.text}</h2>;
             if (block.type === "h3") return <h3 key={i} className="mt-6 font-display text-xl font-semibold">{block.text}</h3>;
             if (block.type === "ul") return (
               <ul key={i} className="ml-6 list-disc space-y-2 text-muted-foreground">
-                {block.items?.map((it, j) => <li key={j}>{it}</li>)}
+                {block.items?.map((it: string, j: number) => <li key={j}>{it}</li>)}
               </ul>
             );
             if (block.type === "quote") return <blockquote key={i} className="border-l-2 border-accent pl-4 italic text-muted-foreground">{block.text}</blockquote>;
