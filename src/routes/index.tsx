@@ -165,7 +165,92 @@ function Home() {
         </div>
       </section>
 
-      {/* CTA */}
+      {/* WHAT NEXORAS DOES */}
+      <section className="mx-auto max-w-5xl px-4 py-16 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">What is Nexoras</span>
+          <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">
+            One workspace for studying, building, and launching your career
+          </h2>
+          <p className="mt-4 text-muted-foreground leading-relaxed">
+            Nexoras is an AI-powered productivity platform designed for students and early-career professionals.
+            We bring together the tools you'd otherwise stitch from five different apps — a study planner, a full
+            mock test simulator for JEE and other engineering entrance exams, an AI resume builder with ATS scoring,
+            mock interview practice, career roadmaps, and a growing library of original learning content — into a
+            single, focused workspace. Our goal is simple: remove the friction between you and the next thing you
+            need to do.
+          </p>
+        </div>
+      </section>
+
+      {/* USE CASES */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="text-xs font-semibold uppercase tracking-widest text-accent">Built for these moments</span>
+          <h2 className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl">Use cases</h2>
+        </div>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {[
+            { t: "Cracking JEE & engineering entrances", d: "Full-length mock tests for JEE Main, JEE Advanced, BITSAT, EAMCET and MHT CET, with AI question generation, negative marking, rank prediction and topic-wise analytics." },
+            { t: "Building your first resume", d: "Six polished templates, AI-rewritten bullets, ATS scoring against any job description, and one-click PDF export." },
+            { t: "Preparing for placement interviews", d: "Mock interviews by role with AI feedback on structure, clarity, and depth — practice as many times as you want." },
+            { t: "Planning your study week", d: "An AI planner that turns your subjects, deadlines, and energy patterns into a realistic weekly schedule that adapts when you fall behind." },
+            { t: "Choosing the right career path", d: "Career roadmaps for software, data, design, finance and emerging fields — with the exact skills and projects you need at each step." },
+            { t: "Learning consistently", d: "An XP, streak and achievement system that quietly rewards the small daily habits that compound into real results." },
+          ].map((u) => (
+            <div key={u.t} className="glass rounded-2xl p-6">
+              <h3 className="font-display font-semibold">{u.t}</h3>
+              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{u.d}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* BENEFITS */}
+      <section className="mx-auto max-w-5xl px-4 pb-16 lg:px-8">
+        <div className="glass rounded-3xl p-8 lg:p-12">
+          <h2 className="font-display text-2xl font-bold sm:text-3xl">Why students choose Nexoras</h2>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+            {[
+              ["Save hours every week", "Stop switching between five apps. Plan, practice and build in one place."],
+              ["Get measurable progress", "Real test scores, real ATS scores, real streaks — not vanity metrics."],
+              ["Learn with AI, not despite it", "Our AI explains, rewrites, and quizzes — but the thinking stays yours."],
+              ["Privacy by default", "Your notes, plans and resumes are yours. We don't sell your data."],
+              ["Free to start", "All core features are free forever. Pro unlocks heavier AI use and analytics."],
+              ["Built for Indian students", "Mock test patterns, exam coverage, and career roadmaps tuned to the Indian education landscape."],
+            ].map(([t, d]) => (
+              <li key={t} className="flex gap-3">
+                <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" />
+                <div>
+                  <p className="font-semibold">{t}</p>
+                  <p className="text-sm text-muted-foreground">{d}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* LATEST FROM BLOG */}
+      <section className="mx-auto max-w-7xl px-4 pb-16 lg:px-8">
+        <div className="flex items-end justify-between">
+          <div>
+            <span className="text-xs font-semibold uppercase tracking-widest text-accent">From the blog</span>
+            <h2 className="mt-2 font-display text-2xl font-bold sm:text-3xl">Latest articles</h2>
+          </div>
+          <Link to="/blog" className="text-sm text-accent hover:underline">View all →</Link>
+        </div>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {homePostsPreview.map((p) => (
+            <Link key={p.slug} to="/blog/$slug" params={{ slug: p.slug }} className="glass group rounded-2xl p-6 transition-all hover:-translate-y-1 hover:shadow-glow">
+              <span className="text-[10px] uppercase tracking-wider text-accent">{p.category}</span>
+              <h3 className="mt-2 font-display text-base font-semibold leading-snug group-hover:text-accent">{p.title}</h3>
+              <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{p.description}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       <section className="mx-auto max-w-7xl px-4 pb-24 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl border border-border p-10 text-center shadow-elegant lg:p-16">
           <HeroOrbs />
