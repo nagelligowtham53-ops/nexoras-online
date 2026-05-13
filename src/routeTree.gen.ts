@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
@@ -17,6 +18,7 @@ import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PracticeRouteImport } from './routes/practice'
@@ -45,6 +47,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 const ToolsRoute = ToolsRouteImport.update({
   id: '/tools',
   path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
+  id: '/terms-of-service',
+  path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -80,6 +87,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -225,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
@@ -232,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
@@ -259,6 +273,7 @@ export interface FileRoutesByTo {
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
@@ -266,6 +281,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
@@ -294,6 +310,7 @@ export interface FileRoutesById {
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
@@ -301,6 +318,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
@@ -330,6 +348,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/pricing'
     | '/privacy'
+    | '/privacy-policy'
     | '/profile'
     | '/reset-password'
     | '/resume'
@@ -337,6 +356,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/terms'
+    | '/terms-of-service'
     | '/tools'
     | '/api/chat'
     | '/api/generate-questions'
@@ -364,6 +384,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/pricing'
     | '/privacy'
+    | '/privacy-policy'
     | '/profile'
     | '/reset-password'
     | '/resume'
@@ -371,6 +392,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/terms'
+    | '/terms-of-service'
     | '/tools'
     | '/api/chat'
     | '/api/generate-questions'
@@ -398,6 +420,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/pricing'
     | '/privacy'
+    | '/privacy-policy'
     | '/profile'
     | '/reset-password'
     | '/resume'
@@ -405,6 +428,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/terms'
+    | '/terms-of-service'
     | '/tools'
     | '/api/chat'
     | '/api/generate-questions'
@@ -433,6 +457,7 @@ export interface RootRouteChildren {
   PracticeRoute: typeof PracticeRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResumeRoute: typeof ResumeRoute
@@ -440,6 +465,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  TermsOfServiceRoute: typeof TermsOfServiceRoute
   ToolsRoute: typeof ToolsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
@@ -452,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/tools'
       fullPath: '/tools'
       preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-service': {
+      id: '/terms-of-service'
+      path: '/terms-of-service'
+      fullPath: '/terms-of-service'
+      preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -501,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -706,6 +746,7 @@ const rootRouteChildren: RootRouteChildren = {
   PracticeRoute: PracticeRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResumeRoute: ResumeRoute,
@@ -713,6 +754,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  TermsOfServiceRoute: TermsOfServiceRoute,
   ToolsRoute: ToolsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
