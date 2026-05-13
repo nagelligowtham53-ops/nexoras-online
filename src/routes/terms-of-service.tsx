@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/privacy-policy")({
+export const Route = createFileRoute("/terms-of-service")({
   beforeLoad: () => {
-    throw redirect({ to: "/privacy" });
+    throw redirect({ to: "/terms" });
   },
 });
