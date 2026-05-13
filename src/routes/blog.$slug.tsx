@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { getPost, blogPosts } from "@/lib/blog-data";
+import { getPost, blogPosts, type BlogPost } from "@/lib/blog-data";
 import { Calendar, Clock, ArrowLeft, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/blog/$slug")({
