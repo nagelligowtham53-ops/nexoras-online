@@ -6,6 +6,9 @@ import {
 import { PageShell } from "@/components/PageShell";
 import { HeroOrbs } from "@/components/HeroOrbs";
 import { Button } from "@/components/ui/button";
+import { blogPosts } from "@/lib/blog-data";
+
+const homePostsPreview = blogPosts.slice(0, 3);
 
 export const Route = createFileRoute("/")({
   head: () => ({
