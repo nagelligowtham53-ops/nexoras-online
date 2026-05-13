@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResumeRouteImport } from './routes/resume'
@@ -37,6 +38,7 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 
@@ -48,6 +50,11 @@ const ToolsRoute = ToolsRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -180,6 +187,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
 const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
   id: '/api/generate-questions',
   path: '/api/generate-questions',
@@ -195,7 +207,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
   '/chat': typeof ChatRoute
@@ -218,16 +230,18 @@ export interface FileRoutesByFullPath {
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/blog/$slug': typeof BlogSlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
   '/chat': typeof ChatRoute
@@ -250,17 +264,19 @@ export interface FileRoutesByTo {
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/blog/$slug': typeof BlogSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
   '/chat': typeof ChatRoute
@@ -283,10 +299,12 @@ export interface FileRoutesById {
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/blog/$slug': typeof BlogSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -317,10 +335,12 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmaps'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/tools'
     | '/api/chat'
     | '/api/generate-questions'
+    | '/blog/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -349,10 +369,12 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmaps'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/tools'
     | '/api/chat'
     | '/api/generate-questions'
+    | '/blog/$slug'
   id:
     | '__root__'
     | '/'
@@ -381,17 +403,19 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmaps'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/tools'
     | '/api/chat'
     | '/api/generate-questions'
+    | '/blog/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AchievementsRoute: typeof AchievementsRoute
-  BlogRoute: typeof BlogRoute
+  BlogRoute: typeof BlogRouteWithChildren
   CalculatorsRoute: typeof CalculatorsRoute
   CareerRoute: typeof CareerRoute
   ChatRoute: typeof ChatRoute
@@ -414,6 +438,7 @@ export interface RootRouteChildren {
   ResumeRoute: typeof ResumeRoute
   RoadmapsRoute: typeof RoadmapsRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   ToolsRoute: typeof ToolsRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -434,6 +459,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -618,6 +650,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/api/generate-questions': {
       id: '/api/generate-questions'
       path: '/api/generate-questions'
@@ -635,11 +674,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AchievementsRoute: AchievementsRoute,
-  BlogRoute: BlogRoute,
+  BlogRoute: BlogRouteWithChildren,
   CalculatorsRoute: CalculatorsRoute,
   CareerRoute: CareerRoute,
   ChatRoute: ChatRoute,
@@ -662,6 +711,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResumeRoute: ResumeRoute,
   RoadmapsRoute: RoadmapsRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   ToolsRoute: ToolsRoute,
   ApiChatRoute: ApiChatRoute,

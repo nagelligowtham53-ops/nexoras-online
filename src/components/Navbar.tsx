@@ -7,6 +7,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
 const primaryLinks = [
+  { to: "/", label: "Home" },
+  { to: "/tools", label: "Features" },
+  { to: "/calculators", label: "Tools" },
+  { to: "/blog", label: "Blog" },
+  { to: "/about", label: "About" },
+  { to: "/contact", label: "Contact" },
+] as const;
+
+const secondaryLinks = [
   { to: "/dashboard", label: "Dashboard" },
   { to: "/chat", label: "AI Chat" },
   { to: "/mock-interview", label: "Mock Interview" },
@@ -15,18 +24,12 @@ const primaryLinks = [
   { to: "/practice", label: "Practice" },
   { to: "/achievements", label: "Achievements" },
   { to: "/roadmaps", label: "Roadmaps" },
-] as const;
-
-const secondaryLinks = [
   { to: "/future-careers", label: "Future Careers" },
   { to: "/engineering-roadmaps", label: "Engineering" },
   { to: "/competitive-exams", label: "Exams" },
   { to: "/courses", label: "Courses" },
-  { to: "/tools", label: "Study Tools" },
-  { to: "/calculators", label: "Calculators" },
   { to: "/resume", label: "Resume" },
   { to: "/career", label: "Career Hub" },
-  { to: "/blog", label: "Blog" },
   { to: "/pricing", label: "Pricing" },
 ] as const;
 
