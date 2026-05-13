@@ -33,6 +33,8 @@ const secondaryLinks = [
   { to: "/pricing", label: "Pricing" },
 ] as const;
 
+const allLinks = [...primaryLinks, ...secondaryLinks];
+
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { user, signOut } = useAuth();
