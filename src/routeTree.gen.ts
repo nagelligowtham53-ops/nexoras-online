@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResumeRouteImport } from './routes/resume'
@@ -49,6 +50,11 @@ const ToolsRoute = ToolsRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -224,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
@@ -291,6 +299,7 @@ export interface FileRoutesById {
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/tools': typeof ToolsRoute
   '/api/chat': typeof ApiChatRoute
@@ -326,6 +335,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmaps'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/tools'
     | '/api/chat'
@@ -359,6 +369,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmaps'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/tools'
     | '/api/chat'
@@ -392,6 +403,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/roadmaps'
     | '/signup'
+    | '/sitemap.xml'
     | '/terms'
     | '/tools'
     | '/api/chat'
@@ -426,6 +438,7 @@ export interface RootRouteChildren {
   ResumeRoute: typeof ResumeRoute
   RoadmapsRoute: typeof RoadmapsRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   ToolsRoute: typeof ToolsRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -446,6 +459,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -691,6 +711,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResumeRoute: ResumeRoute,
   RoadmapsRoute: RoadmapsRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   ToolsRoute: ToolsRoute,
   ApiChatRoute: ApiChatRoute,
@@ -699,3 +720,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
