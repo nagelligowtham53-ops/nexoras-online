@@ -1,0 +1,32 @@
+# Nexoras
+
+> Nexoras is an AI-powered productivity and learning platform for students and early-career professionals: study planner, smart calculators, resume builder, mock interviews, JEE/EAMCET/BITSAT prep, and career guidance.
+
+## Pages
+
+- [Home](/): Overview of the Nexoras AI study and career platform.
+- [About](/about): Mission, team, and what Nexoras builds.
+- [Contact](/contact): Reach the Nexoras team.
+- [Pricing](/pricing): Plans and pricing for Nexoras.
+- [Tools](/tools): All AI productivity tools in one place.
+- [Calculators](/calculators): Smart academic calculators (CGPA, percentage, more).
+- [Resume Builder](/resume): AI-assisted resume builder with templates and PDF export.
+- [Mock Interviews](/mock-interview): AI + HR mock interview practice.
+- [Mock Tests](/mock-tests): Timed mock tests for entrance exams.
+- [Practice](/practice): Practice questions and PYQs.
+- [Roadmaps](/roadmaps): Career roadmaps for students.
+- [Engineering Roadmaps](/engineering-roadmaps): Branch-wise engineering guidance.
+- [Future Careers](/future-careers): AI-era career paths.
+- [Crack JEE](/crack-jee): JEE Main and Advanced preparation hub.
+- [Competitive Exams](/competitive-exams): EAMCET, MHT CET, BITSAT and more.
+- [Courses](/courses): Curated learning programs.
+- [Career](/career): Career planning and guidance.
+
+## Blog
+
+- [Blog](/blog): Long-form guides on AI, productivity, resume building, and careers.
+
+## Optional
+
+- [Privacy Policy](/privacy-policy): How Nexoras handles user data.
+- [Terms of Service](/terms-of-service): Terms governing use of Nexoras.
