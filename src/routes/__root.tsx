@@ -77,6 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Nexoras — Study Smarter with AI" },
       { name: "description", content: "Nexoras is the AI-powered productivity platform for students: study planner, smart calculators, resume builder, interview prep, and career guidance — all in one futuristic dashboard." },
       { name: "author", content: "Nexoras" },
+      { name: "google-site-verification", content: "Yv4uB17W-p9ClcEQQvvf6RtF8zcOWIrLV7C27RRYp1A" },
       { property: "og:title", content: "Nexoras — Study Smarter with AI" },
       { property: "og:description", content: "Nexoras is the AI-powered productivity platform for students: study planner, smart calculators, resume builder, interview prep, and career guidance — all in one futuristic dashboard." },
       { property: "og:type", content: "website" },
