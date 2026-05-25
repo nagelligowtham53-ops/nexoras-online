@@ -77,7 +77,7 @@ function ChatPage() {
     abortRef.current = controller;
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await authedFetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -58,7 +58,7 @@ function MockInterviewPage() {
   }
 
   async function streamChat(allMessages: Msg[], system: string): Promise<string> {
-    const res = await fetch("/api/chat", {
+    const res = await authedFetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -132,7 +132,7 @@ function MockInterviewPage() {
         .join("\n\n");
       const sys = `You are a senior hiring manager scoring a mock interview for the role of ${role} at ${level} level. Read the transcript and respond ONLY with valid minified JSON (no markdown, no commentary) matching this exact shape:
 {"communication": <0-100 integer>, "confidence": <0-100 integer>, "technical": <0-100 integer>, "overall": <0-100 integer>, "strengths": ["...","..."], "improvements": ["...","..."], "summary": "2-3 sentence overall verdict"}`;
-      const res = await fetch("/api/chat", {
+      const res = await authedFetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

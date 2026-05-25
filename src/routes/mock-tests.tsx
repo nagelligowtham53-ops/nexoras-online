@@ -155,7 +155,7 @@ function MockTestsPage() {
     const all: Question[] = [];
     for (let i = 0; i < batches.length; i++) {
       setLoadProgress(`Generating questions… (${all.length}/${total})`);
-      const res = await fetch("/api/generate-questions", {
+      const res = await authedFetch("/api/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ exam: spec.name, subjects: batches[i], difficulty: spec.difficulty }),
