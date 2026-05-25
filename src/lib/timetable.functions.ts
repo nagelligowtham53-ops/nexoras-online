@@ -18,6 +18,7 @@ type Input = {
 };
 
 export const generateTimetable = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: Input) => {
     if (!data || typeof data !== "object") throw new Error("Invalid input");
     return {
