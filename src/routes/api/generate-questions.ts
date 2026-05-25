@@ -1,5 +1,6 @@
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuthFromRequest } from "@/lib/require-auth-http";
 
 type SubjectReq = { name: string; count: number };
 
@@ -7,6 +8,9 @@ export const Route = createFileRoute("/api/generate-questions")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
+        const auth = await requireAuthFromRequest(request);
+        if (auth instanceof Response) return auth;
+
         const apiKey = process.env.LOVABLE_API_KEY;
         if (!apiKey) {
           return Response.json({ error: "AI not configured" }, { status: 500 });
