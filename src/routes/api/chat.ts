@@ -1,5 +1,6 @@
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
+import { requireAuthFromRequest } from "@/lib/require-auth-http";
 
 type ChatMessage = { role: "user" | "assistant" | "system"; content: string };
 
@@ -7,8 +8,10 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }: { request: Request }) => {
+        const auth = await requireAuthFromRequest(request);
+        if (auth instanceof Response) return auth;
+
         const apiKey = process.env.LOVABLE_API_KEY;
-        console.log("[/api/chat] LOVABLE_API_KEY present:", !!apiKey);
         if (!apiKey) {
           return new Response(
             JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
