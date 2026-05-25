@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export type TimetableBlock = {
   time: string;
@@ -17,6 +18,7 @@ type Input = {
 };
 
 export const generateTimetable = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: Input) => {
     if (!data || typeof data !== "object") throw new Error("Invalid input");
     return {

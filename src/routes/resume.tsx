@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { authedFetch } from "@/lib/authed-fetch";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -407,7 +408,7 @@ function AIPanel({ data, setData }: { data: ResumeData; setData: (d: ResumeData)
   const [jobDesc, setJobDesc] = useState("");
 
   async function callAI(system: string, user: string): Promise<string> {
-    const res = await fetch("/api/chat", {
+    const res = await authedFetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ system, messages: [{ role: "user", content: user }] }),

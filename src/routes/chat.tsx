@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { authedFetch } from "@/lib/authed-fetch";
 import { useEffect, useRef, useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { Button } from "@/components/ui/button";
@@ -77,7 +78,7 @@ function ChatPage() {
     abortRef.current = controller;
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await authedFetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
