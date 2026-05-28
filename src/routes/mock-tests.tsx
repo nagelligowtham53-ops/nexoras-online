@@ -869,14 +869,18 @@ function SummaryView(props: { exam: ExamSpec; counts: { answered: number; notAns
   );
 }
 
+type ResultStats = {
+  correct: number; wrong: number; attempted: number; skipped: number;
+  score: number; max_score: number; percent: number; accuracy: number; rank: number;
+  subs: { subject: string; correct: number; total: number; time: number; pct: number; avg: number }[];
+  weakest: { subject: string; pct: number } | undefined;
+  strongest: { subject: string; pct: number } | undefined;
+  totalTime: number; avgPerQ: number; suggestions: string[];
+};
+
 function ResultView(props: {
   exam: ExamSpec;
-  stats: NonNullable<ReturnType<typeof useMemo<{
-    correct: number; wrong: number; attempted: number; skipped: number; score: number; max_score: number; percent: number; accuracy: number; rank: number;
-    subs: { subject: string; correct: number; total: number; time: number; pct: number; avg: number }[];
-    weakest: { subject: string; pct: number } | undefined; strongest: { subject: string; pct: number } | undefined;
-    totalTime: number; avgPerQ: number; suggestions: string[];
-  }>>>;
+  stats: ResultStats;
   reward: { earnedXp: number; newBadges: { name: string; description: string }[] } | null;
   questions: Question[]; answers: (string | null)[]; onReset: () => void;
 }) {
