@@ -6,13 +6,17 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
-import { Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles, BookmarkCheck } from "lucide-react";
+import {
+  Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles,
+  BookmarkCheck, Maximize2, Minimize2, ChevronLeft, ChevronRight, ListChecks, AlertTriangle,
+  Brain, User as UserIcon, ShieldCheck, Menu,
+} from "lucide-react";
 
 export const Route = createFileRoute("/mock-tests")({
   head: () => ({
     meta: [
-      { title: "Mock Tests — JEE Main, JEE Adv, BITSAT, MHT CET, EAMCET | Nexoras" },
-      { name: "description", content: "Real exam simulator with AI-generated questions, mark-for-review, color-coded palette, negative marking, rank prediction & deep analytics." },
+      { title: "JEE Main CBT Simulator — Real Mock Tests | Nexoras" },
+      { name: "description", content: "Production-grade JEE Main / Advanced / BITSAT / MHT CET / EAMCET CBT simulator: full-screen mode, NTA-style palette, sections, negative marking, rank prediction & AI analytics." },
     ],
   }),
   component: () => (
@@ -27,144 +31,160 @@ type Question = {
   type: "mcq" | "numerical";
   q: string;
   options?: string[];
-  correct: number; // index for mcq, value for numerical
+  correct: number;
   explanation?: string;
 };
 
 type ExamSpec = {
   key: string;
   name: string;
+  short: string;
   desc: string;
   duration_min: number;
   subjects: { name: string; count: number }[];
   marking: { correct: number; wrong: number };
   difficulty: string;
+  pattern: string;
 };
 
 const EXAMS: ExamSpec[] = [
-  {
-    key: "jee-main",
-    name: "JEE Main",
-    desc: "75 Qs · 3 hr · +4 / −1 · MCQ + Numerical",
+  { key: "jee-main", name: "JEE Main", short: "Main", pattern: "NTA CBT · MCQ + Integer",
+    desc: "75 Qs · 3 hr · +4 / −1",
     duration_min: 180,
     subjects: [
-      { name: "Physics", count: 25 },
-      { name: "Chemistry", count: 25 },
-      { name: "Mathematics", count: 25 },
+      { name: "Physics", count: 25 }, { name: "Chemistry", count: 25 }, { name: "Mathematics", count: 25 },
     ],
-    marking: { correct: 4, wrong: 1 },
-    difficulty: "JEE Main level (mix of easy, medium, hard)",
-  },
-  {
-    key: "jee-adv",
-    name: "JEE Advanced",
-    desc: "54 Qs · 3 hr · advanced conceptual",
+    marking: { correct: 4, wrong: 1 }, difficulty: "JEE Main level (easy, medium, hard mix)" },
+  { key: "jee-adv", name: "JEE Advanced", short: "Advanced", pattern: "Multi-concept, high difficulty",
+    desc: "54 Qs · 3 hr · +4 / −1",
     duration_min: 180,
     subjects: [
-      { name: "Physics", count: 18 },
-      { name: "Chemistry", count: 18 },
-      { name: "Mathematics", count: 18 },
+      { name: "Physics", count: 18 }, { name: "Chemistry", count: 18 }, { name: "Mathematics", count: 18 },
     ],
-    marking: { correct: 4, wrong: 1 },
-    difficulty: "JEE Advanced level (hard, multi-concept)",
-  },
-  {
-    key: "bitsat",
-    name: "BITSAT",
-    desc: "60 Qs · 2 hr · speed-focused",
+    marking: { correct: 4, wrong: 1 }, difficulty: "JEE Advanced (hard, multi-concept)" },
+  { key: "bitsat", name: "BITSAT", short: "BITSAT", pattern: "Speed-focused MCQ",
+    desc: "60 Qs · 2 hr · +3 / −1",
     duration_min: 120,
     subjects: [
-      { name: "Physics", count: 20 },
-      { name: "Chemistry", count: 20 },
-      { name: "Mathematics", count: 20 },
+      { name: "Physics", count: 20 }, { name: "Chemistry", count: 20 }, { name: "Mathematics", count: 20 },
     ],
-    marking: { correct: 3, wrong: 1 },
-    difficulty: "BITSAT level (medium, speed)",
-  },
-  {
-    key: "mht-cet",
-    name: "MHT CET",
-    desc: "150 Qs · 3 hr · no negative marking",
+    marking: { correct: 3, wrong: 1 }, difficulty: "BITSAT level (medium, speed)" },
+  { key: "mht-cet", name: "MHT CET", short: "MHT CET", pattern: "No negative marking",
+    desc: "150 Qs · 3 hr · +1 / 0",
     duration_min: 180,
     subjects: [
-      { name: "Physics", count: 50 },
-      { name: "Chemistry", count: 50 },
-      { name: "Mathematics", count: 50 },
+      { name: "Physics", count: 50 }, { name: "Chemistry", count: 50 }, { name: "Mathematics", count: 50 },
     ],
-    marking: { correct: 1, wrong: 0 },
-    difficulty: "MHT CET level (medium)",
-  },
-  {
-    key: "eamcet",
-    name: "EAMCET (AP/TS)",
-    desc: "160 Qs · 3 hr · 1 mark each",
+    marking: { correct: 1, wrong: 0 }, difficulty: "MHT CET level (medium)" },
+  { key: "eamcet", name: "EAMCET (AP/TS)", short: "EAMCET", pattern: "Maths-heavy CBT",
+    desc: "160 Qs · 3 hr · +1 / 0",
     duration_min: 180,
     subjects: [
-      { name: "Mathematics", count: 80 },
-      { name: "Physics", count: 40 },
-      { name: "Chemistry", count: 40 },
+      { name: "Mathematics", count: 80 }, { name: "Physics", count: 40 }, { name: "Chemistry", count: 40 },
     ],
-    marking: { correct: 1, wrong: 0 },
-    difficulty: "EAMCET level (medium)",
-  },
+    marking: { correct: 1, wrong: 0 }, difficulty: "EAMCET level (medium)" },
 ];
 
-type Phase = "select" | "loading" | "running" | "result";
+type TestType = "full" | "chapter";
+type Difficulty = "mixed" | "easy" | "medium" | "hard";
+type Phase = "select" | "instructions" | "loading" | "running" | "summary" | "result";
 
 function MockTestsPage() {
   const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>("select");
   const [exam, setExam] = useState<ExamSpec>(EXAMS[0]);
+  const [testType, setTestType] = useState<TestType>("full");
+  const [chapterSubject, setChapterSubject] = useState<string>("Physics");
+  const [difficulty, setDifficulty] = useState<Difficulty>("mixed");
+  const [agreed, setAgreed] = useState(false);
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<(string | null)[]>([]);
   const [marked, setMarked] = useState<boolean[]>([]);
   const [visited, setVisited] = useState<boolean[]>([]);
+  const [timePerQ, setTimePerQ] = useState<number[]>([]);
   const [current, setCurrent] = useState(0);
+  const [activeSection, setActiveSection] = useState<string>("");
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loadProgress, setLoadProgress] = useState("");
   const [reward, setReward] = useState<{ earnedXp: number; newBadges: { name: string; description: string }[] } | null>(null);
-  const startedAtRef = useRef<number>(0);
+  const [fullscreen, setFullscreen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
+  const startedAtRef = useRef<number>(0);
+  const lastTickRef = useRef<number>(0);
+  const examRootRef = useRef<HTMLDivElement>(null);
+
+  // ---- Timer
   useEffect(() => {
     if (phase !== "running") return;
-    if (secondsLeft <= 0) { void finish(); return; }
+    if (secondsLeft <= 0) { void finish(true); return; }
     const t = setInterval(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, secondsLeft]);
 
-  // chunked AI generation for big tests
+  // ---- Time-per-question tracking
+  useEffect(() => {
+    if (phase !== "running") return;
+    lastTickRef.current = Date.now();
+    const ic = current;
+    return () => {
+      const dt = Math.round((Date.now() - lastTickRef.current) / 1000);
+      setTimePerQ((arr) => arr.map((v, i) => (i === ic ? v + dt : v)));
+    };
+  }, [current, phase]);
+
+  // ---- Fullscreen sync
+  useEffect(() => {
+    function onChange() { setFullscreen(!!document.fullscreenElement); }
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  function enterFullscreen() {
+    const el = examRootRef.current ?? document.documentElement;
+    if (!document.fullscreenElement && el.requestFullscreen) {
+      el.requestFullscreen().catch(() => {});
+    }
+  }
+  function exitFullscreen() {
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  // ---- AI question generation (chunked)
   async function generateQuestions(spec: ExamSpec): Promise<Question[]> {
-    const total = spec.subjects.reduce((a, s) => a + s.count, 0);
+    const effective: { name: string; count: number }[] =
+      testType === "chapter"
+        ? [{ name: chapterSubject, count: 25 }]
+        : spec.subjects.map((s) => ({ ...s }));
+    const total = effective.reduce((a, s) => a + s.count, 0);
     const CHUNK = 25;
-    // Build chunked subject batches preserving subject ratios
     const batches: { name: string; count: number }[][] = [];
-    let remaining = spec.subjects.map((s) => ({ ...s }));
+    const remaining = effective.map((s) => ({ ...s }));
     while (remaining.some((s) => s.count > 0)) {
       const batch: { name: string; count: number }[] = [];
       let left = CHUNK;
       for (const s of remaining) {
         if (left <= 0 || s.count <= 0) continue;
-        const take = Math.min(s.count, Math.ceil((s.count / remaining.reduce((a, x) => a + x.count, 0)) * CHUNK));
+        const totalLeft = remaining.reduce((a, x) => a + x.count, 0);
+        const take = Math.min(s.count, Math.ceil((s.count / totalLeft) * CHUNK));
         const real = Math.min(take, left, s.count);
-        if (real > 0) {
-          batch.push({ name: s.name, count: real });
-          s.count -= real;
-          left -= real;
-        }
+        if (real > 0) { batch.push({ name: s.name, count: real }); s.count -= real; left -= real; }
       }
-      remaining = remaining.filter((s) => s.count > 0).concat(remaining.filter((s) => s.count <= 0).slice(0, 0));
       batches.push(batch);
     }
-
+    const diffNote = difficulty === "mixed" ? spec.difficulty : `${spec.name} level — focus on ${difficulty} difficulty`;
     const all: Question[] = [];
     for (let i = 0; i < batches.length; i++) {
       setLoadProgress(`Generating questions… (${all.length}/${total})`);
       const res = await authedFetch("/api/generate-questions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exam: spec.name, subjects: batches[i], difficulty: spec.difficulty }),
+        body: JSON.stringify({ exam: spec.name, subjects: batches[i], difficulty: diffNote }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -176,27 +196,40 @@ function MockTestsPage() {
     return all.slice(0, total);
   }
 
-  async function start(spec: ExamSpec) {
+  function openInstructions(spec: ExamSpec) {
     setExam(spec);
+    setTestType("full");
+    setDifficulty("mixed");
+    setChapterSubject(spec.subjects[0].name);
+    setAgreed(false);
     setError(null);
-    setReward(null);
+    setPhase("instructions");
+  }
+
+  async function beginExam() {
     setPhase("loading");
     setLoadProgress("Preparing your exam…");
     try {
-      const qs = await generateQuestions(spec);
+      const qs = await generateQuestions(exam);
       if (qs.length === 0) throw new Error("No questions returned");
       setQuestions(qs);
       setAnswers(Array(qs.length).fill(null));
       setMarked(Array(qs.length).fill(false));
       setVisited(Array(qs.length).fill(false).map((_, i) => i === 0));
+      setTimePerQ(Array(qs.length).fill(0));
       setCurrent(0);
-      setSecondsLeft(spec.duration_min * 60);
+      setActiveSection(qs[0].subject);
+      const minutes = testType === "chapter" ? 30 : exam.duration_min;
+      setSecondsLeft(minutes * 60);
       startedAtRef.current = Date.now();
+      lastTickRef.current = Date.now();
       setPhase("running");
+      // try fullscreen
+      setTimeout(() => enterFullscreen(), 200);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to load test";
       setError(msg);
-      setPhase("select");
+      setPhase("instructions");
     }
   }
 
@@ -205,16 +238,35 @@ function MockTestsPage() {
   }
 
   function navigate(idx: number) {
+    if (idx < 0 || idx >= questions.length) return;
     setCurrent(idx);
+    setActiveSection(questions[idx].subject);
     setVisited((v) => v.map((b, i) => (i === idx ? true : b)));
+    setPaletteOpen(false);
+  }
+
+  function jumpToSection(sub: string) {
+    const idx = questions.findIndex((q) => q.subject === sub);
+    if (idx >= 0) navigate(idx);
   }
 
   function toggleMark() {
     setMarked((m) => m.map((b, i) => (i === current ? !b : b)));
   }
 
-  async function finish() {
-    if (phase !== "running") return;
+  function saveAndNext() {
+    if (current < questions.length - 1) navigate(current + 1);
+    else setPhase("summary");
+  }
+
+  function markAndNext() {
+    setMarked((m) => m.map((b, i) => (i === current ? true : b)));
+    saveAndNext();
+  }
+
+  async function finish(auto = false) {
+    if (phase !== "running" && phase !== "summary") return;
+    exitFullscreen();
     const duration = Math.round((Date.now() - startedAtRef.current) / 1000);
     let correct = 0, wrong = 0, attempted = 0;
     const subMap = new Map<string, { correct: number; total: number }>();
@@ -227,8 +279,7 @@ function MockTestsPage() {
         const isCorrect = q.type === "mcq"
           ? Number(ans) === q.correct
           : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
-        if (isCorrect) { correct += 1; sub.correct += 1; }
-        else wrong += 1;
+        if (isCorrect) { correct += 1; sub.correct += 1; } else wrong += 1;
       }
       subMap.set(q.subject, sub);
     });
@@ -237,77 +288,155 @@ function MockTestsPage() {
     const subject_breakdown: SubjectStat[] = Array.from(subMap.entries()).map(([subject, s]) => ({
       subject, correct: s.correct, total: s.total,
     }));
-
     setPhase("result");
-
+    if (auto) {
+      // small UX: nothing extra; result page will indicate auto-submit via badge.
+    }
     if (user) {
       try {
         const r = await recordAttemptAndAwardXP(user.id, {
-          exam_key: exam.key,
-          exam_name: exam.name,
-          total_questions: questions.length,
-          attempted, correct, wrong, score, max_score,
-          duration_seconds: duration,
-          subject_breakdown,
+          exam_key: exam.key, exam_name: exam.name,
+          total_questions: questions.length, attempted, correct, wrong, score, max_score,
+          duration_seconds: duration, subject_breakdown,
         });
         setReward({ earnedXp: r.earnedXp, newBadges: r.newBadges });
-      } catch (e) {
-        console.error("save attempt failed", e);
-      }
+      } catch (e) { console.error("save attempt failed", e); }
     }
   }
 
   function reset() {
     setPhase("select");
-    setQuestions([]);
-    setAnswers([]);
-    setMarked([]);
-    setVisited([]);
-    setCurrent(0);
-    setError(null);
-    setReward(null);
+    setQuestions([]); setAnswers([]); setMarked([]); setVisited([]); setTimePerQ([]);
+    setCurrent(0); setError(null); setReward(null);
   }
 
-  // Computed result stats
+  // ---- Status counts
+  const counts = useMemo(() => {
+    let answered = 0, notAnswered = 0, notVisited = 0, markedOnly = 0, answeredMarked = 0;
+    questions.forEach((_, i) => {
+      const a = answers[i];
+      const v = visited[i];
+      const m = marked[i];
+      const isAns = a !== null && a !== "";
+      if (m && isAns) answeredMarked++;
+      else if (m) markedOnly++;
+      else if (isAns) answered++;
+      else if (v) notAnswered++;
+      else notVisited++;
+    });
+    return { answered, notAnswered, notVisited, markedOnly, answeredMarked };
+  }, [questions, answers, visited, marked]);
+
+  const sections = useMemo(() => {
+    const set = new Map<string, number>();
+    questions.forEach((q) => set.set(q.subject, (set.get(q.subject) ?? 0) + 1));
+    return Array.from(set.entries());
+  }, [questions]);
+
+  // ---- Result stats
   const stats = useMemo(() => {
     if (phase !== "result") return null;
     let correct = 0, wrong = 0, attempted = 0;
-    const subMap = new Map<string, { correct: number; total: number }>();
+    const subMap = new Map<string, { correct: number; total: number; time: number }>();
     questions.forEach((q, i) => {
-      const sub = subMap.get(q.subject) ?? { correct: 0, total: 0 };
-      sub.total += 1;
+      const cur = subMap.get(q.subject) ?? { correct: 0, total: 0, time: 0 };
+      cur.total += 1; cur.time += timePerQ[i] ?? 0;
       const ans = answers[i];
       if (ans !== null && ans !== "") {
         attempted += 1;
         const isCorrect = q.type === "mcq"
           ? Number(ans) === q.correct
           : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
-        if (isCorrect) { correct += 1; sub.correct += 1; }
-        else wrong += 1;
+        if (isCorrect) { correct += 1; cur.correct += 1; } else wrong += 1;
       }
-      subMap.set(q.subject, sub);
+      subMap.set(q.subject, cur);
     });
     const score = correct * exam.marking.correct - wrong * exam.marking.wrong;
     const max_score = questions.length * exam.marking.correct;
     const percent = Math.max(0, Math.round((score / Math.max(1, max_score)) * 100));
+    const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
     const rank = Math.max(1, Math.round((100 - percent) * 1500));
-    return { correct, wrong, attempted, skipped: questions.length - attempted, score, max_score, percent, rank, byS: Array.from(subMap.entries()) };
-  }, [phase, questions, answers, exam]);
+    const subs = Array.from(subMap.entries()).map(([s, v]) => ({
+      subject: s, ...v, pct: Math.round((v.correct / Math.max(1, v.total)) * 100),
+      avg: v.total ? Math.round(v.time / v.total) : 0,
+    }));
+    const weakest = [...subs].sort((a, b) => a.pct - b.pct)[0];
+    const strongest = [...subs].sort((a, b) => b.pct - a.pct)[0];
+    const totalTime = timePerQ.reduce((a, b) => a + b, 0);
+    const avgPerQ = questions.length ? Math.round(totalTime / questions.length) : 0;
+    const suggestions: string[] = [];
+    if (weakest && weakest.pct < 50) suggestions.push(`Focus your next 7 days on ${weakest.subject} — current accuracy is only ${weakest.pct}%.`);
+    if (accuracy < 60 && attempted > 5) suggestions.push(`Accuracy is ${accuracy}%. Slow down on tricky questions to reduce silly mistakes.`);
+    if (avgPerQ > 150) suggestions.push(`Average time per question is ${avgPerQ}s — practice timed sets to improve speed.`);
+    if (avgPerQ < 30 && attempted > 5) suggestions.push("Your pacing is very fast — double-check answers before moving on.");
+    if (questions.length - attempted > questions.length * 0.25) suggestions.push(`You skipped ${questions.length - attempted} questions. Even a guess on no-negative questions can boost your score.`);
+    if (strongest && strongest.pct >= 80) suggestions.push(`${strongest.subject} is your strength (${strongest.pct}%). Maintain it with weekly revision.`);
+    if (suggestions.length === 0) suggestions.push("Great consistency across sections — push to the next difficulty tier next time.");
+    return { correct, wrong, attempted, skipped: questions.length - attempted, score, max_score, percent, accuracy, rank, subs, weakest, strongest, totalTime, avgPerQ, suggestions };
+  }, [phase, questions, answers, exam, timePerQ]);
+
+  // ============== RENDER ==============
+
+  // SELECT / INSTRUCTIONS / LOADING / RESULT use PageShell. RUNNING / SUMMARY are CBT shell (no nav).
+  const isCBT = phase === "running" || phase === "summary";
+
+  if (isCBT) {
+    return (
+      <div ref={examRootRef} className="min-h-screen bg-background text-foreground">
+        {phase === "running" && questions.length > 0 && (
+          <RunningView
+            exam={exam}
+            questions={questions}
+            current={current}
+            answers={answers}
+            marked={marked}
+            visited={visited}
+            secondsLeft={secondsLeft}
+            sections={sections}
+            activeSection={activeSection}
+            counts={counts}
+            fullscreen={fullscreen}
+            paletteOpen={paletteOpen}
+            user={user}
+            onPick={pick}
+            onNavigate={navigate}
+            onSection={jumpToSection}
+            onMark={toggleMark}
+            onClear={() => pick("")}
+            onSaveAndNext={saveAndNext}
+            onMarkAndNext={markAndNext}
+            onPrev={() => navigate(current - 1)}
+            onSubmit={() => setPhase("summary")}
+            onFullscreen={fullscreen ? exitFullscreen : enterFullscreen}
+            onTogglePalette={() => setPaletteOpen((b) => !b)}
+          />
+        )}
+        {phase === "summary" && (
+          <SummaryView
+            exam={exam}
+            counts={counts}
+            total={questions.length}
+            secondsLeft={secondsLeft}
+            onBack={() => setPhase("running")}
+            onSubmit={() => void finish(false)}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <PageShell>
       {phase === "select" && (
         <>
           <PageHeader
-            eyebrow="Mock Tests"
-            title="Real exam simulator with AI-generated questions"
-            description="Production-grade simulation: full question count, color-coded palette, mark-for-review, negative marking, and AI analytics."
+            eyebrow="CBT Mock Tests"
+            title="Real exam simulator — JEE, BITSAT, MHT CET, EAMCET"
+            description="Production-grade CBT environment with full-screen mode, NTA-style question palette, section navigation, negative marking and deep analytics."
           />
           <section className="mx-auto max-w-6xl px-4 py-10 lg:px-8">
             {error && (
-              <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-                {error}
-              </div>
+              <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>
             )}
             {!user && (
               <div className="mb-6 rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-sm">
@@ -318,11 +447,13 @@ function MockTestsPage() {
               {EXAMS.map((e) => {
                 const total = e.subjects.reduce((a, s) => a + s.count, 0);
                 return (
-                  <div key={e.key} className="glass rounded-2xl p-6">
+                  <div key={e.key} className="glass group relative overflow-hidden rounded-2xl p-6 transition-all hover:border-accent/40 hover:shadow-glow">
+                    <div className="absolute right-3 top-3 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent">{e.short}</div>
                     <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
                       <Trophy className="h-5 w-5 text-primary-foreground" />
                     </div>
                     <h3 className="mt-3 font-display text-lg font-semibold">{e.name}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{e.pattern}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{e.desc}</p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {e.subjects.map((s) => (
@@ -332,8 +463,8 @@ function MockTestsPage() {
                       ))}
                     </div>
                     <p className="mt-3 text-[11px] text-muted-foreground">Total: {total} questions · {e.duration_min} min</p>
-                    <Button onClick={() => start(e)} className="mt-4 w-full bg-gradient-primary text-primary-foreground">
-                      <Sparkles className="h-4 w-4" /> Start AI mock test
+                    <Button onClick={() => openInstructions(e)} className="mt-4 w-full bg-gradient-primary text-primary-foreground">
+                      <Sparkles className="h-4 w-4" /> Start mock test
                     </Button>
                   </div>
                 );
@@ -343,254 +474,593 @@ function MockTestsPage() {
         </>
       )}
 
+      {phase === "instructions" && (
+        <InstructionsView
+          exam={exam}
+          testType={testType}
+          setTestType={setTestType}
+          chapterSubject={chapterSubject}
+          setChapterSubject={setChapterSubject}
+          difficulty={difficulty}
+          setDifficulty={setDifficulty}
+          agreed={agreed}
+          setAgreed={setAgreed}
+          error={error}
+          onBack={() => setPhase("select")}
+          onBegin={beginExam}
+        />
+      )}
+
       {phase === "loading" && (
-        <section className="mx-auto flex max-w-md flex-col items-center px-4 py-24">
+        <section className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
           <Loader2 className="h-10 w-10 animate-spin text-accent" />
           <h2 className="mt-6 font-display text-xl font-semibold">{exam.name}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{loadProgress}</p>
-          <p className="mt-1 text-xs text-muted-foreground">AI is generating exam-quality questions across {exam.subjects.length} subjects. This may take 20–60s.</p>
-        </section>
-      )}
-
-      {phase === "running" && questions.length > 0 && (
-        <section className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
-          <div className="glass mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl p-3 text-sm">
-            <div>
-              <span className="text-muted-foreground">{exam.name}</span> · Q {current + 1} of {questions.length}
-              <span className="ml-3 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent">
-                {questions[current].subject}
-              </span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Timer className="h-4 w-4 text-accent" />
-              <span className={`font-mono ${secondsLeft < 60 ? "text-destructive" : ""}`}>
-                {Math.floor(secondsLeft / 3600).toString().padStart(2, "0")}:
-                {Math.floor((secondsLeft % 3600) / 60).toString().padStart(2, "0")}:
-                {(secondsLeft % 60).toString().padStart(2, "0")}
-              </span>
-              <Button onClick={() => void finish()} size="sm" variant="outline">Submit</Button>
-            </div>
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-            <div className="glass rounded-2xl p-6">
-              <p className="text-xs uppercase tracking-wider text-accent">{questions[current].type === "numerical" ? "Numerical" : "Multiple Choice"}</p>
-              <h3 className="mt-2 whitespace-pre-wrap text-base font-medium leading-relaxed">{questions[current].q}</h3>
-
-              <div className="mt-5">
-                {questions[current].type === "mcq" && questions[current].options ? (
-                  <div className="grid gap-2">
-                    {questions[current].options!.map((opt, i) => {
-                      const picked = answers[current] === String(i);
-                      return (
-                        <button key={i} onClick={() => pick(String(i))}
-                          className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors ${
-                            picked ? "border-accent/60 bg-accent/10" : "border-border bg-background/40 hover:border-accent/40"
-                          }`}>
-                          <span className="font-mono text-xs text-muted-foreground">{String.fromCharCode(65 + i)}.</span>
-                          <span>{opt}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div>
-                    <label className="text-xs text-muted-foreground">Enter numerical answer</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={answers[current] ?? ""}
-                      onChange={(e) => pick(e.target.value)}
-                      className="mt-1 w-full rounded-lg border border-border bg-background/40 px-4 py-3 text-sm focus:border-accent/60 focus:outline-none"
-                      placeholder="e.g. 3.14"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                <Button variant="outline" disabled={current === 0} onClick={() => navigate(current - 1)}>Previous</Button>
-                <Button variant="outline" onClick={toggleMark}>
-                  <Flag className="h-4 w-4" /> {marked[current] ? "Unmark" : "Mark for review"}
-                </Button>
-                <Button variant="outline" onClick={() => pick("")}>Clear</Button>
-                <div className="ml-auto" />
-                {current < questions.length - 1 ? (
-                  <Button onClick={() => navigate(current + 1)} className="bg-gradient-primary text-primary-foreground">
-                    Save & Next
-                  </Button>
-                ) : (
-                  <Button onClick={() => void finish()} className="bg-gradient-primary text-primary-foreground">
-                    Submit Test
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            <aside className="glass rounded-2xl p-4">
-              <h4 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Question Palette</h4>
-              <div className="grid grid-cols-6 gap-1.5 lg:grid-cols-5">
-                {questions.map((_, i) => {
-                  const ans = answers[i];
-                  const isAnswered = ans !== null && ans !== "";
-                  const isMarked = marked[i];
-                  const isVisited = visited[i];
-                  const isCurrent = i === current;
-                  const cls = isCurrent
-                    ? "bg-gradient-primary text-primary-foreground ring-2 ring-accent"
-                    : isMarked && isAnswered
-                      ? "bg-purple-500/30 text-purple-200 border border-purple-400/60"
-                      : isMarked
-                        ? "bg-purple-500/15 text-purple-300 border border-purple-400/40"
-                        : isAnswered
-                          ? "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50"
-                          : isVisited
-                            ? "bg-rose-500/15 text-rose-300 border border-rose-400/30"
-                            : "bg-background/40 text-muted-foreground border border-border";
-                  return (
-                    <button key={i} onClick={() => navigate(i)}
-                      className={`grid h-8 w-8 place-items-center rounded text-xs font-medium ${cls}`}>
-                      {i + 1}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="mt-4 space-y-1.5 text-[11px]">
-                <Legend color="bg-emerald-500/40 border-emerald-400/60" label="Answered" />
-                <Legend color="bg-rose-500/30 border-rose-400/40" label="Visited, not answered" />
-                <Legend color="bg-purple-500/30 border-purple-400/60" label="Marked for review" />
-                <Legend color="bg-background/40 border-border" label="Not visited" />
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-2 text-center text-xs">
-                <Stat label="Answered" value={answers.filter((a) => a !== null && a !== "").length} />
-                <Stat label="Marked" value={marked.filter(Boolean).length} />
-              </div>
-            </aside>
-          </div>
+          <p className="mt-1 text-xs text-muted-foreground">AI is generating exam-quality questions. This may take 20–60s.</p>
         </section>
       )}
 
       {phase === "result" && stats && (
-        <section className="mx-auto max-w-4xl space-y-6 px-4 py-10 lg:px-8">
-          <div className="glass rounded-2xl p-6 text-center">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">{exam.name} · Result</p>
-            <p className="mt-2 font-display text-5xl font-bold text-gradient">{stats.score}</p>
-            <p className="text-sm text-muted-foreground">out of {stats.max_score} marks · {stats.percent}%</p>
-            <p className="mt-3 inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs">
-              <Trophy className="h-3 w-3 text-accent" /> Predicted rank: ~{stats.rank.toLocaleString()}
-            </p>
-          </div>
-
-          {reward && (
-            <div className="glass rounded-2xl border border-accent/40 p-5">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accent" />
-                <p className="font-display text-sm font-semibold">+{reward.earnedXp} XP earned</p>
-              </div>
-              {reward.newBadges.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">New badges unlocked</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {reward.newBadges.map((b) => (
-                      <span key={b.name} className="inline-flex items-center gap-1 rounded-full bg-gradient-primary px-3 py-1 text-xs text-primary-foreground">
-                        <BookmarkCheck className="h-3 w-3" /> {b.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Tile icon={CheckCircle2} label="Correct" value={String(stats.correct)} />
-            <Tile icon={XCircle} label="Wrong" value={String(stats.wrong)} />
-            <Tile icon={BarChart3} label="Skipped" value={String(stats.skipped)} />
-          </div>
-
-          <div className="glass rounded-2xl p-6">
-            <h3 className="font-display text-lg font-semibold">Subject-wise breakdown</h3>
-            <div className="mt-3 space-y-3">
-              {stats.byS.map(([sub, s]) => {
-                const pct = Math.round((s.correct / Math.max(1, s.total)) * 100);
-                return (
-                  <div key={sub}>
-                    <div className="flex justify-between text-sm">
-                      <span>{sub}</span>
-                      <span className="text-muted-foreground">{s.correct}/{s.total} · {pct}%</span>
-                    </div>
-                    <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary/60">
-                      <div className="h-full bg-gradient-primary" style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-4 text-sm text-muted-foreground">
-              💡 Focus your next 7 days on the lowest-scoring subject above.
-            </p>
-          </div>
-
-          <details className="glass rounded-2xl p-6">
-            <summary className="cursor-pointer text-sm font-medium">Review answers & explanations</summary>
-            <div className="mt-4 space-y-4">
-              {questions.map((q, i) => {
-                const ans = answers[i];
-                const isCorrect = ans !== null && ans !== "" && (q.type === "mcq"
-                  ? Number(ans) === q.correct
-                  : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01);
-                return (
-                  <div key={i} className="rounded-lg border border-border bg-background/40 p-3 text-sm">
-                    <div className="flex items-start gap-2">
-                      <span className="font-mono text-xs text-muted-foreground">Q{i + 1}.</span>
-                      <span className="flex-1">{q.q}</span>
-                      <span className={`text-xs ${isCorrect ? "text-emerald-400" : ans ? "text-rose-400" : "text-muted-foreground"}`}>
-                        {isCorrect ? "✓" : ans ? "✗" : "—"}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Correct: {q.type === "mcq" && q.options ? q.options[q.correct as number] : String(q.correct)}
-                      {q.explanation && <> · {q.explanation}</>}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </details>
-
-          <Button onClick={reset} variant="outline" className="w-full">
-            <RotateCcw className="h-4 w-4" /> Take another test
-          </Button>
-        </section>
+        <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} onReset={reset} />
       )}
     </PageShell>
   );
 }
 
+/* ===================== SUB-VIEWS ===================== */
+
+function InstructionsView(props: {
+  exam: ExamSpec; testType: TestType; setTestType: (t: TestType) => void;
+  chapterSubject: string; setChapterSubject: (s: string) => void;
+  difficulty: Difficulty; setDifficulty: (d: Difficulty) => void;
+  agreed: boolean; setAgreed: (b: boolean) => void; error: string | null;
+  onBack: () => void; onBegin: () => void;
+}) {
+  const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, onBack, onBegin } = props;
+  const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
+  const minutes = testType === "chapter" ? 30 : exam.duration_min;
+  return (
+    <section className="mx-auto max-w-4xl px-4 py-10 lg:px-8">
+      <button onClick={onBack} className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent">
+        <ChevronLeft className="h-3 w-3" /> Back to all tests
+      </button>
+
+      <div className="glass overflow-hidden rounded-2xl">
+        <div className="border-b border-border bg-gradient-to-r from-primary/15 via-accent/10 to-transparent px-6 py-5">
+          <p className="text-xs uppercase tracking-wider text-accent">{exam.pattern}</p>
+          <h1 className="font-display text-2xl font-bold sm:text-3xl">{exam.name} — Test Instructions</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Please read the following instructions carefully before starting.</p>
+        </div>
+
+        <div className="grid gap-5 p-6 lg:grid-cols-[1fr_280px]">
+          <div className="space-y-4 text-sm">
+            <Section title="General Instructions">
+              <ul className="ml-5 list-disc space-y-1.5 text-muted-foreground">
+                <li>The total duration of the examination is <span className="font-medium text-foreground">{minutes} minutes</span>.</li>
+                <li>The clock in the top-right will count down from the start time. When it reaches 00:00, the test will be <span className="font-medium text-foreground">auto-submitted</span>.</li>
+                <li>The Question Palette on the right shows the status of each question using the legend below.</li>
+                <li>You can navigate between questions using <span className="font-medium text-foreground">Previous</span>, <span className="font-medium text-foreground">Save & Next</span>, or by clicking a question number in the palette.</li>
+                <li>Click <span className="font-medium text-foreground">Mark for Review</span> if you want to revisit a question later.</li>
+              </ul>
+            </Section>
+
+            <Section title="Navigation & Sections">
+              <ul className="ml-5 list-disc space-y-1.5 text-muted-foreground">
+                <li>You can switch between sections using the section tabs at the top of the screen.</li>
+                <li>Selecting an option does not save the answer until you click <span className="font-medium text-foreground">Save & Next</span> or move to another question.</li>
+                <li>Use <span className="font-medium text-foreground">Clear Response</span> to deselect your chosen option.</li>
+              </ul>
+            </Section>
+
+            <Section title="Marking Scheme">
+              <ul className="ml-5 list-disc space-y-1.5 text-muted-foreground">
+                <li>Correct answer: <span className="font-medium text-emerald-400">+{exam.marking.correct}</span></li>
+                <li>Incorrect answer: <span className="font-medium text-rose-400">−{exam.marking.wrong}</span></li>
+                <li>Unattempted: <span className="font-medium text-foreground">0</span></li>
+              </ul>
+            </Section>
+
+            <Section title="Question Status Legend">
+              <div className="grid gap-2 text-xs sm:grid-cols-2">
+                <PaletteLegend color="bg-emerald-500/30 border-emerald-400/60" label="Answered" />
+                <PaletteLegend color="bg-rose-500/20 border-rose-400/50" label="Not Answered" />
+                <PaletteLegend color="bg-background/40 border-border" label="Not Visited" />
+                <PaletteLegend color="bg-purple-500/25 border-purple-400/60" label="Marked for Review" />
+                <PaletteLegend color="bg-purple-500/40 border-purple-400/70" label="Answered & Marked" dot />
+              </div>
+            </Section>
+
+            <Section title="Test Configuration">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Test Type</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <ChoiceChip active={testType === "full"} onClick={() => setTestType("full")} label={`Full-length (${exam.subjects.reduce((a, s) => a + s.count, 0)} Qs · ${exam.duration_min}m)`} />
+                    <ChoiceChip active={testType === "chapter"} onClick={() => setTestType("chapter")} label="Chapter-wise (25 Qs · 30m)" />
+                  </div>
+                </div>
+                {testType === "chapter" && (
+                  <div>
+                    <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Subject</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {exam.subjects.map((s) => (
+                        <ChoiceChip key={s.name} active={chapterSubject === s.name} onClick={() => setChapterSubject(s.name)} label={s.name} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Difficulty</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(["mixed", "easy", "medium", "hard"] as const).map((d) => (
+                      <ChoiceChip key={d} active={difficulty === d} onClick={() => setDifficulty(d)} label={d[0].toUpperCase() + d.slice(1)} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </Section>
+
+            <label className="flex items-start gap-2 rounded-xl border border-border bg-background/40 p-3 text-xs">
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[oklch(0.65_0.22_295)]" />
+              <span className="text-muted-foreground">
+                I have read and understood all the instructions. I confirm that I will not engage in any malpractice and will follow the exam rules.
+              </span>
+            </label>
+
+            {error && (
+              <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={onBack}>Cancel</Button>
+              <Button disabled={!agreed} onClick={onBegin} className="bg-gradient-primary text-primary-foreground shadow-glow disabled:opacity-50">
+                <ShieldCheck className="h-4 w-4" /> I'm ready — Begin Test
+              </Button>
+            </div>
+          </div>
+
+          <aside className="space-y-3">
+            <div className="rounded-xl border border-border bg-background/40 p-4 text-sm">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Summary</p>
+              <p className="mt-2 font-display text-2xl font-bold">{total} <span className="text-sm font-normal text-muted-foreground">questions</span></p>
+              <p className="font-display text-2xl font-bold">{minutes}m <span className="text-sm font-normal text-muted-foreground">duration</span></p>
+              <p className="mt-2 text-xs text-muted-foreground">+{exam.marking.correct} / −{exam.marking.wrong} marking</p>
+            </div>
+            <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-xs text-muted-foreground">
+              <Maximize2 className="h-4 w-4 text-accent" />
+              <p className="mt-2">The test will attempt to enter <span className="font-medium text-foreground">full-screen mode</span> for an authentic CBT experience. Avoid switching tabs during the exam.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function RunningView(props: {
+  exam: ExamSpec; questions: Question[]; current: number;
+  answers: (string | null)[]; marked: boolean[]; visited: boolean[];
+  secondsLeft: number; sections: [string, number][]; activeSection: string;
+  counts: { answered: number; notAnswered: number; notVisited: number; markedOnly: number; answeredMarked: number };
+  fullscreen: boolean; paletteOpen: boolean; user: { email?: string | null } | null;
+  onPick: (v: string) => void; onNavigate: (i: number) => void; onSection: (s: string) => void;
+  onMark: () => void; onClear: () => void; onSaveAndNext: () => void; onMarkAndNext: () => void;
+  onPrev: () => void; onSubmit: () => void; onFullscreen: () => void; onTogglePalette: () => void;
+}) {
+  const { exam, questions, current, answers, marked, visited, secondsLeft, sections, activeSection, counts, fullscreen, paletteOpen, user,
+    onPick, onNavigate, onSection, onMark, onClear, onSaveAndNext, onMarkAndNext, onPrev, onSubmit, onFullscreen, onTogglePalette } = props;
+  const q = questions[current];
+  const lowTime = secondsLeft < 300;
+  return (
+    <div className="flex min-h-screen flex-col">
+      {/* CBT Header */}
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-3 py-2 sm:px-4">
+          <div className="flex items-center gap-2">
+            <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-primary text-primary-foreground shadow-glow">
+              <Trophy className="h-4 w-4" />
+            </div>
+            <div className="leading-tight">
+              <p className="text-xs font-semibold">{exam.name}</p>
+              <p className="text-[10px] text-muted-foreground">Nexoras CBT Simulator</p>
+            </div>
+          </div>
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
+            <div className="hidden items-center gap-2 rounded-lg border border-border bg-background/60 px-2 py-1 text-xs sm:flex">
+              <UserIcon className="h-3.5 w-3.5 text-accent" />
+              <span className="max-w-[160px] truncate">{user?.email ?? "Candidate"}</span>
+            </div>
+            <div className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 ${lowTime ? "border-destructive/60 bg-destructive/10 text-destructive animate-pulse-glow" : "border-accent/40 bg-accent/10"}`}>
+              <Timer className="h-4 w-4" />
+              <span className="font-mono text-sm font-semibold">
+                {Math.floor(secondsLeft / 3600).toString().padStart(2, "0")}:
+                {Math.floor((secondsLeft % 3600) / 60).toString().padStart(2, "0")}:
+                {(secondsLeft % 60).toString().padStart(2, "0")}
+              </span>
+            </div>
+            <button onClick={onFullscreen} title={fullscreen ? "Exit full-screen" : "Enter full-screen"} className="hidden rounded-lg border border-border bg-background/60 p-2 hover:border-accent/40 sm:block">
+              {fullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+            <button onClick={onTogglePalette} className="rounded-lg border border-border bg-background/60 p-2 hover:border-accent/40 lg:hidden">
+              <Menu className="h-4 w-4" />
+            </button>
+            <Button onClick={onSubmit} size="sm" className="bg-gradient-primary text-primary-foreground">Submit</Button>
+          </div>
+        </div>
+        {/* Section tabs */}
+        <div className="border-t border-border bg-background/80">
+          <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-3 py-1 sm:px-4">
+            {sections.map(([sub, n]) => {
+              const active = activeSection === sub;
+              return (
+                <button key={sub} onClick={() => onSection(sub)}
+                  className={`whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${active ? "bg-gradient-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                  {sub} <span className="ml-1 opacity-70">({n})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </header>
+
+      <div className="mx-auto grid w-full max-w-7xl flex-1 gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[1fr_300px]">
+        {/* Question pane */}
+        <div className="glass rounded-2xl p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-secondary/60 px-2 py-0.5 font-mono">Question {current + 1}</span>
+              <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent">{q.subject}</span>
+              <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground">{q.type === "numerical" ? "Numerical" : "MCQ"}</span>
+            </div>
+            <div className="text-muted-foreground">
+              Marks: <span className="text-emerald-400">+{exam.marking.correct}</span> / <span className="text-rose-400">−{exam.marking.wrong}</span>
+            </div>
+          </div>
+
+          <h3 className="mt-4 whitespace-pre-wrap text-base font-medium leading-relaxed">{q.q}</h3>
+
+          <div className="mt-5">
+            {q.type === "mcq" && q.options ? (
+              <div className="grid gap-2">
+                {q.options.map((opt, i) => {
+                  const picked = answers[current] === String(i);
+                  return (
+                    <button key={i} onClick={() => onPick(String(i))}
+                      className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-colors ${picked ? "border-accent/60 bg-accent/15" : "border-border bg-background/40 hover:border-accent/40"}`}>
+                      <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border text-xs font-medium ${picked ? "border-accent bg-accent text-accent-foreground" : "border-border"}`}>
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <span className="flex-1">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div>
+                <label className="text-xs text-muted-foreground">Enter numerical answer</label>
+                <input type="number" step="any" value={answers[current] ?? ""} onChange={(e) => onPick(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-border bg-background/40 px-4 py-3 text-sm focus:border-accent/60 focus:outline-none"
+                  placeholder="e.g. 3.14" />
+              </div>
+            )}
+          </div>
+
+          {/* Action bar */}
+          <div className="mt-6 flex flex-wrap gap-2 border-t border-border pt-4">
+            <Button variant="outline" size="sm" onClick={onMark}>
+              <Flag className="h-4 w-4" /> {marked[current] ? "Unmark" : "Mark for Review"}
+            </Button>
+            <Button variant="outline" size="sm" onClick={onClear}>Clear Response</Button>
+            <div className="ml-auto flex flex-wrap gap-2">
+              <Button variant="outline" size="sm" disabled={current === 0} onClick={onPrev}>
+                <ChevronLeft className="h-4 w-4" /> Previous
+              </Button>
+              <Button variant="outline" size="sm" onClick={onMarkAndNext}>Mark & Next</Button>
+              <Button size="sm" onClick={onSaveAndNext} className="bg-gradient-primary text-primary-foreground">
+                Save & Next <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Palette */}
+        <aside className={`${paletteOpen ? "fixed inset-0 z-30 bg-background/95 p-4 backdrop-blur lg:static lg:bg-transparent lg:p-0" : "hidden lg:block"}`}>
+          <div className="glass h-full rounded-2xl p-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Question Palette</h4>
+              <button onClick={onTogglePalette} className="text-xs text-accent lg:hidden">Close</button>
+            </div>
+
+            <div className="mt-3 max-h-[50vh] overflow-y-auto pr-1 lg:max-h-[55vh]">
+              {sections.map(([sub]) => {
+                const idxs = questions.map((qq, i) => ({ qq, i })).filter((x) => x.qq.subject === sub);
+                return (
+                  <div key={sub} className="mb-3">
+                    <p className="mb-1.5 text-[10px] uppercase tracking-wider text-accent">{sub}</p>
+                    <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8 lg:grid-cols-5">
+                      {idxs.map(({ i }) => {
+                        const ans = answers[i];
+                        const isAns = ans !== null && ans !== "";
+                        const isMarked = marked[i];
+                        const isVisited = visited[i];
+                        const isCurrent = i === current;
+                        let cls = "bg-background/40 text-muted-foreground border-border";
+                        if (isMarked && isAns) cls = "bg-purple-500/40 text-white border-purple-400/70";
+                        else if (isMarked) cls = "bg-purple-500/25 text-purple-200 border-purple-400/60";
+                        else if (isAns) cls = "bg-emerald-500/30 text-emerald-100 border-emerald-400/60";
+                        else if (isVisited) cls = "bg-rose-500/20 text-rose-200 border-rose-400/50";
+                        const ring = isCurrent ? "ring-2 ring-accent ring-offset-1 ring-offset-background" : "";
+                        return (
+                          <button key={i} onClick={() => onNavigate(i)}
+                            className={`relative grid h-8 w-8 place-items-center rounded border text-xs font-medium ${cls} ${ring}`}>
+                            {i + 1}
+                            {isMarked && isAns && <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-400" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 space-y-1 border-t border-border pt-3 text-[10px]">
+              <PaletteLegend color="bg-emerald-500/30 border-emerald-400/60" label={`Answered (${counts.answered})`} />
+              <PaletteLegend color="bg-rose-500/20 border-rose-400/50" label={`Not Answered (${counts.notAnswered})`} />
+              <PaletteLegend color="bg-background/40 border-border" label={`Not Visited (${counts.notVisited})`} />
+              <PaletteLegend color="bg-purple-500/25 border-purple-400/60" label={`Marked (${counts.markedOnly})`} />
+              <PaletteLegend color="bg-purple-500/40 border-purple-400/70" label={`Answered+Marked (${counts.answeredMarked})`} dot />
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function SummaryView(props: { exam: ExamSpec; counts: { answered: number; notAnswered: number; notVisited: number; markedOnly: number; answeredMarked: number }; total: number; secondsLeft: number; onBack: () => void; onSubmit: () => void; }) {
+  const { exam, counts, total, secondsLeft, onBack, onSubmit } = props;
+  return (
+    <div className="mx-auto flex min-h-screen max-w-3xl flex-col px-4 py-10">
+      <div className="glass rounded-2xl p-6">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
+          <ListChecks className="h-4 w-4" /> Exam Summary — {exam.name}
+        </div>
+        <h2 className="mt-2 font-display text-2xl font-bold">Are you sure you want to submit?</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Review your attempt below. Once submitted you cannot change your answers.</p>
+
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <SummaryTile label="Total" value={total} />
+          <SummaryTile label="Answered" value={counts.answered + counts.answeredMarked} tone="emerald" />
+          <SummaryTile label="Not Answered" value={counts.notAnswered} tone="rose" />
+          <SummaryTile label="Marked" value={counts.markedOnly} tone="purple" />
+          <SummaryTile label="Answered & Marked" value={counts.answeredMarked} tone="purple" />
+          <SummaryTile label="Not Visited" value={counts.notVisited} />
+        </div>
+
+        <div className="mt-5 rounded-xl border border-border bg-background/40 p-4 text-sm">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+            <Timer className="h-3.5 w-3.5 text-accent" /> Time remaining
+          </div>
+          <p className="mt-1 font-mono text-2xl font-semibold">
+            {Math.floor(secondsLeft / 3600).toString().padStart(2, "0")}:
+            {Math.floor((secondsLeft % 3600) / 60).toString().padStart(2, "0")}:
+            {(secondsLeft % 60).toString().padStart(2, "0")}
+          </p>
+        </div>
+
+        {(counts.notAnswered + counts.notVisited + counts.markedOnly) > 0 && (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-xs text-amber-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>You have <span className="font-semibold">{counts.notAnswered + counts.notVisited}</span> unanswered question(s) and <span className="font-semibold">{counts.markedOnly}</span> marked-for-review item(s) without an answer.</span>
+          </div>
+        )}
+
+        <div className="mt-6 flex flex-wrap gap-2">
+          <Button variant="outline" onClick={onBack}>
+            <ChevronLeft className="h-4 w-4" /> Back to test
+          </Button>
+          <Button onClick={onSubmit} className="ml-auto bg-gradient-primary text-primary-foreground shadow-glow">
+            <ShieldCheck className="h-4 w-4" /> Submit Final
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type ResultStats = {
+  correct: number; wrong: number; attempted: number; skipped: number;
+  score: number; max_score: number; percent: number; accuracy: number; rank: number;
+  subs: { subject: string; correct: number; total: number; time: number; pct: number; avg: number }[];
+  weakest: { subject: string; pct: number } | undefined;
+  strongest: { subject: string; pct: number } | undefined;
+  totalTime: number; avgPerQ: number; suggestions: string[];
+};
+
+function ResultView(props: {
+  exam: ExamSpec;
+  stats: ResultStats;
+  reward: { earnedXp: number; newBadges: { name: string; description: string }[] } | null;
+  questions: Question[]; answers: (string | null)[]; onReset: () => void;
+}) {
+  const { exam, stats, reward, questions, answers, onReset } = props;
+  return (
+    <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 lg:px-8">
+      <div className="glass relative overflow-hidden rounded-2xl p-6 text-center">
+        <div className="absolute inset-0 bg-gradient-hero opacity-50" />
+        <div className="relative">
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">{exam.name} · Result</p>
+          <p className="mt-2 font-display text-6xl font-bold text-gradient">{stats.score}</p>
+          <p className="text-sm text-muted-foreground">out of {stats.max_score} marks · {stats.percent}%</p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs">
+              <Trophy className="h-3 w-3 text-accent" /> Predicted rank: ~{stats.rank.toLocaleString()}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs">
+              Accuracy {stats.accuracy}%
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-3 py-1 text-xs">
+              Avg {stats.avgPerQ}s/Q
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {reward && (
+        <div className="glass rounded-2xl border border-accent/40 p-5">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-accent" />
+            <p className="font-display text-sm font-semibold">+{reward.earnedXp} XP earned</p>
+          </div>
+          {reward.newBadges.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">New badges unlocked</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {reward.newBadges.map((b) => (
+                  <span key={b.name} className="inline-flex items-center gap-1 rounded-full bg-gradient-primary px-3 py-1 text-xs text-primary-foreground">
+                    <BookmarkCheck className="h-3 w-3" /> {b.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-4">
+        <Tile icon={CheckCircle2} label="Correct" value={String(stats.correct)} />
+        <Tile icon={XCircle} label="Wrong" value={String(stats.wrong)} />
+        <Tile icon={BarChart3} label="Skipped" value={String(stats.skipped)} />
+        <Tile icon={Timer} label="Time used" value={`${Math.floor(stats.totalTime / 60)}m`} />
+      </div>
+
+      <div className="glass rounded-2xl p-6">
+        <h3 className="font-display text-lg font-semibold">Subject Performance</h3>
+        <div className="mt-4 space-y-4">
+          {stats.subs.map((s) => (
+            <div key={s.subject}>
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">{s.subject}</span>
+                <span className="text-muted-foreground">{s.correct}/{s.total} · {s.pct}% · {s.avg}s avg</span>
+              </div>
+              <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary/60">
+                <div className={`h-full ${s.pct >= 70 ? "bg-emerald-500" : s.pct >= 40 ? "bg-amber-500" : "bg-rose-500"}`} style={{ width: `${s.pct}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="glass rounded-2xl p-5">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
+            <AlertTriangle className="h-4 w-4" /> Weak topic detected
+          </div>
+          <p className="mt-2 font-display text-xl font-semibold">{stats.weakest?.subject ?? "—"}</p>
+          <p className="text-sm text-muted-foreground">Current accuracy: <span className="text-rose-400">{stats.weakest?.pct ?? 0}%</span></p>
+          <p className="mt-2 text-xs text-muted-foreground">Strengthen fundamentals and revisit PYQs on this subject.</p>
+        </div>
+        <div className="glass rounded-2xl p-5">
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-emerald-400">
+            <Trophy className="h-4 w-4" /> Your strength
+          </div>
+          <p className="mt-2 font-display text-xl font-semibold">{stats.strongest?.subject ?? "—"}</p>
+          <p className="text-sm text-muted-foreground">Accuracy: <span className="text-emerald-400">{stats.strongest?.pct ?? 0}%</span></p>
+          <p className="mt-2 text-xs text-muted-foreground">Maintain consistency with weekly timed sets.</p>
+        </div>
+      </div>
+
+      <div className="glass rounded-2xl p-6">
+        <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
+          <Brain className="h-4 w-4" /> AI Improvement Suggestions
+        </div>
+        <ul className="mt-3 space-y-2 text-sm">
+          {stats.suggestions.map((s, i) => (
+            <li key={i} className="flex items-start gap-2 rounded-lg border border-border bg-background/40 p-3">
+              <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-accent" /> <span>{s}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <details className="glass rounded-2xl p-6">
+        <summary className="cursor-pointer text-sm font-medium">Review all answers & explanations</summary>
+        <div className="mt-4 space-y-3">
+          {questions.map((q, i) => {
+            const ans = answers[i];
+            const isCorrect = ans !== null && ans !== "" && (q.type === "mcq"
+              ? Number(ans) === q.correct
+              : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01);
+            return (
+              <div key={i} className="rounded-lg border border-border bg-background/40 p-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <span className="font-mono text-xs text-muted-foreground">Q{i + 1}.</span>
+                  <span className="flex-1">{q.q}</span>
+                  <span className={`text-xs ${isCorrect ? "text-emerald-400" : ans ? "text-rose-400" : "text-muted-foreground"}`}>
+                    {isCorrect ? "✓" : ans ? "✗" : "—"}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Correct: {q.type === "mcq" && q.options ? q.options[q.correct as number] : String(q.correct)}
+                  {q.explanation && <> · {q.explanation}</>}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </details>
+
+      <Button onClick={onReset} variant="outline" className="w-full">
+        <RotateCcw className="h-4 w-4" /> Take another test
+      </Button>
+    </section>
+  );
+}
+
+/* ===================== Tiny atoms ===================== */
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <h3 className="mb-2 font-display text-sm font-semibold text-foreground">{title}</h3>
+      {children}
+    </div>
+  );
+}
+function ChoiceChip({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
+  return (
+    <button onClick={onClick}
+      className={`rounded-lg border px-3 py-1.5 text-xs ${active ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/40 hover:border-accent/40"}`}>
+      {label}
+    </button>
+  );
+}
+function PaletteLegend({ color, label, dot }: { color: string; label: string; dot?: boolean }) {
+  return (
+    <div className="flex items-center gap-2 text-muted-foreground">
+      <span className={`relative inline-block h-3.5 w-3.5 rounded border ${color}`}>
+        {dot && <span className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />}
+      </span>
+      {label}
+    </div>
+  );
+}
+function SummaryTile({ label, value, tone }: { label: string; value: number; tone?: "emerald" | "rose" | "purple" }) {
+  const c = tone === "emerald" ? "text-emerald-400" : tone === "rose" ? "text-rose-400" : tone === "purple" ? "text-purple-300" : "text-foreground";
+  return (
+    <div className="rounded-xl border border-border bg-background/40 p-4 text-center">
+      <p className={`font-display text-2xl font-bold ${c}`}>{value}</p>
+      <p className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+    </div>
+  );
+}
 function Tile({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string }) {
   return (
     <div className="glass rounded-xl p-4 text-center">
       <Icon className="mx-auto h-5 w-5 text-accent" />
       <p className="mt-2 text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="font-display text-2xl font-bold">{value}</p>
-    </div>
-  );
-}
-
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <div className="flex items-center gap-2 text-muted-foreground">
-      <span className={`inline-block h-3 w-3 rounded border ${color}`} />
-      {label}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md border border-border bg-background/40 p-2">
-      <p className="font-display text-lg font-bold">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
     </div>
   );
 }
