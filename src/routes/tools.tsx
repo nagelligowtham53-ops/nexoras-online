@@ -6,14 +6,14 @@ import { Brain, Calendar, Sparkles, Wand2, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { generateTimetable, type WeeklyTimetable } from "@/lib/timetable.functions";
-import { RequireAuth } from "@/components/RequireAuth";
+import { PremiumGate } from "@/components/PremiumGate";
 
 export const Route = createFileRoute("/tools")({
   head: () => ({ meta: [{ title: "Study Tools — Nexoras" }, { name: "description", content: "AI study planner and timetable generator." }] }),
   component: () => (
-    <RequireAuth>
+    <PremiumGate feature="AI Study Planner">
       <Tools />
-    </RequireAuth>
+    </PremiumGate>
   ),
 });
 

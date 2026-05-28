@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
+import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import {
   Download, Sparkles, Mail, Phone, MapPin, Globe, Linkedin, Github,
@@ -17,7 +18,11 @@ export const Route = createFileRoute("/resume")({
       { name: "description", content: "Build an ATS-friendly resume with 6 professional templates, AI suggestions, ATS score analysis, and one-click PDF export. Free for students." },
     ],
   }),
-  component: ResumePage,
+  component: () => (
+    <PremiumGate feature="AI Resume Builder">
+      <ResumePage />
+    </PremiumGate>
+  ),
 });
 
 // ============ Types ============
