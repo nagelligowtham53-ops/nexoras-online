@@ -190,6 +190,9 @@ export function Navbar() {
             </div>
             {user ? (
               <>
+                <Link to="/billing" className="hidden md:inline-flex">
+                  <Button variant="ghost" size="sm">Billing</Button>
+                </Link>
                 <Link to="/profile" className="hidden sm:inline-flex">
                   <Button variant="ghost" size="sm"><UserIcon className="h-4 w-4" /> {user.email?.split("@")[0]}</Button>
                 </Link>

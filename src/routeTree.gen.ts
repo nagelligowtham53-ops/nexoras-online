@@ -22,6 +22,7 @@ import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as MockTestsRouteImport } from './routes/mock-tests'
 import { Route as MockInterviewRouteImport } from './routes/mock-interview'
 import { Route as LoginRouteImport } from './routes/login'
@@ -37,9 +38,12 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CareerRouteImport } from './routes/career'
 import { Route as CalculatorsRouteImport } from './routes/calculators'
 import { Route as BlogRouteImport } from './routes/blog'
+import { Route as BillingRouteImport } from './routes/billing'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
+import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -107,6 +111,11 @@ const PricingRoute = PricingRouteImport.update({
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment-success',
+  path: '/payment-success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MockTestsRoute = MockTestsRouteImport.update({
@@ -184,6 +193,11 @@ const BlogRoute = BlogRouteImport.update({
   path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BillingRoute = BillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AchievementsRoute = AchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
@@ -197,6 +211,16 @@ const AboutRoute = AboutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvoiceIdRoute = InvoiceIdRouteImport.update({
+  id: '/invoice/$id',
+  path: '/invoice/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckoutPlanRoute = CheckoutPlanRouteImport.update({
+  id: '/checkout/$plan',
+  path: '/checkout/$plan',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
@@ -219,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
@@ -234,6 +259,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -250,11 +276,14 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/checkout/$plan': typeof CheckoutPlanRoute
+  '/invoice/$id': typeof InvoiceIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
@@ -270,6 +299,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -286,12 +316,15 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/checkout/$plan': typeof CheckoutPlanRoute
+  '/invoice/$id': typeof InvoiceIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
   '/career': typeof CareerRoute
@@ -307,6 +340,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/practice': typeof PracticeRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -323,6 +357,8 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/checkout/$plan': typeof CheckoutPlanRoute
+  '/invoice/$id': typeof InvoiceIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -330,6 +366,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/achievements'
+    | '/billing'
     | '/blog'
     | '/calculators'
     | '/career'
@@ -345,6 +382,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mock-interview'
     | '/mock-tests'
+    | '/payment-success'
     | '/practice'
     | '/pricing'
     | '/privacy'
@@ -361,11 +399,14 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
+    | '/checkout/$plan'
+    | '/invoice/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/achievements'
+    | '/billing'
     | '/blog'
     | '/calculators'
     | '/career'
@@ -381,6 +422,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mock-interview'
     | '/mock-tests'
+    | '/payment-success'
     | '/practice'
     | '/pricing'
     | '/privacy'
@@ -397,11 +439,14 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
+    | '/checkout/$plan'
+    | '/invoice/$id'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/achievements'
+    | '/billing'
     | '/blog'
     | '/calculators'
     | '/career'
@@ -417,6 +462,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mock-interview'
     | '/mock-tests'
+    | '/payment-success'
     | '/practice'
     | '/pricing'
     | '/privacy'
@@ -433,12 +479,15 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
+    | '/checkout/$plan'
+    | '/invoice/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AchievementsRoute: typeof AchievementsRoute
+  BillingRoute: typeof BillingRoute
   BlogRoute: typeof BlogRouteWithChildren
   CalculatorsRoute: typeof CalculatorsRoute
   CareerRoute: typeof CareerRoute
@@ -454,6 +503,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MockInterviewRoute: typeof MockInterviewRoute
   MockTestsRoute: typeof MockTestsRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   PracticeRoute: typeof PracticeRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -469,6 +519,8 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
+  CheckoutPlanRoute: typeof CheckoutPlanRoute
+  InvoiceIdRoute: typeof InvoiceIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -562,6 +614,13 @@ declare module '@tanstack/react-router' {
       path: '/practice'
       fullPath: '/practice'
       preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-success': {
+      id: '/payment-success'
+      path: '/payment-success'
+      fullPath: '/payment-success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mock-tests': {
@@ -669,6 +728,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/billing': {
+      id: '/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof BillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/achievements': {
       id: '/achievements'
       path: '/achievements'
@@ -688,6 +754,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invoice/$id': {
+      id: '/invoice/$id'
+      path: '/invoice/$id'
+      fullPath: '/invoice/$id'
+      preLoaderRoute: typeof InvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkout/$plan': {
+      id: '/checkout/$plan'
+      path: '/checkout/$plan'
+      fullPath: '/checkout/$plan'
+      preLoaderRoute: typeof CheckoutPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/$slug': {
@@ -728,6 +808,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AchievementsRoute: AchievementsRoute,
+  BillingRoute: BillingRoute,
   BlogRoute: BlogRouteWithChildren,
   CalculatorsRoute: CalculatorsRoute,
   CareerRoute: CareerRoute,
@@ -743,6 +824,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MockInterviewRoute: MockInterviewRoute,
   MockTestsRoute: MockTestsRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   PracticeRoute: PracticeRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
@@ -758,17 +840,9 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
+  CheckoutPlanRoute: CheckoutPlanRoute,
+  InvoiceIdRoute: InvoiceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
