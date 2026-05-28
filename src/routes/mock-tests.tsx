@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
+import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
@@ -14,7 +15,11 @@ export const Route = createFileRoute("/mock-tests")({
       { name: "description", content: "Real exam simulator with AI-generated questions, mark-for-review, color-coded palette, negative marking, rank prediction & deep analytics." },
     ],
   }),
-  component: MockTestsPage,
+  component: () => (
+    <PremiumGate feature="Mock Tests">
+      <MockTestsPage />
+    </PremiumGate>
+  ),
 });
 
 type Question = {

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageShell, PageHeader } from "@/components/PageShell";
+import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Cpu, Zap, Cog, Building2, Beaker, Rocket, ArrowRight } from "lucide-react";
 
@@ -10,7 +11,11 @@ export const Route = createFileRoute("/engineering-roadmaps")({
       { name: "description", content: "B.Tech branch-wise roadmaps: CSE, ECE, Mechanical, Civil, Chemical, Aerospace. Skills, projects, internships and placements." },
     ],
   }),
-  component: EngineeringRoadmapsPage,
+  component: () => (
+    <PremiumGate feature="Engineering Roadmaps">
+      <EngineeringRoadmapsPage />
+    </PremiumGate>
+  ),
 });
 
 const BRANCHES = [

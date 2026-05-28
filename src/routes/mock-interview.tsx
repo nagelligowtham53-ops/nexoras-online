@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { authedFetch } from "@/lib/authed-fetch";
 import { useEffect, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
+import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -16,7 +17,11 @@ export const Route = createFileRoute("/mock-interview")({
       { name: "description", content: "Practice realistic interviews with role-specific AI questions, follow-ups, and personalised scoring." },
     ],
   }),
-  component: MockInterviewPage,
+  component: () => (
+    <PremiumGate feature="AI Mock Interviews">
+      <MockInterviewPage />
+    </PremiumGate>
+  ),
 });
 
 const ROLES = [

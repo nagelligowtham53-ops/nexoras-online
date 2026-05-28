@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/PageShell";
 import { RequireAuth } from "@/components/RequireAuth";
+import { DemoBanner } from "@/components/PremiumGate";
+import { usePremium } from "@/lib/premium";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -17,8 +19,18 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardPage() {
   return (
     <RequireAuth>
-      <Dashboard />
+      <DashboardShell />
     </RequireAuth>
+  );
+}
+
+function DashboardShell() {
+  const { isAdmin } = usePremium();
+  return (
+    <>
+      {isAdmin && <DemoBanner />}
+      <Dashboard />
+    </>
   );
 }
 

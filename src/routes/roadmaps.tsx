@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
+import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, GraduationCap, IndianRupee, BookOpen, Trophy, Briefcase, Globe, CheckCircle2 } from "lucide-react";
 
@@ -11,7 +12,11 @@ export const Route = createFileRoute("/roadmaps")({
       { name: "description", content: "Stream-based career roadmaps: MPC, BiPC, MEC, CEC, Arts, Diploma & Polytechnic. Skills, salary, colleges, certifications & step-by-step paths." },
     ],
   }),
-  component: RoadmapsPage,
+  component: () => (
+    <PremiumGate feature="Career Roadmaps">
+      <RoadmapsPage />
+    </PremiumGate>
+  ),
 });
 
 type Career = {
