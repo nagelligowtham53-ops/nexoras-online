@@ -188,11 +188,11 @@ export function Navbar() {
                 className="w-full bg-transparent placeholder:text-muted-foreground/70 focus:outline-none"
               />
             </div>
+            <span className="hidden md:inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-accent">
+              <Sparkles className="h-3 w-3" /> 100% Free
+            </span>
             {user ? (
               <>
-                <Link to="/billing" className="hidden md:inline-flex">
-                  <Button variant="ghost" size="sm">Billing</Button>
-                </Link>
                 <Link to="/profile" className="hidden sm:inline-flex">
                   <Button variant="ghost" size="sm"><UserIcon className="h-4 w-4" /> {user.email?.split("@")[0]}</Button>
                 </Link>

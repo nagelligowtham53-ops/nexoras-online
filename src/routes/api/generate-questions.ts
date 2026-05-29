@@ -37,17 +37,19 @@ export const Route = createFileRoute("/api/generate-questions")({
           .map((s) => `${s.count} ${s.name}`)
           .join(", ");
 
+        const allowedSubjects = subjects.map((s) => s.name).join(" | ");
         const prompt = `Generate a complete ${exam} mock test with realistic, exam-quality questions at ${difficulty} difficulty.
 Subjects and counts: ${subjectList}.
 
 Return STRICT JSON only, no prose, no markdown fences. Shape:
-{ "questions": [ { "subject": "Physics" | "Chemistry" | "Mathematics", "type": "mcq" | "numerical", "q": "question text using plain text and unicode (no LaTeX)", "options": ["A","B","C","D"] (omit for numerical), "correct": 0..3 (for mcq) | numeric_value (for numerical), "explanation": "1-2 line solution" } ] }
+{ "questions": [ { "subject": "${allowedSubjects}", "type": "mcq" | "numerical", "q": "question text using plain text and unicode (no LaTeX)", "options": ["A","B","C","D"] (omit for numerical), "correct": 0..3 (for mcq) | numeric_value (for numerical), "explanation": "1-2 line solution" } ] }
 
 Rules:
-- Cover diverse chapters across NCERT class 11 & 12 syllabus.
+- The "subject" field MUST be exactly one of: ${allowedSubjects}.
+- Cover diverse, authentic topics from the official ${exam} syllabus.
 - For numerical type, "correct" must be a number; do not include options.
 - For mcq, exactly 4 options, "correct" is the 0-based index.
-- No duplicate questions. No images. Keep each question under 280 chars.
+- No duplicate questions. No images. Keep each question under 320 chars.
 - Total questions must equal ${subjects.reduce((a, s) => a + s.count, 0)}.`;
 
         let upstream: Response;
