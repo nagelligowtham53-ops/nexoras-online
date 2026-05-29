@@ -135,7 +135,13 @@ function MockTestsPage() {
   const [phase, setPhase] = useState<Phase>("select");
   const [exam, setExam] = useState<ExamSpec>(EXAMS[0]);
   const [testType, setTestType] = useState<TestType>("full");
-  const [chapterSubject, setChapterSubject] = useState<string>("Physics");
+  const [chapterSubject, setChapterSubject] = useState<string>(EXAMS[0].subjects[0].name);
+  useEffect(() => {
+    if (!exam.subjects.some((s) => s.name === chapterSubject)) {
+      setChapterSubject(exam.subjects[0].name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [exam.key]);
   const [difficulty, setDifficulty] = useState<Difficulty>("mixed");
   const [agreed, setAgreed] = useState(false);
 
