@@ -6,15 +6,16 @@ import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Mic, Send, Loader2, Bot, User as UserIcon, Sparkles, RotateCcw, BarChart3,
+  Mic, MicOff, Send, Loader2, Bot, User as UserIcon, Sparkles, RotateCcw,
+  BarChart3, Briefcase, Plane, MessagesSquare, Building2, Globe2, Cpu,
 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/mock-interview")({
   head: () => ({
     meta: [
-      { title: "AI Mock Interview — Nexoras" },
-      { name: "description", content: "Practice realistic interviews with role-specific AI questions, follow-ups, and personalised scoring." },
+      { title: "AI Mock Interview — HR · Technical · Visa · Behavioral | Nexoras" },
+      { name: "description", content: "Practice realistic mock interviews with an AI interviewer. Technical, HR, US/student visa, behavioral and communication rounds with voice mic, live transcription and scoring." },
     ],
   }),
   component: () => (
@@ -24,12 +25,102 @@ export const Route = createFileRoute("/mock-interview")({
   ),
 });
 
-const ROLES = [
+type Category = {
+  key: string;
+  label: string;
+  blurb: string;
+  icon: React.ComponentType<{ className?: string }>;
+  options: readonly string[];
+  optionLabel: string;
+  systemBuilder: (role: string, level: string) => string;
+};
+
+const TECHNICAL_ROLES = [
   "Software Engineer", "AI Engineer", "Data Scientist", "Cybersecurity Analyst",
-  "UI/UX Designer", "Doctor", "Lawyer", "IAS Officer",
-  "Mechanical Engineer", "Business Analyst", "Product Manager", "Marketing Manager",
+  "UI/UX Designer", "Mechanical Engineer", "Business Analyst", "Product Manager",
 ] as const;
+
+const HR_ROLES = [
+  "Software Engineer", "Product Manager", "Marketing Manager", "Data Analyst",
+  "Operations Manager", "Sales Executive", "Consultant", "Generic Corporate",
+] as const;
+
+const VISA_TYPES = [
+  "USA F-1 Student Visa", "USA H-1B Work Visa", "USA B1/B2 Tourist Visa",
+  "Canada Study Permit", "UK Tier-4 Student Visa", "Schengen Tourist Visa",
+  "Australia Student Visa (500)",
+] as const;
+
+const STUDENT_VISA_TYPES = [
+  "USA F-1 (MS/PhD)", "USA F-1 (Undergraduate)", "Canada Study Permit",
+  "UK Student Visa", "Australia 500", "Germany Student Visa", "Ireland Stamp 2",
+] as const;
+
+const BEHAVIORAL_TOPICS = [
+  "Leadership & ownership", "Conflict resolution", "Failure & learning",
+  "Teamwork & collaboration", "Time management", "Customer obsession",
+  "Innovation / bias for action",
+] as const;
+
+const COMMUNICATION_FOCUS = [
+  "Public speaking", "Group discussion", "Storytelling", "Active listening",
+  "Pitching an idea", "Negotiation",
+] as const;
+
 const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
+
+const CATEGORIES: Category[] = [
+  {
+    key: "technical", label: "Technical Interview", icon: Cpu,
+    blurb: "Role-specific, deep-dive technical questions with smart follow-ups.",
+    options: TECHNICAL_ROLES, optionLabel: "Choose your role",
+    systemBuilder: (role, level) =>
+      `You are a senior ${role} interviewing a candidate at ${level.toLowerCase()} level. Ask ONE focused technical question at a time — coding, system-design, fundamentals, or scenario-based. Briefly acknowledge each answer in one sentence, then ask a smart role-specific follow-up that probes deeper. Mix in 1-2 behavioral questions every ~5 questions. Keep questions concise (1-3 sentences), realistic and progressively harder. Never reveal answers. Continue until candidate ends.`,
+  },
+  {
+    key: "hr", label: "HR Interview", icon: Building2,
+    blurb: "HR round practice: motivation, culture-fit, salary, expectations.",
+    options: HR_ROLES, optionLabel: "Target role",
+    systemBuilder: (role, level) =>
+      `You are an HR manager interviewing a candidate for a ${role} position at ${level.toLowerCase()} level. Ask ONE HR-style question at a time — motivation, strengths/weaknesses, why this company, salary expectations, career goals, conflict handling, culture-fit. Acknowledge each answer in one sentence then ask a polite, probing follow-up. Stay warm but professional. Never reveal model answers.`,
+  },
+  {
+    key: "visa", label: "Visa Interview", icon: Plane,
+    blurb: "Realistic embassy / consular officer simulation.",
+    options: VISA_TYPES, optionLabel: "Visa type",
+    systemBuilder: (role, level) =>
+      `You are a strict but fair consular officer conducting a ${role} interview. The interview is at ${level.toLowerCase()} difficulty. Ask ONE direct visa-officer question at a time — purpose of travel, ties to home country, financials, sponsor, itinerary, prior travel, intent to return. Keep questions short and sharp (1-2 sentences). After each answer give a single short reaction word ("Okay.", "I see.", "Hmm.") and immediately ask the next question. Do NOT coach. Continue until candidate ends.`,
+  },
+  {
+    key: "student-visa", label: "Student Visa Interview", icon: Globe2,
+    blurb: "Detailed F-1 / study-permit officer simulation.",
+    options: STUDENT_VISA_TYPES, optionLabel: "Visa type",
+    systemBuilder: (role, level) =>
+      `You are a consular officer running a ${role} interview at ${level.toLowerCase()} difficulty. Ask ONE student-visa-officer question at a time — university name, program, why this university, why this country, funding source, sponsor income, GRE/IELTS scores, post-study plans, ties to home country. Keep questions short and sharp. Brief neutral acknowledgement only. Do NOT coach. Continue until candidate ends.`,
+  },
+  {
+    key: "us-visa", label: "US Visa Mock", icon: Plane,
+    blurb: "US embassy F-1 / H-1B / B1-B2 officer simulation.",
+    options: ["F-1 Student Visa", "H-1B Work Visa", "B1/B2 Visitor", "L-1 Intra-company", "O-1 Extraordinary"] as const,
+    optionLabel: "US visa category",
+    systemBuilder: (role, level) =>
+      `You are a US consular officer at a US embassy conducting a ${role} visa interview at ${level.toLowerCase()} difficulty. Ask ONE crisp question at a time in the brisk style of a real US visa officer — purpose, sponsor, funds, ties to home country, university/employer, prior US travel, intent to return. Replies must be 1-2 sentences. After each answer, react in one word and immediately ask the next question. Do NOT give tips during the interview.`,
+  },
+  {
+    key: "behavioral", label: "Behavioral Interview", icon: MessagesSquare,
+    blurb: "STAR-style behavioral questions and follow-ups.",
+    options: BEHAVIORAL_TOPICS, optionLabel: "Focus area",
+    systemBuilder: (role, level) =>
+      `You are an experienced behavioral interviewer focusing on "${role}" at ${level.toLowerCase()} difficulty. Ask ONE STAR-format behavioral question at a time ("Tell me about a time when…"). After each answer, acknowledge briefly and probe deeper — challenge the Situation, ask for the candidate's specific Actions, quantify Results, and look for ownership. Never reveal ideal answers.`,
+  },
+  {
+    key: "communication", label: "Communication Practice", icon: Briefcase,
+    blurb: "Improve fluency, structure, clarity and confidence.",
+    options: COMMUNICATION_FOCUS, optionLabel: "Focus skill",
+    systemBuilder: (role, level) =>
+      `You are a communication coach running a ${level.toLowerCase()} session focused on "${role}". Give ONE short speaking prompt at a time (e.g. "Describe a recent project in 60 seconds", "Convince me to use Nexoras"). After the candidate responds, give very brief feedback (1-2 sentences) on clarity, structure and filler words, then give the next prompt. Be encouraging but specific.`,
+  },
+];
 
 type Msg = { id: string; role: "user" | "assistant"; content: string };
 type Phase = "setup" | "interview" | "feedback";
@@ -43,24 +134,110 @@ type Feedback = {
   summary: string;
 };
 
-const HISTORY_KEY = "nexoras.mockInterview.history.v1";
+const HISTORY_KEY = "nexoras.mockInterview.history.v2";
+
+// --- Web Speech API (browser-native, free)
+type SR = {
+  start: () => void;
+  stop: () => void;
+  onresult: ((e: { results: ArrayLike<{ 0: { transcript: string }; isFinal: boolean }> }) => void) | null;
+  onerror: ((e: { error?: string }) => void) | null;
+  onend: (() => void) | null;
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+};
+function getSR(): SR | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as { SpeechRecognition?: new () => SR; webkitSpeechRecognition?: new () => SR };
+  const Ctor = w.SpeechRecognition || w.webkitSpeechRecognition;
+  return Ctor ? new Ctor() : null;
+}
 
 function MockInterviewPage() {
+  const [category, setCategory] = useState<Category>(CATEGORIES[0]);
   const [phase, setPhase] = useState<Phase>("setup");
-  const [role, setRole] = useState<string>(ROLES[0]);
+  const [option, setOption] = useState<string>(CATEGORIES[0].options[0]);
   const [level, setLevel] = useState<(typeof LEVELS)[number]>("Intermediate");
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [listening, setListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const srRef = useRef<SR | null>(null);
+  const interimRef = useRef<string>("");
+
+  useEffect(() => {
+    setVoiceSupported(getSR() !== null);
+  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, busy]);
 
-  function systemPrompt() {
-    return `You are an expert ${role} interviewer running a ${level.toLowerCase()}-level mock interview. Ask ONE focused interview question at a time. Mix technical, scenario, and behavioural questions appropriate to the role. After each candidate answer, briefly acknowledge it in one short sentence and then ask a smart, role-specific follow-up that probes deeper into their reasoning, experience, or weakest point. Keep questions concise (1-3 sentences), realistic, and progressively harder. Never reveal the answer. Never produce feedback yet — just continue the interview until the candidate ends it.`;
+  useEffect(() => {
+    setOption(category.options[0]);
+  }, [category]);
+
+  function speak(text: string) {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    try {
+      const clean = text.replace(/[*_`#>\-]+/g, " ").slice(0, 500);
+      const u = new SpeechSynthesisUtterance(clean);
+      u.rate = 1.0; u.pitch = 1.0; u.lang = "en-US";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch { /* ignore */ }
+  }
+
+  function toggleMic() {
+    if (!voiceSupported) {
+      toast.error("Voice input not supported in this browser. Try Chrome or Edge.");
+      return;
+    }
+    if (listening) {
+      srRef.current?.stop();
+      return;
+    }
+    const sr = getSR();
+    if (!sr) return;
+    sr.lang = "en-US";
+    sr.continuous = true;
+    sr.interimResults = true;
+    interimRef.current = "";
+    sr.onresult = (e) => {
+      let finalText = "";
+      let interim = "";
+      for (let i = 0; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      const combined = (finalText + " " + interim).trim();
+      setInput((prev) => {
+        // Replace the last interim portion if we tracked one
+        const base = prev.endsWith(interimRef.current) && interimRef.current
+          ? prev.slice(0, prev.length - interimRef.current.length)
+          : prev;
+        interimRef.current = combined;
+        return (base + " " + combined).trim();
+      });
+    };
+    sr.onerror = (ev) => {
+      if (ev.error && ev.error !== "no-speech" && ev.error !== "aborted") {
+        toast.error(`Mic error: ${ev.error}`);
+      }
+    };
+    sr.onend = () => setListening(false);
+    try {
+      sr.start();
+      srRef.current = sr;
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
   }
 
   async function streamChat(allMessages: Msg[], system: string): Promise<string> {
@@ -88,6 +265,7 @@ function MockInterviewPage() {
       acc += decoder.decode(value, { stream: true });
       setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, content: acc } : m)));
     }
+    speak(acc);
     return acc;
   }
 
@@ -97,14 +275,13 @@ function MockInterviewPage() {
     setFeedback(null);
     setBusy(true);
     try {
-      // Seed with a kickoff user "begin" message so AI asks first question.
       const seed: Msg[] = [{
         id: crypto.randomUUID(),
         role: "user",
-        content: `Please start the interview now for the role of ${role} at ${level} level. Greet me briefly and ask your first question.`,
+        content: `Please start the ${category.label} now for "${option}" at ${level} level. Greet me briefly in one line and ask your first question.`,
       }];
       setMessages(seed);
-      await streamChat(seed, systemPrompt());
+      await streamChat(seed, category.systemBuilder(option, level));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to start");
       setPhase("setup");
@@ -116,12 +293,14 @@ function MockInterviewPage() {
   async function sendAnswer() {
     const text = input.trim();
     if (!text || busy) return;
+    if (listening) srRef.current?.stop();
+    interimRef.current = "";
     const next: Msg[] = [...messages, { id: crypto.randomUUID(), role: "user", content: text }];
     setMessages(next);
     setInput("");
     setBusy(true);
     try {
-      await streamChat(next, systemPrompt());
+      await streamChat(next, category.systemBuilder(option, level));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -136,8 +315,8 @@ function MockInterviewPage() {
       const transcript = messages
         .map((m) => `${m.role === "user" ? "Candidate" : "Interviewer"}: ${m.content}`)
         .join("\n\n");
-      const sys = `You are a senior hiring manager scoring a mock interview for the role of ${role} at ${level} level. Read the transcript and respond ONLY with valid minified JSON (no markdown, no commentary) matching this exact shape:
-{"communication": <0-100 integer>, "confidence": <0-100 integer>, "technical": <0-100 integer>, "overall": <0-100 integer>, "strengths": ["...","..."], "improvements": ["...","..."], "summary": "2-3 sentence overall verdict"}`;
+      const sys = `You are a senior evaluator scoring a ${category.label} for "${option}" at ${level} level. Read the transcript and respond ONLY with valid minified JSON (no markdown, no commentary) matching this exact shape:
+{"communication": <0-100>, "confidence": <0-100>, "technical": <0-100>, "overall": <0-100>, "strengths": ["...","..."], "improvements": ["...","..."], "summary": "2-3 sentence verdict"}`;
       const res = await authedFetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -155,18 +334,16 @@ function MockInterviewPage() {
         if (done) break;
         acc += decoder.decode(value, { stream: true });
       }
-      // Extract JSON from response
       const match = acc.match(/\{[\s\S]*\}/);
       if (!match) throw new Error("Could not parse feedback");
       const parsed: Feedback = JSON.parse(match[0]);
       setFeedback(parsed);
       setPhase("feedback");
-      // Save to history
       try {
         const raw = localStorage.getItem(HISTORY_KEY);
         const arr = raw ? JSON.parse(raw) : [];
-        arr.unshift({ at: Date.now(), role, level, feedback: parsed });
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0, 20)));
+        arr.unshift({ at: Date.now(), category: category.label, option, level, feedback: parsed });
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(arr.slice(0, 30)));
       } catch { /* ignore */ }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to score");
@@ -176,6 +353,8 @@ function MockInterviewPage() {
   }
 
   function reset() {
+    if (listening) srRef.current?.stop();
+    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
     setPhase("setup");
     setMessages([]);
     setFeedback(null);
@@ -186,64 +365,100 @@ function MockInterviewPage() {
     <PageShell>
       <PageHeader
         eyebrow="AI Mock Interview"
-        title="Practice the interview that gets you hired"
-        description="Pick your role and difficulty. Nexoras AI runs a realistic, role-specific interview with smart follow-ups and detailed scoring."
+        title="Real interviews, real practice — by voice or text"
+        description="HR, technical, visa, behavioral and communication rounds. Speak naturally into your mic; the AI listens, replies, and scores you."
       />
 
       <section className="mx-auto max-w-5xl px-4 py-10 lg:px-8">
         {phase === "setup" && (
-          <div className="glass space-y-6 rounded-2xl p-6">
-            <div>
-              <label className="mb-2 block text-sm font-semibold">Choose your role</label>
-              <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
-                {ROLES.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => setRole(r)}
-                    className={`rounded-xl border px-3 py-2.5 text-left text-sm transition-all ${
-                      role === r
-                        ? "border-accent/60 bg-gradient-primary text-primary-foreground shadow-glow"
-                        : "border-border bg-background/40 hover:border-accent/40 hover:bg-secondary/60"
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
+          <div className="space-y-6">
+            <div className="glass rounded-2xl p-6">
+              <label className="mb-3 block text-sm font-semibold">Interview type</label>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {CATEGORIES.map((c) => {
+                  const Icon = c.icon;
+                  const active = category.key === c.key;
+                  return (
+                    <button
+                      key={c.key}
+                      onClick={() => setCategory(c)}
+                      className={`group flex items-start gap-3 rounded-xl border p-3 text-left transition-all ${
+                        active
+                          ? "border-accent/60 bg-gradient-card shadow-glow"
+                          : "border-border bg-background/40 hover:border-accent/40"
+                      }`}
+                    >
+                      <span className={`mt-0.5 inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg ${
+                        active ? "bg-gradient-primary text-primary-foreground shadow-glow" : "bg-secondary/70 text-accent"
+                      }`}>
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="flex flex-col">
+                        <span className="text-sm font-semibold">{c.label}</span>
+                        <span className="text-xs text-muted-foreground">{c.blurb}</span>
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div>
-              <label className="mb-2 block text-sm font-semibold">Difficulty</label>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {LEVELS.map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => setLevel(l)}
-                    className={`rounded-xl border px-3 py-2.5 text-sm transition-all ${
-                      level === l
-                        ? "border-accent/60 bg-gradient-primary text-primary-foreground shadow-glow"
-                        : "border-border bg-background/40 hover:border-accent/40 hover:bg-secondary/60"
-                    }`}
-                  >
-                    {l}
-                  </button>
-                ))}
+            <div className="glass space-y-6 rounded-2xl p-6">
+              <div>
+                <label className="mb-2 block text-sm font-semibold">{category.optionLabel}</label>
+                <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                  {category.options.map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => setOption(r)}
+                      className={`rounded-xl border px-3 py-2.5 text-left text-sm transition-all ${
+                        option === r
+                          ? "border-accent/60 bg-gradient-primary text-primary-foreground shadow-glow"
+                          : "border-border bg-background/40 hover:border-accent/40 hover:bg-secondary/60"
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
               </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold">Difficulty</label>
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {LEVELS.map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => setLevel(l)}
+                      className={`rounded-xl border px-3 py-2.5 text-sm transition-all ${
+                        level === l
+                          ? "border-accent/60 bg-gradient-primary text-primary-foreground shadow-glow"
+                          : "border-border bg-background/40 hover:border-accent/40 hover:bg-secondary/60"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border/60 bg-background/30 p-3 text-xs text-muted-foreground">
+                <Sparkles className="mr-1 inline h-3.5 w-3.5 text-accent" />
+                {voiceSupported
+                  ? "Mic enabled — tap the mic during the interview to speak naturally. The AI will reply by voice too."
+                  : "Voice mic isn't supported in this browser. You can still type answers. (Tip: Chrome or Edge enables voice.)"}
+              </div>
+
+              <Button
+                onClick={startInterview}
+                disabled={busy}
+                size="lg"
+                className="w-full bg-gradient-primary text-primary-foreground shadow-glow"
+              >
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
+                {busy ? "Starting…" : `Start ${level} ${category.label}`}
+              </Button>
             </div>
-
-            <Button
-              onClick={startInterview}
-              disabled={busy}
-              size="lg"
-              className="w-full bg-gradient-primary text-primary-foreground shadow-glow"
-            >
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-4 w-4" />}
-              {busy ? "Starting…" : `Start ${level} Interview as ${role}`}
-            </Button>
-
-            <p className="text-center text-xs text-muted-foreground">
-              Tip: answer each question thoughtfully. The AI adapts follow-ups to your responses.
-            </p>
           </div>
         )}
 
@@ -251,8 +466,8 @@ function MockInterviewPage() {
           <div className="glass flex h-[70vh] flex-col rounded-2xl p-4 sm:p-6">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div className="text-sm">
-                <span className="text-muted-foreground">Interviewing for</span>{" "}
-                <span className="font-semibold text-gradient">{role}</span>{" "}
+                <span className="text-muted-foreground">{category.label}</span>{" "}
+                <span className="font-semibold text-gradient">· {option}</span>{" "}
                 <span className="rounded-full border border-border bg-secondary/60 px-2 py-0.5 text-[10px] uppercase tracking-wider">{level}</span>
               </div>
               <div className="flex gap-2">
@@ -277,6 +492,16 @@ function MockInterviewPage() {
             </div>
 
             <div className="mt-3 flex items-end gap-2">
+              <Button
+                onClick={toggleMic}
+                variant={listening ? "default" : "outline"}
+                size="icon"
+                className={listening ? "bg-red-500 text-white hover:bg-red-600 animate-pulse" : ""}
+                disabled={busy}
+                title={voiceSupported ? (listening ? "Stop listening" : "Speak your answer") : "Voice not supported"}
+              >
+                {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
               <Textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -286,7 +511,7 @@ function MockInterviewPage() {
                     void sendAnswer();
                   }
                 }}
-                placeholder="Type your answer… (Shift+Enter for newline)"
+                placeholder={listening ? "Listening… speak naturally" : "Type or press mic to speak…"}
                 rows={2}
                 className="min-h-[52px] max-h-40 resize-none"
                 disabled={busy}
@@ -299,6 +524,11 @@ function MockInterviewPage() {
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+            {listening && (
+              <p className="mt-1 text-center text-[11px] text-accent">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500 animate-ping" /> Live transcription — tap mic again to stop
+              </p>
+            )}
           </div>
         )}
 
@@ -307,9 +537,9 @@ function MockInterviewPage() {
             <div className="glass rounded-2xl p-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Performance Report</p>
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">{category.label} Report</p>
                   <h2 className="font-display text-2xl font-bold">
-                    {role} <span className="text-gradient">· {level}</span>
+                    {option} <span className="text-gradient">· {level}</span>
                   </h2>
                 </div>
                 <Button onClick={reset} variant="outline">
