@@ -32,6 +32,7 @@ const EXAMS: Exam[] = [
   { name: "NEET UG", purpose: "MBBS / BDS admissions", level: "12th Science (PCB)", attempts: "Once/year", syllabus: "Physics, Chemistry, Biology — NCERT heavy", prepTime: "18–24 months" },
   { name: "BITSAT", purpose: "BITS Pilani / Goa / Hyderabad", level: "12th PCM", attempts: "Twice/year", syllabus: "PCM + English + Logical reasoning, computer-based", prepTime: "12 months", link: "/mock-tests" },
   { name: "MHT CET", purpose: "Maharashtra Engg / Pharm", level: "12th PCM/PCB", attempts: "Once/year", syllabus: "Maharashtra board PCM/PCB, MCQ-based", prepTime: "12 months", link: "/mock-tests" },
+  { name: "COMEDK UGET", purpose: "Karnataka private engineering colleges", level: "12th PCM", attempts: "Once/year", syllabus: "Physics, Chemistry, Mathematics — 11/12 PCM, speed-focused MCQs, no negative marking", prepTime: "10–12 months", link: "/mock-tests" },
   { name: "EAMCET (AP/TS)", purpose: "AP / Telangana Engg & Med", level: "12th PCM/PCB", attempts: "Once/year", syllabus: "State board PCM/PCB + speed-focused MCQs", prepTime: "12 months", link: "/mock-tests" },
   { name: "CUET UG", purpose: "Central University admissions", level: "12th any stream", attempts: "Once/year", syllabus: "Domain subjects + General Test + Language", prepTime: "6–12 months" },
   { name: "GATE", purpose: "M.Tech / PSU jobs / research", level: "B.Tech final year+", attempts: "Once/year", syllabus: "Core branch + Engineering Maths + Aptitude", prepTime: "12 months" },
