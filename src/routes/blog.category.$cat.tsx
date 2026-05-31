@@ -58,7 +58,7 @@ function Category() {
           <p className="text-sm text-muted-foreground">No articles yet — check back soon.</p>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map((p) => (
+            {posts.map((p: any) => (
               <Link
                 key={p.slug}
                 to="/blog/$slug"

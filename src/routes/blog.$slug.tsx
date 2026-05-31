@@ -113,7 +113,7 @@ function Article() {
 
         {post.tags && post.tags.length > 0 && (
           <div className="mt-10 flex flex-wrap gap-2 border-t border-border pt-6">
-            {post.tags.map((t) => (
+            {post.tags.map((t: string) => (
               <span key={t} className="rounded-full border border-border bg-secondary/40 px-2 py-0.5 text-[11px] text-muted-foreground">#{t}</span>
             ))}
           </div>
@@ -123,7 +123,7 @@ function Article() {
           <section className="mt-16 border-t border-border pt-10">
             <h2 className="font-display text-xl font-semibold">Related reading</h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-3">
-              {related.map((r) => (
+              {related.map((r: any) => (
                 <Link key={r.slug} to="/blog/$slug" params={{ slug: r.slug }} className="glass rounded-xl p-4 transition-all hover:-translate-y-1 hover:shadow-glow">
                   <p className="text-[10px] uppercase tracking-wider text-accent">{r.category}</p>
                   <p className="mt-2 text-sm font-semibold leading-snug">{r.title}</p>
