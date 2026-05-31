@@ -107,7 +107,7 @@ Rules: 900-1300 words, only block types p/h2/h3/ul/quote, ul blocks use items[],
         category: pick.category,
         author: "Nexoras Team",
         read_time: String(parsed.read_time ?? "7 min").slice(0, 12),
-        content: parsed.content,
+        content: parsed.content as never,
         meta_title: parsed.meta_title ? String(parsed.meta_title).slice(0, 70) : null,
         meta_description: parsed.meta_description
           ? String(parsed.meta_description).slice(0, 180)

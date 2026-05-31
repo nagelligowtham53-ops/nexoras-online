@@ -206,7 +206,7 @@ export const Route = createFileRoute("/api/blog-admin")({
             author: p.author || "Nexoras Team",
             read_time: p.read_time || "6 min",
             cover: p.cover ?? null,
-            content: p.content ?? [],
+            content: (p.content ?? []) as never,
             meta_title: p.meta_title ?? null,
             meta_description: p.meta_description ?? null,
             tags: p.tags ?? [],
