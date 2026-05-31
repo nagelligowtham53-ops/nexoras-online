@@ -1,31 +1,41 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { PageShell } from "@/components/PageShell";
-import { getPost, blogPosts, type BlogPost } from "@/lib/blog-data";
+import { fetchPost, fetchAllPosts } from "@/lib/blog-store";
+import type { BlogPost } from "@/lib/blog-data";
 import { Calendar, Clock, ArrowLeft, Tag } from "lucide-react";
 
 export const Route = createFileRoute("/blog/$slug")({
-  loader: ({ params }) => {
-    const post = getPost(params.slug);
+  loader: async ({ params }) => {
+    const post = await fetchPost(params.slug);
     if (!post) throw notFound();
-    return { post };
+    const all = await fetchAllPosts();
+    const related = all
+      .filter((p) => p.category === post.category && p.slug !== post.slug)
+      .slice(0, 3);
+    return { post, related };
   },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, params }) => {
     const post = loaderData?.post;
     if (!post) return { meta: [{ title: "Article — Nexoras" }] };
+    const url = `https://nexoras.online/blog/${params.slug}`;
+    const title = post.metaTitle ?? `${post.title} — Nexoras Blog`;
+    const description = post.metaDescription ?? post.description;
     return {
       meta: [
-        { title: `${post.title} — Nexoras Blog` },
-        { name: "description", content: post.description },
+        { title },
+        { name: "description", content: description },
         { name: "author", content: post.author },
         { property: "article:published_time", content: post.date },
         { property: "article:section", content: post.category },
         { property: "og:type", content: "article" },
-        { property: "og:title", content: post.title },
-        { property: "og:description", content: post.description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
         { name: "twitter:card", content: "summary_large_image" },
-        { name: "twitter:title", content: post.title },
-        { name: "twitter:description", content: post.description },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
       ],
+      links: [{ rel: "canonical", href: url }],
       scripts: [
         {
           type: "application/ld+json",
@@ -33,10 +43,11 @@ export const Route = createFileRoute("/blog/$slug")({
             "@context": "https://schema.org",
             "@type": "Article",
             headline: post.title,
-            description: post.description,
+            description,
             author: { "@type": "Organization", name: post.author },
             datePublished: post.date,
             articleSection: post.category,
+            mainEntityOfPage: url,
             publisher: { "@type": "Organization", name: "Nexoras" },
           }),
         },
@@ -52,11 +63,18 @@ export const Route = createFileRoute("/blog/$slug")({
       </div>
     </PageShell>
   ),
+  errorComponent: ({ error }) => (
+    <PageShell>
+      <div className="mx-auto max-w-3xl px-4 py-24 text-center">
+        <h1 className="text-2xl font-bold">Couldn't load this article</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    </PageShell>
+  ),
 });
 
 function Article() {
-  const { post } = Route.useLoaderData();
-  const related = blogPosts.filter((p) => p.category === post.category && p.slug !== post.slug).slice(0, 3);
+  const { post, related } = Route.useLoaderData();
 
   return (
     <PageShell>
@@ -65,9 +83,13 @@ function Article() {
           <ArrowLeft className="h-4 w-4" /> All articles
         </Link>
         <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 uppercase tracking-wider text-accent">
+          <Link
+            to="/blog/category/$cat"
+            params={{ cat: post.category.toLowerCase().replace(/\s+/g, "-") }}
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 uppercase tracking-wider text-accent hover:bg-accent/10"
+          >
             <Tag className="h-3 w-3" /> {post.category}
-          </span>
+          </Link>
           <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3" /> {new Date(post.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
           <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {post.readTime} read</span>
           <span>By {post.author}</span>
@@ -88,6 +110,14 @@ function Article() {
             return <p key={i} className="text-muted-foreground">{block.text}</p>;
           })}
         </div>
+
+        {post.tags && post.tags.length > 0 && (
+          <div className="mt-10 flex flex-wrap gap-2 border-t border-border pt-6">
+            {post.tags.map((t) => (
+              <span key={t} className="rounded-full border border-border bg-secondary/40 px-2 py-0.5 text-[11px] text-muted-foreground">#{t}</span>
+            ))}
+          </div>
+        )}
 
         {related.length > 0 && (
           <section className="mt-16 border-t border-border pt-10">

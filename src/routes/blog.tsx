@@ -2,34 +2,40 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { Clock } from "lucide-react";
-import { blogPosts, categories } from "@/lib/blog-data";
+import { fetchAllPosts, ALL_CATEGORIES } from "@/lib/blog-store";
 
 export const Route = createFileRoute("/blog")({
   head: () => ({
     meta: [
       { title: "Blog & Resources — Nexoras" },
-      { name: "description", content: "Long-form guides on AI study tools, productivity systems, resume building, automation, and student careers — written by the Nexoras team." },
+      { name: "description", content: "Long-form guides on AI study tools, exam preparation, productivity, resume building, automation, and student careers — written and curated by the Nexoras team." },
       { property: "og:title", content: "Nexoras Blog — Guides for Students & Early Careers" },
-      { property: "og:description", content: "In-depth articles on AI, productivity, resume building, and automation for students and freshers." },
+      { property: "og:description", content: "In-depth articles on AI, exam prep, productivity, resume building, and automation for students and freshers." },
+      { property: "og:url", content: "https://nexoras.online/blog" },
     ],
+    links: [{ rel: "canonical", href: "https://nexoras.online/blog" }],
   }),
+  loader: async () => ({ posts: await fetchAllPosts() }),
   component: Blog,
 });
 
 function Blog() {
+  const { posts } = Route.useLoaderData();
   const [active, setActive] = useState<string>("All");
-  const list = active === "All" ? blogPosts : blogPosts.filter((p) => p.category === active);
+  const present = Array.from(new Set(posts.map((p) => p.category)));
+  const tabs = ["All", ...ALL_CATEGORIES.filter((c) => present.includes(c))];
+  const list = active === "All" ? posts : posts.filter((p) => p.category === active);
 
   return (
     <PageShell>
       <PageHeader
         eyebrow="Nexoras Blog"
         title="Guides that make you sharper"
-        description="Long-form, original articles on AI study tools, productivity, resume building, automation, and careers — written for students and early-career professionals."
+        description="Long-form articles on AI study tools, exam preparation, productivity, resume building, and careers — written for students and early-career professionals. Fresh content every week."
       />
       <section className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
         <div className="flex flex-wrap gap-2">
-          {(["All", ...categories] as const).map((c) => (
+          {tabs.map((c) => (
             <button
               key={c}
               onClick={() => setActive(c)}
@@ -41,6 +47,16 @@ function Blog() {
             >
               {c}
             </button>
+          ))}
+          {ALL_CATEGORIES.filter((c) => present.includes(c)).map((c) => (
+            <Link
+              key={`link-${c}`}
+              to="/blog/category/$cat"
+              params={{ cat: c.toLowerCase().replace(/\s+/g, "-") }}
+              className="rounded-full border border-border/60 bg-transparent px-3 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              /{c.toLowerCase().replace(/\s+/g, "-")}
+            </Link>
           ))}
         </div>
 
@@ -62,6 +78,9 @@ function Blog() {
               </p>
             </Link>
           ))}
+          {list.length === 0 && (
+            <p className="text-sm text-muted-foreground">No articles in this category yet.</p>
+          )}
         </div>
       </section>
     </PageShell>
