@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
-import { blogPosts } from "@/lib/blog-data";
+import { fetchAllPosts, ALL_CATEGORIES } from "@/lib/blog-store";
 
 const BASE_URL = "https://nexoras.online";
 
@@ -46,14 +46,20 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/signup", changefreq: "yearly", priority: "0.3" },
         ];
 
-        const blogEntries: SitemapEntry[] = blogPosts.map((p) => ({
+        const allPosts = await fetchAllPosts();
+        const blogEntries: SitemapEntry[] = allPosts.map((p) => ({
           path: `/blog/${p.slug}`,
           lastmod: p.date,
           changefreq: "monthly",
           priority: "0.8",
         }));
+        const categoryEntries: SitemapEntry[] = ALL_CATEGORIES.map((c) => ({
+          path: `/blog/category/${c.toLowerCase().replace(/\s+/g, "-")}`,
+          changefreq: "weekly",
+          priority: "0.6",
+        }));
 
-        const entries = [...staticEntries, ...blogEntries];
+        const entries = [...staticEntries, ...categoryEntries, ...blogEntries];
 
         const urls = entries.map((e) =>
           [
