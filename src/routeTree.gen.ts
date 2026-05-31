@@ -48,6 +48,8 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
+import { Route as AdminBlogRouteImport } from './routes/admin.blog'
+import { Route as BlogCategoryCatRouteImport } from './routes/blog.category.$cat'
 import { Route as ApiPublicHooksPublishScheduledRouteImport } from './routes/api/public/hooks/publish-scheduled'
 
 const ToolsRoute = ToolsRouteImport.update({
@@ -245,6 +247,16 @@ const ApiBlogAdminRoute = ApiBlogAdminRouteImport.update({
   path: '/api/blog-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminBlogRoute = AdminBlogRouteImport.update({
+  id: '/admin/blog',
+  path: '/admin/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogCategoryCatRoute = BlogCategoryCatRouteImport.update({
+  id: '/category/$cat',
+  path: '/category/$cat',
+  getParentRoute: () => BlogRoute,
+} as any)
 const ApiPublicHooksPublishScheduledRoute =
   ApiPublicHooksPublishScheduledRouteImport.update({
     id: '/api/public/hooks/publish-scheduled',
@@ -286,12 +298,14 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/blog/category/$cat': typeof BlogCategoryCatRoute
   '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
 export interface FileRoutesByTo {
@@ -328,12 +342,14 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/blog/category/$cat': typeof BlogCategoryCatRoute
   '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
 export interface FileRoutesById {
@@ -371,12 +387,14 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/blog/category/$cat': typeof BlogCategoryCatRoute
   '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
 export interface FileRouteTypes {
@@ -415,12 +433,14 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/blog/category/$cat'
     | '/api/public/hooks/publish-scheduled'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -457,12 +477,14 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/blog/category/$cat'
     | '/api/public/hooks/publish-scheduled'
   id:
     | '__root__'
@@ -499,12 +521,14 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/blog/category/$cat'
     | '/api/public/hooks/publish-scheduled'
   fileRoutesById: FileRoutesById
 }
@@ -542,6 +566,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ToolsRoute: typeof ToolsRoute
+  AdminBlogRoute: typeof AdminBlogRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
@@ -825,6 +850,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBlogAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/blog': {
+      id: '/admin/blog'
+      path: '/admin/blog'
+      fullPath: '/admin/blog'
+      preLoaderRoute: typeof AdminBlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/category/$cat': {
+      id: '/blog/category/$cat'
+      path: '/category/$cat'
+      fullPath: '/blog/category/$cat'
+      preLoaderRoute: typeof BlogCategoryCatRouteImport
+      parentRoute: typeof BlogRoute
+    }
     '/api/public/hooks/publish-scheduled': {
       id: '/api/public/hooks/publish-scheduled'
       path: '/api/public/hooks/publish-scheduled'
@@ -837,10 +876,12 @@ declare module '@tanstack/react-router' {
 
 interface BlogRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
+  BlogCategoryCatRoute: typeof BlogCategoryCatRoute
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
+  BlogCategoryCatRoute: BlogCategoryCatRoute,
 }
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
@@ -879,6 +920,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   ToolsRoute: ToolsRoute,
+  AdminBlogRoute: AdminBlogRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,

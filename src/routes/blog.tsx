@@ -22,9 +22,9 @@ export const Route = createFileRoute("/blog")({
 function Blog() {
   const { posts } = Route.useLoaderData();
   const [active, setActive] = useState<string>("All");
-  const present = Array.from(new Set(posts.map((p) => p.category)));
+  const present = Array.from(new Set(posts.map((p: any) => p.category)));
   const tabs = ["All", ...ALL_CATEGORIES.filter((c) => present.includes(c))];
-  const list = active === "All" ? posts : posts.filter((p) => p.category === active);
+  const list = active === "All" ? posts : posts.filter((p: any) => p.category === active);
 
   return (
     <PageShell>
@@ -61,7 +61,7 @@ function Blog() {
         </div>
 
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((p) => (
+          {list.map((p: any) => (
             <Link
               key={p.slug}
               to="/blog/$slug"
