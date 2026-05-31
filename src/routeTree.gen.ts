@@ -47,6 +47,10 @@ import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
+import { Route as AdminBlogRouteImport } from './routes/admin.blog'
+import { Route as BlogCategoryCatRouteImport } from './routes/blog.category.$cat'
+import { Route as ApiPublicHooksPublishScheduledRouteImport } from './routes/api/public/hooks/publish-scheduled'
 
 const ToolsRoute = ToolsRouteImport.update({
   id: '/tools',
@@ -238,6 +242,27 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiBlogAdminRoute = ApiBlogAdminRouteImport.update({
+  id: '/api/blog-admin',
+  path: '/api/blog-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBlogRoute = AdminBlogRouteImport.update({
+  id: '/admin/blog',
+  path: '/admin/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogCategoryCatRoute = BlogCategoryCatRouteImport.update({
+  id: '/category/$cat',
+  path: '/category/$cat',
+  getParentRoute: () => BlogRoute,
+} as any)
+const ApiPublicHooksPublishScheduledRoute =
+  ApiPublicHooksPublishScheduledRouteImport.update({
+    id: '/api/public/hooks/publish-scheduled',
+    path: '/api/public/hooks/publish-scheduled',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -273,11 +298,15 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/admin/blog': typeof AdminBlogRoute
+  '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/blog/category/$cat': typeof BlogCategoryCatRoute
+  '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -313,11 +342,15 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/admin/blog': typeof AdminBlogRoute
+  '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/blog/category/$cat': typeof BlogCategoryCatRoute
+  '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -354,11 +387,15 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/admin/blog': typeof AdminBlogRoute
+  '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/blog/category/$cat': typeof BlogCategoryCatRoute
+  '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -396,11 +433,15 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/admin/blog'
+    | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/blog/category/$cat'
+    | '/api/public/hooks/publish-scheduled'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -436,11 +477,15 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/admin/blog'
+    | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/blog/category/$cat'
+    | '/api/public/hooks/publish-scheduled'
   id:
     | '__root__'
     | '/'
@@ -476,11 +521,15 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/admin/blog'
+    | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/blog/category/$cat'
+    | '/api/public/hooks/publish-scheduled'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -517,10 +566,13 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ToolsRoute: typeof ToolsRoute
+  AdminBlogRoute: typeof AdminBlogRoute
+  ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
   CheckoutPlanRoute: typeof CheckoutPlanRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
+  ApiPublicHooksPublishScheduledRoute: typeof ApiPublicHooksPublishScheduledRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -791,15 +843,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/blog-admin': {
+      id: '/api/blog-admin'
+      path: '/api/blog-admin'
+      fullPath: '/api/blog-admin'
+      preLoaderRoute: typeof ApiBlogAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/blog': {
+      id: '/admin/blog'
+      path: '/admin/blog'
+      fullPath: '/admin/blog'
+      preLoaderRoute: typeof AdminBlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/category/$cat': {
+      id: '/blog/category/$cat'
+      path: '/category/$cat'
+      fullPath: '/blog/category/$cat'
+      preLoaderRoute: typeof BlogCategoryCatRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/api/public/hooks/publish-scheduled': {
+      id: '/api/public/hooks/publish-scheduled'
+      path: '/api/public/hooks/publish-scheduled'
+      fullPath: '/api/public/hooks/publish-scheduled'
+      preLoaderRoute: typeof ApiPublicHooksPublishScheduledRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface BlogRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
+  BlogCategoryCatRoute: typeof BlogCategoryCatRoute
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
+  BlogCategoryCatRoute: BlogCategoryCatRoute,
 }
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
@@ -838,21 +920,14 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   ToolsRoute: ToolsRoute,
+  AdminBlogRoute: AdminBlogRoute,
+  ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
   CheckoutPlanRoute: CheckoutPlanRoute,
   InvoiceIdRoute: InvoiceIdRoute,
+  ApiPublicHooksPublishScheduledRoute: ApiPublicHooksPublishScheduledRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
