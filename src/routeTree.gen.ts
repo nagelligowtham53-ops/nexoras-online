@@ -45,6 +45,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
@@ -232,6 +233,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
+const ApiRecordAttemptRoute = ApiRecordAttemptRouteImport.update({
+  id: '/api/record-attempt',
+  path: '/api/record-attempt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
   id: '/api/generate-questions',
   path: '/api/generate-questions',
@@ -302,6 +308,7 @@ export interface FileRoutesByFullPath {
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -346,6 +353,7 @@ export interface FileRoutesByTo {
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -437,6 +446,7 @@ export interface FileRouteTypes {
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
+    | '/api/record-attempt'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -481,6 +491,7 @@ export interface FileRouteTypes {
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
+    | '/api/record-attempt'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -525,6 +536,7 @@ export interface FileRouteTypes {
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-questions'
+    | '/api/record-attempt'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -570,6 +582,7 @@ export interface RootRouteChildren {
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
+  ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
   CheckoutPlanRoute: typeof CheckoutPlanRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   ApiPublicHooksPublishScheduledRoute: typeof ApiPublicHooksPublishScheduledRoute
@@ -829,6 +842,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
     }
+    '/api/record-attempt': {
+      id: '/api/record-attempt'
+      path: '/api/record-attempt'
+      fullPath: '/api/record-attempt'
+      preLoaderRoute: typeof ApiRecordAttemptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/generate-questions': {
       id: '/api/generate-questions'
       path: '/api/generate-questions'
@@ -924,6 +944,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
+  ApiRecordAttemptRoute: ApiRecordAttemptRoute,
   CheckoutPlanRoute: CheckoutPlanRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   ApiPublicHooksPublishScheduledRoute: ApiPublicHooksPublishScheduledRoute,
