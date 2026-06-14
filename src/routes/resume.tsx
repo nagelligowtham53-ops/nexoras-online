@@ -228,7 +228,7 @@ function ResumePage() {
           children: [run(text)],
         });
 
-      const children: Paragraph[] = [];
+      const children: InstanceType<typeof Paragraph>[] = [];
 
       // Header — Name, role, contact
       children.push(new Paragraph({
