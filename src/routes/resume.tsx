@@ -42,17 +42,23 @@ type ResumeData = {
   certifications: Certification[];
 };
 
-type TemplateId = "modern" | "minimal" | "corporate" | "creative" | "tech" | "academic" | "analyst";
+type TemplateId =
+  | "modern" | "minimal" | "corporate" | "creative" | "tech" | "academic" | "analyst"
+  | "harvard" | "stanford" | "iit" | "faang";
 type Customization = { template: TemplateId; accent: string; font: string };
 
 // ============ Templates meta ============
 const TEMPLATES: { id: TemplateId; name: string; tag: string; desc: string; accent: string }[] = [
   { id: "modern",    name: "Modern Professional",     tag: "Popular",       desc: "Clean two-tone layout with sidebar accents. Great for any role.",          accent: "#6366f1" },
-  { id: "minimal",   name: "ATS-Friendly Corporate",  tag: "ATS-Safe",      desc: "Pure typography, single column. Highest ATS pass rate.",                   accent: "#0f172a" },
+  { id: "harvard",   name: "Harvard Resume",          tag: "Ivy League",    desc: "Classic Harvard OCS layout — serif, dense, single column. Recruiter-loved.", accent: "#a51c30" },
+  { id: "stanford",  name: "Stanford Resume",         tag: "Ivy League",    desc: "Stanford-style clean header, balanced sections, sans-serif elegance.",     accent: "#8c1515" },
+  { id: "iit",       name: "IIT Placement Resume",    tag: "Campus",        desc: "Single-page IIT placement format with POR, achievements, and CGPA focus.", accent: "#1e3a8a" },
+  { id: "faang",     name: "FAANG Software Engineer", tag: "Big Tech",      desc: "Metrics-first SWE resume tuned for Google/Meta/Amazon hiring bars.",        accent: "#0f766e" },
+  { id: "minimal",   name: "Minimal ATS Resume",      tag: "ATS-Safe",      desc: "Pure typography, single column. Highest ATS pass rate.",                   accent: "#0f172a" },
   { id: "academic",  name: "Student / Fresher",       tag: "Entry Level",   desc: "Education-first layout for students, interns and freshers.",               accent: "#7c3aed" },
   { id: "tech",      name: "Software Engineer",       tag: "Engineer",      desc: "Mono-accent, code-style sections. Built for SWE/AI/ML roles.",             accent: "#10b981" },
   { id: "analyst",   name: "Data Analyst",            tag: "Analytics",     desc: "Metric-led layout with KPI highlights for analyst & data roles.",          accent: "#0ea5e9" },
-  { id: "corporate", name: "Business / Management",   tag: "Professional",  desc: "Formal serif headings. Perfect for finance, consulting, MBA.",             accent: "#0e7490" },
+  { id: "corporate", name: "Business Resume",         tag: "Professional",  desc: "Formal serif headings. Perfect for finance, consulting, MBA.",             accent: "#0e7490" },
   { id: "creative",  name: "Creative Designer",       tag: "Designer",      desc: "Bold gradient header with stats. For design and product roles.",           accent: "#ec4899" },
 ];
 
@@ -137,23 +143,31 @@ function ResumePage() {
     try {
       const node = document.getElementById("resume-print-area");
       if (!node) throw new Error("Preview not ready");
+      // html2canvas-pro supports oklch / lab / color() — the original html2canvas
+      // fails on Tailwind v4 design tokens and was the cause of past PDF errors.
       const [{ default: html2canvas }, jsPdfMod] = await Promise.all([
-        import("html2canvas"),
+        import("html2canvas-pro"),
         import("jspdf"),
       ]);
       const jsPDF = jsPdfMod.jsPDF;
-      // Render preview exactly as shown (WYSIWYG).
+      // Force pixel width to A4 ratio so output paginates predictably.
+      const prevWidth = node.style.width;
+      node.style.width = "794px"; // 210mm @ 96dpi
+      await new Promise((r) => requestAnimationFrame(r));
       const canvas = await html2canvas(node, {
-        scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false,
-        windowWidth: node.scrollWidth,
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        windowWidth: 794,
       });
+      node.style.width = prevWidth;
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const imgW = pageW;
       const imgH = (canvas.height * imgW) / canvas.width;
-      // Slice across multiple pages — preserves exact preview look.
       let heightLeft = imgH;
       let position = 0;
       pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
@@ -175,45 +189,171 @@ function ResumePage() {
   async function exportDOCX() {
     setExporting("docx");
     try {
-      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = await import("docx");
-      const para = (t: string, opts: { bold?: boolean; size?: number } = {}) =>
-        new Paragraph({ children: [new TextRun({ text: t, bold: opts.bold, size: opts.size ?? 22 })] });
-      const heading = (t: string) =>
-        new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 }, children: [new TextRun({ text: t.toUpperCase(), bold: true, color: cust.accent.replace("#",""), size: 24 })] });
-      const children: import("docx").Paragraph[] = [];
-      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.name, bold: true, size: 40 })] }));
-      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.role, italics: true, size: 22 })] }));
-      const contact = [data.email, data.phone, data.location, data.website, data.linkedin, data.github].filter(Boolean).join("  •  ");
-      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20 })] }));
-      if (data.summary) { children.push(heading("Summary")); children.push(para(data.summary)); }
+      const {
+        Document, Packer, Paragraph, TextRun, AlignmentType,
+        BorderStyle, LevelFormat, ExternalHyperlink,
+      } = await import("docx");
+
+      // Pick a font family that maps the on-screen choice to a Word-safe equivalent.
+      const fontMap: Record<string, string> = {
+        inter: "Calibri",
+        serif: "Georgia",
+        mono: "Consolas",
+        display: "Calibri",
+      };
+      const docFont = fontMap[cust.font] || "Calibri";
+      const accentHex = cust.accent.replace("#", "").toUpperCase();
+
+      const run = (text: string, opts: { bold?: boolean; italics?: boolean; size?: number; color?: string } = {}) =>
+        new TextRun({ text, bold: opts.bold, italics: opts.italics, size: opts.size ?? 22, color: opts.color, font: docFont });
+
+      const para = (text: string, opts: { bold?: boolean; size?: number; italics?: boolean; align?: typeof AlignmentType[keyof typeof AlignmentType] } = {}) =>
+        new Paragraph({
+          alignment: opts.align,
+          spacing: { after: 80 },
+          children: [run(text, opts)],
+        });
+
+      const sectionHeading = (text: string) =>
+        new Paragraph({
+          spacing: { before: 240, after: 120 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: accentHex, space: 2 } },
+          children: [run(text.toUpperCase(), { bold: true, size: 24, color: accentHex })],
+        });
+
+      const bullet = (text: string) =>
+        new Paragraph({
+          numbering: { reference: "resume-bullets", level: 0 },
+          spacing: { after: 40 },
+          children: [run(text)],
+        });
+
+      const children: InstanceType<typeof Paragraph>[] = [];
+
+      // Header — Name, role, contact
+      children.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 80 },
+        children: [run(data.name, { bold: true, size: 44, color: accentHex })],
+      }));
+      if (data.role) children.push(para(data.role, { italics: true, size: 22, align: AlignmentType.CENTER }));
+
+      const contactBits = [data.email, data.phone, data.location].filter(Boolean).join("  •  ");
+      if (contactBits) children.push(para(contactBits, { size: 20, align: AlignmentType.CENTER }));
+
+      const links = [
+        data.website  ? { label: data.website,  url: data.website.startsWith("http") ? data.website : `https://${data.website}` } : null,
+        data.linkedin ? { label: data.linkedin, url: data.linkedin.startsWith("http") ? data.linkedin : `https://${data.linkedin}` } : null,
+        data.github   ? { label: data.github,   url: data.github.startsWith("http") ? data.github : `https://${data.github}` } : null,
+      ].filter(Boolean) as { label: string; url: string }[];
+      if (links.length) {
+        const linkChildren: (InstanceType<typeof TextRun> | InstanceType<typeof ExternalHyperlink>)[] = [];
+        links.forEach((l, i) => {
+          if (i > 0) linkChildren.push(run("  •  ", { size: 20 }));
+          linkChildren.push(new ExternalHyperlink({
+            link: l.url,
+            children: [new TextRun({ text: l.label, size: 20, color: accentHex, font: docFont, underline: {} })],
+          }));
+        });
+        children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: linkChildren }));
+      }
+
+      if (data.summary) {
+        children.push(sectionHeading("Summary"));
+        children.push(para(data.summary));
+      }
+
       if (data.experience.length) {
-        children.push(heading("Experience"));
+        children.push(sectionHeading("Experience"));
         for (const x of data.experience) {
-          children.push(new Paragraph({ children: [new TextRun({ text: `${x.role} — ${x.company}`, bold: true, size: 22 }), new TextRun({ text: `   ${x.period}`, italics: true, size: 20 })] }));
-          for (const b of x.bullets.filter(Boolean)) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: 22 })] }));
+          children.push(new Paragraph({
+            spacing: { before: 120, after: 40 },
+            children: [
+              run(`${x.role}`, { bold: true, size: 22 }),
+              run(` — ${x.company}`, { size: 22 }),
+              run(`   ${x.period}`, { italics: true, size: 20, color: "666666" }),
+            ],
+          }));
+          for (const b of x.bullets.filter(Boolean)) children.push(bullet(b));
         }
       }
+
       if (data.education.length) {
-        children.push(heading("Education"));
+        children.push(sectionHeading("Education"));
         for (const e of data.education) {
-          children.push(new Paragraph({ children: [new TextRun({ text: `${e.degree} — ${e.school}`, bold: true, size: 22 }), new TextRun({ text: `   ${e.period}`, italics: true, size: 20 })] }));
+          children.push(new Paragraph({
+            spacing: { before: 80, after: 20 },
+            children: [
+              run(`${e.degree}`, { bold: true, size: 22 }),
+              run(` — ${e.school}`, { size: 22 }),
+              run(`   ${e.period}`, { italics: true, size: 20, color: "666666" }),
+            ],
+          }));
           if (e.details) children.push(para(e.details, { size: 20 }));
         }
       }
-      if (data.skills) { children.push(heading("Skills")); children.push(para(data.skills)); }
+
+      if (data.skills) {
+        children.push(sectionHeading("Skills"));
+        const skillList = data.skills.split(",").map((s) => s.trim()).filter(Boolean);
+        // Keep skills as a single paragraph with bullet separators so ATS parsers
+        // pick them up as a comma list, but they still read as a structured group.
+        children.push(new Paragraph({
+          spacing: { after: 80 },
+          children: [run(skillList.join("  •  "), { size: 22 })],
+        }));
+      }
+
       if (data.projects.length) {
-        children.push(heading("Projects"));
+        children.push(sectionHeading("Projects"));
         for (const p of data.projects) {
-          children.push(new Paragraph({ children: [new TextRun({ text: `${p.name} — `, bold: true, size: 22 }), new TextRun({ text: p.tech, italics: true, size: 20 })] }));
+          children.push(new Paragraph({
+            spacing: { before: 80, after: 20 },
+            children: [
+              run(`${p.name}`, { bold: true, size: 22, color: accentHex }),
+              run(` — ${p.tech}`, { italics: true, size: 20 }),
+            ],
+          }));
           if (p.description) children.push(para(p.description, { size: 20 }));
-          if (p.link) children.push(para(p.link, { size: 18 }));
+          if (p.link) {
+            const url = p.link.startsWith("http") ? p.link : `https://${p.link}`;
+            children.push(new Paragraph({
+              spacing: { after: 40 },
+              children: [new ExternalHyperlink({
+                link: url,
+                children: [new TextRun({ text: p.link, size: 18, color: accentHex, font: docFont, underline: {} })],
+              })],
+            }));
+          }
         }
       }
+
       if (data.certifications.length) {
-        children.push(heading("Certifications"));
-        for (const c of data.certifications) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: `${c.name} — ${c.issuer} (${c.year})`, size: 22 })] }));
+        children.push(sectionHeading("Certifications"));
+        for (const c of data.certifications) children.push(bullet(`${c.name} — ${c.issuer} (${c.year})`));
       }
-      const doc = new Document({ sections: [{ children }] });
+
+      const doc = new Document({
+        creator: "Nexoras Resume Builder",
+        title: `${data.name} Resume`,
+        styles: { default: { document: { run: { font: docFont, size: 22 } } } },
+        numbering: {
+          config: [{
+            reference: "resume-bullets",
+            levels: [{
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: "•",
+              alignment: AlignmentType.LEFT,
+              style: { paragraph: { indent: { left: 540, hanging: 270 } } },
+            }],
+          }],
+        },
+        sections: [{
+          properties: { page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } } },
+          children,
+        }],
+      });
       const blob = await Packer.toBlob(doc);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -818,6 +958,10 @@ function ResumeView({ data, cust, mini }: { data: ResumeData; cust: Customizatio
       {cust.template === "tech"      && <TechTpl {...props} />}
       {cust.template === "academic"  && <AcademicTpl {...props} />}
       {cust.template === "analyst"   && <AnalystTpl {...props} />}
+      {cust.template === "harvard"   && <HarvardTpl {...props} />}
+      {cust.template === "stanford"  && <StanfordTpl {...props} />}
+      {cust.template === "iit"       && <IITTpl {...props} />}
+      {cust.template === "faang"     && <FaangTpl {...props} />}
     </div>
   );
 }
@@ -1117,4 +1261,266 @@ function ProjItem({ p, accent }: { p: Project; accent: string }) {
       <div className="text-slate-700">{p.description}</div>
     </div>
   );
+}
+
+// ===== Harvard (classic OCS layout: serif, dense, single column) =====
+function HarvardTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-3 max-w-3xl mx-auto" style={{ fontFamily: "'Source Serif Pro', Georgia, serif" }}>
+      <header className="text-center">
+        <h1 className="text-[26px] font-bold tracking-wide uppercase">{data.name}</h1>
+        <div className="text-[11px] text-slate-700 mt-1">
+          {[data.location, data.email, data.phone, data.linkedin, data.github, data.website].filter(Boolean).join(" • ")}
+        </div>
+      </header>
+      <div className="border-t border-slate-800" />
+      {data.summary && (
+        <section>
+          <HarvardH>Summary</HarvardH>
+          <p className="text-[12px] leading-snug">{data.summary}</p>
+        </section>
+      )}
+      {data.education.length > 0 && (
+        <section>
+          <HarvardH>Education</HarvardH>
+          {data.education.map((e) => (
+            <div key={e.id} className="mb-2 text-[12px]">
+              <div className="flex justify-between"><strong>{e.school}</strong><em>{e.period}</em></div>
+              <div>{e.degree}{e.details ? ` — ${e.details}` : ""}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.experience.length > 0 && (
+        <section>
+          <HarvardH>Experience</HarvardH>
+          {data.experience.map((x) => (
+            <div key={x.id} className="mb-2 text-[12px]">
+              <div className="flex justify-between"><strong>{x.company}</strong><em>{x.period}</em></div>
+              <div className="italic">{x.role}</div>
+              <ul className="list-disc list-outside ml-5 mt-0.5">
+                {x.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.projects.length > 0 && (
+        <section>
+          <HarvardH>Projects</HarvardH>
+          {data.projects.map((p) => (
+            <div key={p.id} className="mb-1.5 text-[12px]">
+              <div><strong>{p.name}</strong> — <em>{p.tech}</em></div>
+              <div>{p.description}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      <section>
+        <HarvardH>Skills &amp; Interests</HarvardH>
+        <div className="text-[12px]"><strong>Skills:</strong> {data.skills}</div>
+        {data.certifications.length > 0 && (
+          <div className="text-[12px]"><strong>Certifications:</strong> {data.certifications.map((c) => `${c.name} (${c.issuer}, ${c.year})`).join("; ")}</div>
+        )}
+      </section>
+      <span style={{ color: accent, display: "none" }}>{accent}</span>
+    </div>
+  );
+}
+function HarvardH({ children }: { children: React.ReactNode }) {
+  return <div className="font-bold uppercase tracking-wider text-[12px] border-b border-slate-400 mb-1 mt-1">{children}</div>;
+}
+
+// ===== Stanford (clean header, balanced sans-serif) =====
+function StanfordTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <header>
+        <h1 className="text-3xl font-light tracking-tight" style={{ color: accent }}>{data.name}</h1>
+        <p className="text-sm text-slate-700 mt-0.5">{data.role}</p>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
+          {[data.email, data.phone, data.location, data.linkedin, data.github, data.website].filter(Boolean).join(" | ")}
+        </div>
+        <div className="mt-3 h-0.5" style={{ background: accent }} />
+      </header>
+      {data.summary && <Block title="Profile" accent={accent} flat><p className="text-xs leading-relaxed">{data.summary}</p></Block>}
+      {data.education.length > 0 && (
+        <Block title="Education" accent={accent} flat>
+          {data.education.map((e) => (
+            <div key={e.id} className="mb-2 text-xs">
+              <div className="flex justify-between"><strong>{e.school}</strong><span className="text-slate-500">{e.period}</span></div>
+              <div>{e.degree}</div>
+              {e.details && <div className="text-slate-600">{e.details}</div>}
+            </div>
+          ))}
+        </Block>
+      )}
+      <Block title="Experience" accent={accent} flat>{data.experience.map((x) => <ExpItem key={x.id} x={x} accent={accent} />)}</Block>
+      {data.projects.length > 0 && <Block title="Projects" accent={accent} flat>{data.projects.map((p) => <ProjItem key={p.id} p={p} accent={accent} />)}</Block>}
+      <Block title="Skills" accent={accent} flat><SkillsList data={data} /></Block>
+      {data.certifications.length > 0 && (
+        <Block title="Honors &amp; Certifications" accent={accent} flat>
+          <ul className="text-xs space-y-1">{data.certifications.map((c) => <li key={c.id}>• {c.name} — {c.issuer} ({c.year})</li>)}</ul>
+        </Block>
+      )}
+    </div>
+  );
+}
+
+// ===== IIT Placement (single page, POR/Achievements oriented) =====
+function IITTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-3" style={{ fontFamily: "'Source Serif Pro', Georgia, serif" }}>
+      <header className="text-center border-b-2 pb-2" style={{ borderColor: accent }}>
+        <h1 className="text-2xl font-bold tracking-wide">{data.name}</h1>
+        <p className="text-[12px] text-slate-700">{data.role}</p>
+        <div className="text-[11px] text-slate-600 mt-1">
+          {[data.email, data.phone, data.linkedin, data.github, data.website, data.location].filter(Boolean).join(" | ")}
+        </div>
+      </header>
+      {data.education.length > 0 && (
+        <section>
+          <IITH accent={accent}>Education</IITH>
+          <table className="w-full text-[11px] border-collapse">
+            <thead>
+              <tr className="text-left" style={{ background: `${accent}15` }}>
+                <th className="border border-slate-300 px-2 py-1">Degree</th>
+                <th className="border border-slate-300 px-2 py-1">Institute</th>
+                <th className="border border-slate-300 px-2 py-1">Year</th>
+                <th className="border border-slate-300 px-2 py-1">CGPA / %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.education.map((e) => (
+                <tr key={e.id}>
+                  <td className="border border-slate-300 px-2 py-1">{e.degree}</td>
+                  <td className="border border-slate-300 px-2 py-1">{e.school}</td>
+                  <td className="border border-slate-300 px-2 py-1">{e.period}</td>
+                  <td className="border border-slate-300 px-2 py-1">{e.details}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+      {data.experience.length > 0 && (
+        <section>
+          <IITH accent={accent}>Internships &amp; Experience</IITH>
+          {data.experience.map((x) => (
+            <div key={x.id} className="mb-2 text-[11px]">
+              <div className="flex justify-between"><strong>{x.role}</strong><em>{x.period}</em></div>
+              <div className="italic" style={{ color: accent }}>{x.company}</div>
+              <ul className="list-disc list-outside ml-5">
+                {x.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.projects.length > 0 && (
+        <section>
+          <IITH accent={accent}>Key Projects</IITH>
+          {data.projects.map((p) => (
+            <div key={p.id} className="mb-1.5 text-[11px]">
+              <div><strong>{p.name}</strong> | <em>{p.tech}</em></div>
+              <div>{p.description}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      <section>
+        <IITH accent={accent}>Technical Skills</IITH>
+        <div className="text-[11px]">{data.skills}</div>
+      </section>
+      {data.certifications.length > 0 && (
+        <section>
+          <IITH accent={accent}>Achievements &amp; Certifications</IITH>
+          <ul className="list-disc list-outside ml-5 text-[11px]">
+            {data.certifications.map((c) => <li key={c.id}>{c.name} — {c.issuer} ({c.year})</li>)}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+function IITH({ accent, children }: { accent: string; children: React.ReactNode }) {
+  return <div className="font-bold uppercase tracking-wider text-[12px] mb-1 pb-0.5 border-b" style={{ color: accent, borderColor: accent }}>{children}</div>;
+}
+
+// ===== FAANG SWE (metrics-first, dense single column) =====
+function FaangTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-3 max-w-3xl mx-auto">
+      <header>
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">{data.name}</h1>
+          <span className="text-[11px] text-slate-600">{data.location}</span>
+        </div>
+        <div className="text-[12px] text-slate-700">{data.role}</div>
+        <div className="mt-1 text-[11px] text-slate-600">
+          {[data.email, data.phone, data.linkedin, data.github, data.website].filter(Boolean).join("  •  ")}
+        </div>
+        <div className="mt-2 h-px" style={{ background: accent }} />
+      </header>
+      {data.summary && (
+        <section>
+          <FaangH accent={accent}>Summary</FaangH>
+          <p className="text-[12px] leading-snug">{data.summary}</p>
+        </section>
+      )}
+      <section>
+        <FaangH accent={accent}>Skills</FaangH>
+        <div className="text-[12px]">{data.skills}</div>
+      </section>
+      {data.experience.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Experience</FaangH>
+          {data.experience.map((x) => (
+            <div key={x.id} className="mb-2 text-[12px]">
+              <div className="flex justify-between">
+                <div><strong>{x.role}</strong> · <span style={{ color: accent }}>{x.company}</span></div>
+                <span className="text-slate-500">{x.period}</span>
+              </div>
+              <ul className="list-disc list-outside ml-5 mt-0.5">
+                {x.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.projects.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Projects</FaangH>
+          {data.projects.map((p) => (
+            <div key={p.id} className="mb-1.5 text-[12px]">
+              <div><strong style={{ color: accent }}>{p.name}</strong> — <em>{p.tech}</em></div>
+              <div>{p.description}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.education.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Education</FaangH>
+          {data.education.map((e) => (
+            <div key={e.id} className="text-[12px] mb-1">
+              <div className="flex justify-between"><strong>{e.degree}, {e.school}</strong><span className="text-slate-500">{e.period}</span></div>
+              {e.details && <div className="text-slate-600">{e.details}</div>}
+            </div>
+          ))}
+        </section>
+      )}
+      {data.certifications.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Certifications</FaangH>
+          <ul className="list-disc list-outside ml-5 text-[12px]">
+            {data.certifications.map((c) => <li key={c.id}>{c.name} — {c.issuer} ({c.year})</li>)}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+function FaangH({ accent, children }: { accent: string; children: React.ReactNode }) {
+  return <div className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: accent }}>{children}</div>;
 }
