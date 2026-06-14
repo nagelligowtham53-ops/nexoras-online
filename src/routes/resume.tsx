@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Download, Sparkles, Mail, Phone, MapPin, Globe, Linkedin, Github,
   Plus, Trash2, Save, Wand2, FileCheck2, Loader2, Upload, Search,
-  GripVertical, Star,
+  GripVertical, Star, Printer, Share2, FileText, MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 
