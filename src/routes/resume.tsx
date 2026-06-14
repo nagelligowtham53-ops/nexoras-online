@@ -981,6 +981,51 @@ function AcademicTpl({ data, accent }: { data: ResumeData; accent: string }) {
   );
 }
 
+// ===== Analyst =====
+function AnalystTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-4">
+      <header className="flex items-start justify-between border-b-2 pb-3" style={{ borderColor: accent }}>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: accent }}>{data.name}</h1>
+          <p className="text-sm text-slate-700">{data.role}</p>
+          <div className="mt-1"><ContactRow data={data} /></div>
+        </div>
+        {data.photo && <img src={data.photo} alt="" className="h-16 w-16 rounded-md object-cover" />}
+      </header>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <Kpi label="Years exp." value={String(data.experience.length)} accent={accent} />
+        <Kpi label="Projects" value={String(data.projects.length)} accent={accent} />
+        <Kpi label="Certifications" value={String(data.certifications.length)} accent={accent} />
+      </div>
+      <Block title="Profile" accent={accent}><p className="text-xs leading-relaxed">{data.summary}</p></Block>
+      <Block title="Core Skills" accent={accent}><SkillsList data={data} /></Block>
+      <Block title="Experience" accent={accent}>{data.experience.map((x) => <ExpItem key={x.id} x={x} accent={accent} />)}</Block>
+      {data.projects.length > 0 && <Block title="Analytics Projects" accent={accent}>{data.projects.map((p) => <ProjItem key={p.id} p={p} accent={accent} />)}</Block>}
+      <div className="grid grid-cols-2 gap-4">
+        <Block title="Education" accent={accent}>
+          {data.education.map((e) => (
+            <div key={e.id} className="text-xs mb-1"><strong>{e.degree}</strong><div>{e.school} · {e.period}</div><div className="text-slate-500">{e.details}</div></div>
+          ))}
+        </Block>
+        {data.certifications.length > 0 && <Block title="Certifications" accent={accent}>
+          <ul className="text-xs space-y-1">{data.certifications.map((c) => <li key={c.id}>• {c.name} — {c.issuer} ({c.year})</li>)}</ul>
+        </Block>}
+      </div>
+    </div>
+  );
+}
+function Kpi({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 py-2">
+      <div className="text-lg font-bold" style={{ color: accent }}>{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-slate-500">{label}</div>
+    </div>
+  );
+}
+
+
+
 // shared block + atoms
 function H({ accent, children }: { accent: string; children: React.ReactNode }) {
   return <div className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: accent }}>{children}</div>;
