@@ -189,45 +189,171 @@ function ResumePage() {
   async function exportDOCX() {
     setExporting("docx");
     try {
-      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = await import("docx");
-      const para = (t: string, opts: { bold?: boolean; size?: number } = {}) =>
-        new Paragraph({ children: [new TextRun({ text: t, bold: opts.bold, size: opts.size ?? 22 })] });
-      const heading = (t: string) =>
-        new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 }, children: [new TextRun({ text: t.toUpperCase(), bold: true, color: cust.accent.replace("#",""), size: 24 })] });
-      const children: import("docx").Paragraph[] = [];
-      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.name, bold: true, size: 40 })] }));
-      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.role, italics: true, size: 22 })] }));
-      const contact = [data.email, data.phone, data.location, data.website, data.linkedin, data.github].filter(Boolean).join("  •  ");
-      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20 })] }));
-      if (data.summary) { children.push(heading("Summary")); children.push(para(data.summary)); }
+      const {
+        Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType,
+        BorderStyle, LevelFormat, ExternalHyperlink,
+      } = await import("docx");
+
+      // Pick a font family that maps the on-screen choice to a Word-safe equivalent.
+      const fontMap: Record<string, string> = {
+        inter: "Calibri",
+        serif: "Georgia",
+        mono: "Consolas",
+        display: "Calibri",
+      };
+      const docFont = fontMap[cust.font] || "Calibri";
+      const accentHex = cust.accent.replace("#", "").toUpperCase();
+
+      const run = (text: string, opts: { bold?: boolean; italics?: boolean; size?: number; color?: string } = {}) =>
+        new TextRun({ text, bold: opts.bold, italics: opts.italics, size: opts.size ?? 22, color: opts.color, font: docFont });
+
+      const para = (text: string, opts: { bold?: boolean; size?: number; italics?: boolean; align?: typeof AlignmentType[keyof typeof AlignmentType] } = {}) =>
+        new Paragraph({
+          alignment: opts.align,
+          spacing: { after: 80 },
+          children: [run(text, opts)],
+        });
+
+      const sectionHeading = (text: string) =>
+        new Paragraph({
+          spacing: { before: 240, after: 120 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: accentHex, space: 2 } },
+          children: [run(text.toUpperCase(), { bold: true, size: 24, color: accentHex })],
+        });
+
+      const bullet = (text: string) =>
+        new Paragraph({
+          numbering: { reference: "resume-bullets", level: 0 },
+          spacing: { after: 40 },
+          children: [run(text)],
+        });
+
+      const children: Paragraph[] = [];
+
+      // Header — Name, role, contact
+      children.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 80 },
+        children: [run(data.name, { bold: true, size: 44, color: accentHex })],
+      }));
+      if (data.role) children.push(para(data.role, { italics: true, size: 22, align: AlignmentType.CENTER }));
+
+      const contactBits = [data.email, data.phone, data.location].filter(Boolean).join("  •  ");
+      if (contactBits) children.push(para(contactBits, { size: 20, align: AlignmentType.CENTER }));
+
+      const links = [
+        data.website  ? { label: data.website,  url: data.website.startsWith("http") ? data.website : `https://${data.website}` } : null,
+        data.linkedin ? { label: data.linkedin, url: data.linkedin.startsWith("http") ? data.linkedin : `https://${data.linkedin}` } : null,
+        data.github   ? { label: data.github,   url: data.github.startsWith("http") ? data.github : `https://${data.github}` } : null,
+      ].filter(Boolean) as { label: string; url: string }[];
+      if (links.length) {
+        const linkChildren: (TextRun | ExternalHyperlink)[] = [];
+        links.forEach((l, i) => {
+          if (i > 0) linkChildren.push(run("  •  ", { size: 20 }));
+          linkChildren.push(new ExternalHyperlink({
+            link: l.url,
+            children: [new TextRun({ text: l.label, size: 20, color: accentHex, font: docFont, underline: {} })],
+          }));
+        });
+        children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: linkChildren }));
+      }
+
+      if (data.summary) {
+        children.push(sectionHeading("Summary"));
+        children.push(para(data.summary));
+      }
+
       if (data.experience.length) {
-        children.push(heading("Experience"));
+        children.push(sectionHeading("Experience"));
         for (const x of data.experience) {
-          children.push(new Paragraph({ children: [new TextRun({ text: `${x.role} — ${x.company}`, bold: true, size: 22 }), new TextRun({ text: `   ${x.period}`, italics: true, size: 20 })] }));
-          for (const b of x.bullets.filter(Boolean)) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: 22 })] }));
+          children.push(new Paragraph({
+            spacing: { before: 120, after: 40 },
+            children: [
+              run(`${x.role}`, { bold: true, size: 22 }),
+              run(` — ${x.company}`, { size: 22 }),
+              run(`   ${x.period}`, { italics: true, size: 20, color: "666666" }),
+            ],
+          }));
+          for (const b of x.bullets.filter(Boolean)) children.push(bullet(b));
         }
       }
+
       if (data.education.length) {
-        children.push(heading("Education"));
+        children.push(sectionHeading("Education"));
         for (const e of data.education) {
-          children.push(new Paragraph({ children: [new TextRun({ text: `${e.degree} — ${e.school}`, bold: true, size: 22 }), new TextRun({ text: `   ${e.period}`, italics: true, size: 20 })] }));
+          children.push(new Paragraph({
+            spacing: { before: 80, after: 20 },
+            children: [
+              run(`${e.degree}`, { bold: true, size: 22 }),
+              run(` — ${e.school}`, { size: 22 }),
+              run(`   ${e.period}`, { italics: true, size: 20, color: "666666" }),
+            ],
+          }));
           if (e.details) children.push(para(e.details, { size: 20 }));
         }
       }
-      if (data.skills) { children.push(heading("Skills")); children.push(para(data.skills)); }
+
+      if (data.skills) {
+        children.push(sectionHeading("Skills"));
+        const skillList = data.skills.split(",").map((s) => s.trim()).filter(Boolean);
+        // Keep skills as a single paragraph with bullet separators so ATS parsers
+        // pick them up as a comma list, but they still read as a structured group.
+        children.push(new Paragraph({
+          spacing: { after: 80 },
+          children: [run(skillList.join("  •  "), { size: 22 })],
+        }));
+      }
+
       if (data.projects.length) {
-        children.push(heading("Projects"));
+        children.push(sectionHeading("Projects"));
         for (const p of data.projects) {
-          children.push(new Paragraph({ children: [new TextRun({ text: `${p.name} — `, bold: true, size: 22 }), new TextRun({ text: p.tech, italics: true, size: 20 })] }));
+          children.push(new Paragraph({
+            spacing: { before: 80, after: 20 },
+            children: [
+              run(`${p.name}`, { bold: true, size: 22, color: accentHex }),
+              run(` — ${p.tech}`, { italics: true, size: 20 }),
+            ],
+          }));
           if (p.description) children.push(para(p.description, { size: 20 }));
-          if (p.link) children.push(para(p.link, { size: 18 }));
+          if (p.link) {
+            const url = p.link.startsWith("http") ? p.link : `https://${p.link}`;
+            children.push(new Paragraph({
+              spacing: { after: 40 },
+              children: [new ExternalHyperlink({
+                link: url,
+                children: [new TextRun({ text: p.link, size: 18, color: accentHex, font: docFont, underline: {} })],
+              })],
+            }));
+          }
         }
       }
+
       if (data.certifications.length) {
-        children.push(heading("Certifications"));
-        for (const c of data.certifications) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: `${c.name} — ${c.issuer} (${c.year})`, size: 22 })] }));
+        children.push(sectionHeading("Certifications"));
+        for (const c of data.certifications) children.push(bullet(`${c.name} — ${c.issuer} (${c.year})`));
       }
-      const doc = new Document({ sections: [{ children }] });
+
+      const doc = new Document({
+        creator: "Nexoras Resume Builder",
+        title: `${data.name} Resume`,
+        styles: { default: { document: { run: { font: docFont, size: 22 } } } },
+        numbering: {
+          config: [{
+            reference: "resume-bullets",
+            levels: [{
+              level: 0,
+              format: LevelFormat.BULLET,
+              text: "•",
+              alignment: AlignmentType.LEFT,
+              style: { paragraph: { indent: { left: 540, hanging: 270 } } },
+            }],
+          }],
+        },
+        sections: [{
+          properties: { page: { margin: { top: 720, bottom: 720, left: 900, right: 900 } } },
+          children,
+        }],
+      });
       const blob = await Packer.toBlob(doc);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
