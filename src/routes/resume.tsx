@@ -760,6 +760,7 @@ function ResumeView({ data, cust, mini }: { data: ResumeData; cust: Customizatio
       {cust.template === "creative"  && <CreativeTpl {...props} />}
       {cust.template === "tech"      && <TechTpl {...props} />}
       {cust.template === "academic"  && <AcademicTpl {...props} />}
+      {cust.template === "analyst"   && <AnalystTpl {...props} />}
     </div>
   );
 }
