@@ -276,13 +276,19 @@ function ResumePage() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={saveDraft}><Save className="h-4 w-4" /> Save</Button>
-            <Button size="sm" className="bg-gradient-primary text-primary-foreground shadow-glow" onClick={exportPDF}>
-              <Download className="h-4 w-4" /> Export PDF
+            <Button variant="outline" size="sm" onClick={printResume}><Printer className="h-4 w-4" /> Print</Button>
+            <Button variant="outline" size="sm" onClick={shareLink}><Share2 className="h-4 w-4" /> Share link</Button>
+            <Button variant="outline" size="sm" onClick={exportDOCX} disabled={exporting === "docx"}>
+              {exporting === "docx" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />} DOCX
+            </Button>
+            <Button size="sm" className="bg-gradient-primary text-primary-foreground shadow-glow" onClick={exportPDF} disabled={exporting === "pdf"}>
+              {exporting === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Export PDF
             </Button>
           </div>
         </div>
+
 
         <div className="grid gap-6 lg:grid-cols-[420px_1fr] print:block">
           {/* Left panel */}
