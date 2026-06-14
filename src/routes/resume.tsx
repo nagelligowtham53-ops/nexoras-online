@@ -42,17 +42,23 @@ type ResumeData = {
   certifications: Certification[];
 };
 
-type TemplateId = "modern" | "minimal" | "corporate" | "creative" | "tech" | "academic" | "analyst";
+type TemplateId =
+  | "modern" | "minimal" | "corporate" | "creative" | "tech" | "academic" | "analyst"
+  | "harvard" | "stanford" | "iit" | "faang";
 type Customization = { template: TemplateId; accent: string; font: string };
 
 // ============ Templates meta ============
 const TEMPLATES: { id: TemplateId; name: string; tag: string; desc: string; accent: string }[] = [
   { id: "modern",    name: "Modern Professional",     tag: "Popular",       desc: "Clean two-tone layout with sidebar accents. Great for any role.",          accent: "#6366f1" },
-  { id: "minimal",   name: "ATS-Friendly Corporate",  tag: "ATS-Safe",      desc: "Pure typography, single column. Highest ATS pass rate.",                   accent: "#0f172a" },
+  { id: "harvard",   name: "Harvard Resume",          tag: "Ivy League",    desc: "Classic Harvard OCS layout — serif, dense, single column. Recruiter-loved.", accent: "#a51c30" },
+  { id: "stanford",  name: "Stanford Resume",         tag: "Ivy League",    desc: "Stanford-style clean header, balanced sections, sans-serif elegance.",     accent: "#8c1515" },
+  { id: "iit",       name: "IIT Placement Resume",    tag: "Campus",        desc: "Single-page IIT placement format with POR, achievements, and CGPA focus.", accent: "#1e3a8a" },
+  { id: "faang",     name: "FAANG Software Engineer", tag: "Big Tech",      desc: "Metrics-first SWE resume tuned for Google/Meta/Amazon hiring bars.",        accent: "#0f766e" },
+  { id: "minimal",   name: "Minimal ATS Resume",      tag: "ATS-Safe",      desc: "Pure typography, single column. Highest ATS pass rate.",                   accent: "#0f172a" },
   { id: "academic",  name: "Student / Fresher",       tag: "Entry Level",   desc: "Education-first layout for students, interns and freshers.",               accent: "#7c3aed" },
   { id: "tech",      name: "Software Engineer",       tag: "Engineer",      desc: "Mono-accent, code-style sections. Built for SWE/AI/ML roles.",             accent: "#10b981" },
   { id: "analyst",   name: "Data Analyst",            tag: "Analytics",     desc: "Metric-led layout with KPI highlights for analyst & data roles.",          accent: "#0ea5e9" },
-  { id: "corporate", name: "Business / Management",   tag: "Professional",  desc: "Formal serif headings. Perfect for finance, consulting, MBA.",             accent: "#0e7490" },
+  { id: "corporate", name: "Business Resume",         tag: "Professional",  desc: "Formal serif headings. Perfect for finance, consulting, MBA.",             accent: "#0e7490" },
   { id: "creative",  name: "Creative Designer",       tag: "Designer",      desc: "Bold gradient header with stats. For design and product roles.",           accent: "#ec4899" },
 ];
 
