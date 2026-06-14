@@ -190,7 +190,7 @@ function ResumePage() {
     setExporting("docx");
     try {
       const {
-        Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType,
+        Document, Packer, Paragraph, TextRun, AlignmentType,
         BorderStyle, LevelFormat, ExternalHyperlink,
       } = await import("docx");
 
