@@ -626,15 +626,71 @@ Keywords = up to 8 missing/recommended keywords for the target role.`,
     finally { setBusy(null); }
   }
 
+  async function improveProjects() {
+    setBusy("projects");
+    try {
+      const updated = await Promise.all(data.projects.map(async (p) => {
+        if (!p.name) return p;
+        const out = await callAI(
+          "Rewrite this project description into 1-2 punchy sentences emphasising tech stack, what was built, and measurable outcome. Return ONLY the description.",
+          `Project: ${p.name}\nTech: ${p.tech}\nCurrent: ${p.description}`
+        );
+        return { ...p, description: out };
+      }));
+      setData({ ...data, projects: updated });
+      toast.success("Project descriptions improved");
+    } catch (e) { toast.error("AI failed: " + (e as Error).message); }
+    finally { setBusy(null); }
+  }
+
+  async function suggestSkills() {
+    setBusy("skills");
+    try {
+      const out = await callAI(
+        "Suggest 8-12 highly relevant skills (comma separated, no numbering) for the target role given the existing skills. Avoid duplicates. Return ONLY the comma list.",
+        `Role: ${data.role}\nExisting: ${data.skills}`
+      );
+      setData({ ...data, skills: (data.skills ? data.skills + ", " : "") + out });
+      toast.success("Skills suggested");
+    } catch (e) { toast.error("AI failed: " + (e as Error).message); }
+    finally { setBusy(null); }
+  }
+
+  async function generateInterviewQs() {
+    setBusy("interview");
+    try {
+      const out = await callAI(
+        "Generate 8 realistic interview questions tailored to this resume — mix behavioural, technical, and project-deep-dive. Return ONLY the questions, one per line, no numbering.",
+        `Role: ${data.role}\nSkills: ${data.skills}\nExperience: ${data.experience.map((e) => `${e.role}@${e.company}`).join("; ")}\nProjects: ${data.projects.map((p) => p.name).join("; ")}`
+      );
+      const qs = out.split("\n").map((s) => s.replace(/^[-•*\d.\s]+/, "").trim()).filter(Boolean);
+      setInterviewQs(qs);
+      toast.success("Interview questions ready");
+    } catch (e) { toast.error("AI failed: " + (e as Error).message); }
+    finally { setBusy(null); }
+  }
+
   return (
     <div className="space-y-4">
       <Section title="AI Resume Tools">
         <div className="grid gap-2">
           <AIButton label="Rewrite summary" busy={busy === "summary"} onClick={improveSummary} icon={<Sparkles className="h-4 w-4" />} />
           <AIButton label="Improve all bullet points" busy={busy === "bullets"} onClick={improveBullets} icon={<Wand2 className="h-4 w-4" />} />
+          <AIButton label="Improve project descriptions" busy={busy === "projects"} onClick={improveProjects} icon={<Wand2 className="h-4 w-4" />} />
+          <AIButton label="Suggest more skills" busy={busy === "skills"} onClick={suggestSkills} icon={<Sparkles className="h-4 w-4" />} />
           <AIButton label="Fix grammar in summary" busy={busy === "grammar"} onClick={fixGrammar} icon={<Wand2 className="h-4 w-4" />} />
+          <AIButton label="Generate interview questions" busy={busy === "interview"} onClick={generateInterviewQs} icon={<MessageSquare className="h-4 w-4" />} />
         </div>
+        {interviewQs.length > 0 && (
+          <div className="mt-3 rounded-lg border border-border bg-secondary/30 p-3">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Interview prep based on your resume</div>
+            <ol className="list-decimal list-outside ml-4 space-y-1 text-sm">
+              {interviewQs.map((q, i) => <li key={i}>{q}</li>)}
+            </ol>
+          </div>
+        )}
       </Section>
+
 
       <Section title="ATS Score Analyzer">
         <TextField
