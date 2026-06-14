@@ -1262,3 +1262,265 @@ function ProjItem({ p, accent }: { p: Project; accent: string }) {
     </div>
   );
 }
+
+// ===== Harvard (classic OCS layout: serif, dense, single column) =====
+function HarvardTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-3 max-w-3xl mx-auto" style={{ fontFamily: "'Source Serif Pro', Georgia, serif" }}>
+      <header className="text-center">
+        <h1 className="text-[26px] font-bold tracking-wide uppercase">{data.name}</h1>
+        <div className="text-[11px] text-slate-700 mt-1">
+          {[data.location, data.email, data.phone, data.linkedin, data.github, data.website].filter(Boolean).join(" • ")}
+        </div>
+      </header>
+      <div className="border-t border-slate-800" />
+      {data.summary && (
+        <section>
+          <HarvardH>Summary</HarvardH>
+          <p className="text-[12px] leading-snug">{data.summary}</p>
+        </section>
+      )}
+      {data.education.length > 0 && (
+        <section>
+          <HarvardH>Education</HarvardH>
+          {data.education.map((e) => (
+            <div key={e.id} className="mb-2 text-[12px]">
+              <div className="flex justify-between"><strong>{e.school}</strong><em>{e.period}</em></div>
+              <div>{e.degree}{e.details ? ` — ${e.details}` : ""}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.experience.length > 0 && (
+        <section>
+          <HarvardH>Experience</HarvardH>
+          {data.experience.map((x) => (
+            <div key={x.id} className="mb-2 text-[12px]">
+              <div className="flex justify-between"><strong>{x.company}</strong><em>{x.period}</em></div>
+              <div className="italic">{x.role}</div>
+              <ul className="list-disc list-outside ml-5 mt-0.5">
+                {x.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.projects.length > 0 && (
+        <section>
+          <HarvardH>Projects</HarvardH>
+          {data.projects.map((p) => (
+            <div key={p.id} className="mb-1.5 text-[12px]">
+              <div><strong>{p.name}</strong> — <em>{p.tech}</em></div>
+              <div>{p.description}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      <section>
+        <HarvardH>Skills &amp; Interests</HarvardH>
+        <div className="text-[12px]"><strong>Skills:</strong> {data.skills}</div>
+        {data.certifications.length > 0 && (
+          <div className="text-[12px]"><strong>Certifications:</strong> {data.certifications.map((c) => `${c.name} (${c.issuer}, ${c.year})`).join("; ")}</div>
+        )}
+      </section>
+      <span style={{ color: accent, display: "none" }}>{accent}</span>
+    </div>
+  );
+}
+function HarvardH({ children }: { children: React.ReactNode }) {
+  return <div className="font-bold uppercase tracking-wider text-[12px] border-b border-slate-400 mb-1 mt-1">{children}</div>;
+}
+
+// ===== Stanford (clean header, balanced sans-serif) =====
+function StanfordTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-4 max-w-3xl mx-auto">
+      <header>
+        <h1 className="text-3xl font-light tracking-tight" style={{ color: accent }}>{data.name}</h1>
+        <p className="text-sm text-slate-700 mt-0.5">{data.role}</p>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-600">
+          {[data.email, data.phone, data.location, data.linkedin, data.github, data.website].filter(Boolean).join(" | ")}
+        </div>
+        <div className="mt-3 h-0.5" style={{ background: accent }} />
+      </header>
+      {data.summary && <Block title="Profile" accent={accent} flat><p className="text-xs leading-relaxed">{data.summary}</p></Block>}
+      {data.education.length > 0 && (
+        <Block title="Education" accent={accent} flat>
+          {data.education.map((e) => (
+            <div key={e.id} className="mb-2 text-xs">
+              <div className="flex justify-between"><strong>{e.school}</strong><span className="text-slate-500">{e.period}</span></div>
+              <div>{e.degree}</div>
+              {e.details && <div className="text-slate-600">{e.details}</div>}
+            </div>
+          ))}
+        </Block>
+      )}
+      <Block title="Experience" accent={accent} flat>{data.experience.map((x) => <ExpItem key={x.id} x={x} accent={accent} />)}</Block>
+      {data.projects.length > 0 && <Block title="Projects" accent={accent} flat>{data.projects.map((p) => <ProjItem key={p.id} p={p} accent={accent} />)}</Block>}
+      <Block title="Skills" accent={accent} flat><SkillsList data={data} /></Block>
+      {data.certifications.length > 0 && (
+        <Block title="Honors &amp; Certifications" accent={accent} flat>
+          <ul className="text-xs space-y-1">{data.certifications.map((c) => <li key={c.id}>• {c.name} — {c.issuer} ({c.year})</li>)}</ul>
+        </Block>
+      )}
+    </div>
+  );
+}
+
+// ===== IIT Placement (single page, POR/Achievements oriented) =====
+function IITTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-3" style={{ fontFamily: "'Source Serif Pro', Georgia, serif" }}>
+      <header className="text-center border-b-2 pb-2" style={{ borderColor: accent }}>
+        <h1 className="text-2xl font-bold tracking-wide">{data.name}</h1>
+        <p className="text-[12px] text-slate-700">{data.role}</p>
+        <div className="text-[11px] text-slate-600 mt-1">
+          {[data.email, data.phone, data.linkedin, data.github, data.website, data.location].filter(Boolean).join(" | ")}
+        </div>
+      </header>
+      {data.education.length > 0 && (
+        <section>
+          <IITH accent={accent}>Education</IITH>
+          <table className="w-full text-[11px] border-collapse">
+            <thead>
+              <tr className="text-left" style={{ background: `${accent}15` }}>
+                <th className="border border-slate-300 px-2 py-1">Degree</th>
+                <th className="border border-slate-300 px-2 py-1">Institute</th>
+                <th className="border border-slate-300 px-2 py-1">Year</th>
+                <th className="border border-slate-300 px-2 py-1">CGPA / %</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.education.map((e) => (
+                <tr key={e.id}>
+                  <td className="border border-slate-300 px-2 py-1">{e.degree}</td>
+                  <td className="border border-slate-300 px-2 py-1">{e.school}</td>
+                  <td className="border border-slate-300 px-2 py-1">{e.period}</td>
+                  <td className="border border-slate-300 px-2 py-1">{e.details}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+      {data.experience.length > 0 && (
+        <section>
+          <IITH accent={accent}>Internships &amp; Experience</IITH>
+          {data.experience.map((x) => (
+            <div key={x.id} className="mb-2 text-[11px]">
+              <div className="flex justify-between"><strong>{x.role}</strong><em>{x.period}</em></div>
+              <div className="italic" style={{ color: accent }}>{x.company}</div>
+              <ul className="list-disc list-outside ml-5">
+                {x.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.projects.length > 0 && (
+        <section>
+          <IITH accent={accent}>Key Projects</IITH>
+          {data.projects.map((p) => (
+            <div key={p.id} className="mb-1.5 text-[11px]">
+              <div><strong>{p.name}</strong> | <em>{p.tech}</em></div>
+              <div>{p.description}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      <section>
+        <IITH accent={accent}>Technical Skills</IITH>
+        <div className="text-[11px]">{data.skills}</div>
+      </section>
+      {data.certifications.length > 0 && (
+        <section>
+          <IITH accent={accent}>Achievements &amp; Certifications</IITH>
+          <ul className="list-disc list-outside ml-5 text-[11px]">
+            {data.certifications.map((c) => <li key={c.id}>{c.name} — {c.issuer} ({c.year})</li>)}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+function IITH({ accent, children }: { accent: string; children: React.ReactNode }) {
+  return <div className="font-bold uppercase tracking-wider text-[12px] mb-1 pb-0.5 border-b" style={{ color: accent, borderColor: accent }}>{children}</div>;
+}
+
+// ===== FAANG SWE (metrics-first, dense single column) =====
+function FaangTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-3 max-w-3xl mx-auto">
+      <header>
+        <div className="flex items-baseline justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">{data.name}</h1>
+          <span className="text-[11px] text-slate-600">{data.location}</span>
+        </div>
+        <div className="text-[12px] text-slate-700">{data.role}</div>
+        <div className="mt-1 text-[11px] text-slate-600">
+          {[data.email, data.phone, data.linkedin, data.github, data.website].filter(Boolean).join("  •  ")}
+        </div>
+        <div className="mt-2 h-px" style={{ background: accent }} />
+      </header>
+      {data.summary && (
+        <section>
+          <FaangH accent={accent}>Summary</FaangH>
+          <p className="text-[12px] leading-snug">{data.summary}</p>
+        </section>
+      )}
+      <section>
+        <FaangH accent={accent}>Skills</FaangH>
+        <div className="text-[12px]">{data.skills}</div>
+      </section>
+      {data.experience.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Experience</FaangH>
+          {data.experience.map((x) => (
+            <div key={x.id} className="mb-2 text-[12px]">
+              <div className="flex justify-between">
+                <div><strong>{x.role}</strong> · <span style={{ color: accent }}>{x.company}</span></div>
+                <span className="text-slate-500">{x.period}</span>
+              </div>
+              <ul className="list-disc list-outside ml-5 mt-0.5">
+                {x.bullets.filter(Boolean).map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.projects.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Projects</FaangH>
+          {data.projects.map((p) => (
+            <div key={p.id} className="mb-1.5 text-[12px]">
+              <div><strong style={{ color: accent }}>{p.name}</strong> — <em>{p.tech}</em></div>
+              <div>{p.description}</div>
+            </div>
+          ))}
+        </section>
+      )}
+      {data.education.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Education</FaangH>
+          {data.education.map((e) => (
+            <div key={e.id} className="text-[12px] mb-1">
+              <div className="flex justify-between"><strong>{e.degree}, {e.school}</strong><span className="text-slate-500">{e.period}</span></div>
+              {e.details && <div className="text-slate-600">{e.details}</div>}
+            </div>
+          ))}
+        </section>
+      )}
+      {data.certifications.length > 0 && (
+        <section>
+          <FaangH accent={accent}>Certifications</FaangH>
+          <ul className="list-disc list-outside ml-5 text-[12px]">
+            {data.certifications.map((c) => <li key={c.id}>{c.name} — {c.issuer} ({c.year})</li>)}
+          </ul>
+        </section>
+      )}
+    </div>
+  );
+}
+function FaangH({ accent, children }: { accent: string; children: React.ReactNode }) {
+  return <div className="text-[11px] font-bold uppercase tracking-widest mb-1" style={{ color: accent }}>{children}</div>;
+}
