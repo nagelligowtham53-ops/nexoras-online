@@ -247,7 +247,7 @@ function ResumePage() {
         data.github   ? { label: data.github,   url: data.github.startsWith("http") ? data.github : `https://${data.github}` } : null,
       ].filter(Boolean) as { label: string; url: string }[];
       if (links.length) {
-        const linkChildren: (TextRun | ExternalHyperlink)[] = [];
+        const linkChildren: (InstanceType<typeof TextRun> | InstanceType<typeof ExternalHyperlink>)[] = [];
         links.forEach((l, i) => {
           if (i > 0) linkChildren.push(run("  •  ", { size: 20 }));
           linkChildren.push(new ExternalHyperlink({
