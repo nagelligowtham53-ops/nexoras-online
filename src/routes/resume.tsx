@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Download, Sparkles, Mail, Phone, MapPin, Globe, Linkedin, Github,
   Plus, Trash2, Save, Wand2, FileCheck2, Loader2, Upload, Search,
-  GripVertical, Star,
+  GripVertical, Star, Printer, Share2, FileText, MessageSquare,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -42,17 +42,18 @@ type ResumeData = {
   certifications: Certification[];
 };
 
-type TemplateId = "modern" | "minimal" | "corporate" | "creative" | "tech" | "academic";
+type TemplateId = "modern" | "minimal" | "corporate" | "creative" | "tech" | "academic" | "analyst";
 type Customization = { template: TemplateId; accent: string; font: string };
 
 // ============ Templates meta ============
 const TEMPLATES: { id: TemplateId; name: string; tag: string; desc: string; accent: string }[] = [
-  { id: "modern",    name: "Modern",    tag: "Popular",    desc: "Clean two-tone layout with sidebar accents. Great for any role.",          accent: "#6366f1" },
-  { id: "minimal",   name: "Minimal",   tag: "ATS-Safe",   desc: "Pure typography, single column. Highest ATS pass rate.",                   accent: "#0f172a" },
-  { id: "corporate", name: "Corporate", tag: "Professional", desc: "Formal serif headings. Perfect for finance, consulting, MBA.",          accent: "#0e7490" },
-  { id: "creative",  name: "Creative",  tag: "Designer",   desc: "Bold gradient header with stats. For design and product roles.",          accent: "#ec4899" },
-  { id: "tech",      name: "Tech",      tag: "Engineer",   desc: "Mono-accent, code-style sections. Built for SWE/AI/ML roles.",            accent: "#10b981" },
-  { id: "academic",  name: "Academic",  tag: "Research",   desc: "Publication-friendly layout. For research, MS/PhD applications.",         accent: "#7c3aed" },
+  { id: "modern",    name: "Modern Professional",     tag: "Popular",       desc: "Clean two-tone layout with sidebar accents. Great for any role.",          accent: "#6366f1" },
+  { id: "minimal",   name: "ATS-Friendly Corporate",  tag: "ATS-Safe",      desc: "Pure typography, single column. Highest ATS pass rate.",                   accent: "#0f172a" },
+  { id: "academic",  name: "Student / Fresher",       tag: "Entry Level",   desc: "Education-first layout for students, interns and freshers.",               accent: "#7c3aed" },
+  { id: "tech",      name: "Software Engineer",       tag: "Engineer",      desc: "Mono-accent, code-style sections. Built for SWE/AI/ML roles.",             accent: "#10b981" },
+  { id: "analyst",   name: "Data Analyst",            tag: "Analytics",     desc: "Metric-led layout with KPI highlights for analyst & data roles.",          accent: "#0ea5e9" },
+  { id: "corporate", name: "Business / Management",   tag: "Professional",  desc: "Formal serif headings. Perfect for finance, consulting, MBA.",             accent: "#0e7490" },
+  { id: "creative",  name: "Creative Designer",       tag: "Designer",      desc: "Bold gradient header with stats. For design and product roles.",           accent: "#ec4899" },
 ];
 
 const FONTS = [
@@ -104,9 +105,18 @@ function ResumePage() {
   const [tab, setTab] = useState<"templates" | "edit" | "ai">("edit");
   const [search, setSearch] = useState("");
 
-  // Load draft
+  // Load draft + share-link payload
   useEffect(() => {
     try {
+      // ?r=<base64 json> for shareable resume links
+      const url = new URL(window.location.href);
+      const r = url.searchParams.get("r");
+      if (r) {
+        const decoded = JSON.parse(decodeURIComponent(escape(atob(r))));
+        if (decoded?.data) setData(decoded.data);
+        if (decoded?.cust) setCust(decoded.cust);
+        return;
+      }
       const d = localStorage.getItem("nexoras-resume-data");
       const c = localStorage.getItem("nexoras-resume-cust");
       if (d) setData(JSON.parse(d));
@@ -120,9 +130,117 @@ function ResumePage() {
     toast.success("Draft saved locally");
   }
 
-  function exportPDF() {
+  const [exporting, setExporting] = useState<null | "pdf" | "docx">(null);
+
+  async function exportPDF() {
+    setExporting("pdf");
+    try {
+      const node = document.getElementById("resume-print-area");
+      if (!node) throw new Error("Preview not ready");
+      const [{ default: html2canvas }, jsPdfMod] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const jsPDF = jsPdfMod.jsPDF;
+      // Render preview exactly as shown (WYSIWYG).
+      const canvas = await html2canvas(node, {
+        scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false,
+        windowWidth: node.scrollWidth,
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      // Slice across multiple pages — preserves exact preview look.
+      let heightLeft = imgH;
+      let position = 0;
+      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+      while (heightLeft > 0) {
+        position = heightLeft - imgH;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+        heightLeft -= pageH;
+      }
+      const fname = (data.name || "resume").replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+      pdf.save(`${fname}_resume.pdf`);
+      toast.success("PDF exported");
+    } catch (e) {
+      toast.error("PDF export failed: " + (e as Error).message);
+    } finally { setExporting(null); }
+  }
+
+  async function exportDOCX() {
+    setExporting("docx");
+    try {
+      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = await import("docx");
+      const para = (t: string, opts: { bold?: boolean; size?: number } = {}) =>
+        new Paragraph({ children: [new TextRun({ text: t, bold: opts.bold, size: opts.size ?? 22 })] });
+      const heading = (t: string) =>
+        new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 }, children: [new TextRun({ text: t.toUpperCase(), bold: true, color: cust.accent.replace("#",""), size: 24 })] });
+      const children: import("docx").Paragraph[] = [];
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.name, bold: true, size: 40 })] }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.role, italics: true, size: 22 })] }));
+      const contact = [data.email, data.phone, data.location, data.website, data.linkedin, data.github].filter(Boolean).join("  •  ");
+      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20 })] }));
+      if (data.summary) { children.push(heading("Summary")); children.push(para(data.summary)); }
+      if (data.experience.length) {
+        children.push(heading("Experience"));
+        for (const x of data.experience) {
+          children.push(new Paragraph({ children: [new TextRun({ text: `${x.role} — ${x.company}`, bold: true, size: 22 }), new TextRun({ text: `   ${x.period}`, italics: true, size: 20 })] }));
+          for (const b of x.bullets.filter(Boolean)) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: 22 })] }));
+        }
+      }
+      if (data.education.length) {
+        children.push(heading("Education"));
+        for (const e of data.education) {
+          children.push(new Paragraph({ children: [new TextRun({ text: `${e.degree} — ${e.school}`, bold: true, size: 22 }), new TextRun({ text: `   ${e.period}`, italics: true, size: 20 })] }));
+          if (e.details) children.push(para(e.details, { size: 20 }));
+        }
+      }
+      if (data.skills) { children.push(heading("Skills")); children.push(para(data.skills)); }
+      if (data.projects.length) {
+        children.push(heading("Projects"));
+        for (const p of data.projects) {
+          children.push(new Paragraph({ children: [new TextRun({ text: `${p.name} — `, bold: true, size: 22 }), new TextRun({ text: p.tech, italics: true, size: 20 })] }));
+          if (p.description) children.push(para(p.description, { size: 20 }));
+          if (p.link) children.push(para(p.link, { size: 18 }));
+        }
+      }
+      if (data.certifications.length) {
+        children.push(heading("Certifications"));
+        for (const c of data.certifications) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: `${c.name} — ${c.issuer} (${c.year})`, size: 22 })] }));
+      }
+      const doc = new Document({ sections: [{ children }] });
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const fname = (data.name || "resume").replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+      a.href = url; a.download = `${fname}_resume.docx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("DOCX exported");
+    } catch (e) {
+      toast.error("DOCX export failed: " + (e as Error).message);
+    } finally { setExporting(null); }
+  }
+
+  function printResume() {
     saveDraft();
-    setTimeout(() => window.print(), 100);
+    setTimeout(() => window.print(), 80);
+  }
+
+  async function shareLink() {
+    try {
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ data, cust }))));
+      const url = `${window.location.origin}${window.location.pathname}?r=${encodeURIComponent(payload)}`;
+      await navigator.clipboard.writeText(url);
+      toast.success("Share link copied to clipboard");
+    } catch (e) {
+      toast.error("Could not copy link: " + (e as Error).message);
+    }
   }
 
   const filteredTemplates = useMemo(
@@ -158,13 +276,19 @@ function ResumePage() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" size="sm" onClick={saveDraft}><Save className="h-4 w-4" /> Save</Button>
-            <Button size="sm" className="bg-gradient-primary text-primary-foreground shadow-glow" onClick={exportPDF}>
-              <Download className="h-4 w-4" /> Export PDF
+            <Button variant="outline" size="sm" onClick={printResume}><Printer className="h-4 w-4" /> Print</Button>
+            <Button variant="outline" size="sm" onClick={shareLink}><Share2 className="h-4 w-4" /> Share link</Button>
+            <Button variant="outline" size="sm" onClick={exportDOCX} disabled={exporting === "docx"}>
+              {exporting === "docx" ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />} DOCX
+            </Button>
+            <Button size="sm" className="bg-gradient-primary text-primary-foreground shadow-glow" onClick={exportPDF} disabled={exporting === "pdf"}>
+              {exporting === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Export PDF
             </Button>
           </div>
         </div>
+
 
         <div className="grid gap-6 lg:grid-cols-[420px_1fr] print:block">
           {/* Left panel */}
@@ -411,6 +535,7 @@ function AIPanel({ data, setData }: { data: ResumeData; setData: (d: ResumeData)
   const [busy, setBusy] = useState<string | null>(null);
   const [ats, setAts] = useState<{ score: number; strengths: string[]; gaps: string[]; keywords: string[] } | null>(null);
   const [jobDesc, setJobDesc] = useState("");
+  const [interviewQs, setInterviewQs] = useState<string[]>([]);
 
   async function callAI(system: string, user: string): Promise<string> {
     const res = await authedFetch("/api/chat", {
@@ -501,15 +626,71 @@ Keywords = up to 8 missing/recommended keywords for the target role.`,
     finally { setBusy(null); }
   }
 
+  async function improveProjects() {
+    setBusy("projects");
+    try {
+      const updated = await Promise.all(data.projects.map(async (p) => {
+        if (!p.name) return p;
+        const out = await callAI(
+          "Rewrite this project description into 1-2 punchy sentences emphasising tech stack, what was built, and measurable outcome. Return ONLY the description.",
+          `Project: ${p.name}\nTech: ${p.tech}\nCurrent: ${p.description}`
+        );
+        return { ...p, description: out };
+      }));
+      setData({ ...data, projects: updated });
+      toast.success("Project descriptions improved");
+    } catch (e) { toast.error("AI failed: " + (e as Error).message); }
+    finally { setBusy(null); }
+  }
+
+  async function suggestSkills() {
+    setBusy("skills");
+    try {
+      const out = await callAI(
+        "Suggest 8-12 highly relevant skills (comma separated, no numbering) for the target role given the existing skills. Avoid duplicates. Return ONLY the comma list.",
+        `Role: ${data.role}\nExisting: ${data.skills}`
+      );
+      setData({ ...data, skills: (data.skills ? data.skills + ", " : "") + out });
+      toast.success("Skills suggested");
+    } catch (e) { toast.error("AI failed: " + (e as Error).message); }
+    finally { setBusy(null); }
+  }
+
+  async function generateInterviewQs() {
+    setBusy("interview");
+    try {
+      const out = await callAI(
+        "Generate 8 realistic interview questions tailored to this resume — mix behavioural, technical, and project-deep-dive. Return ONLY the questions, one per line, no numbering.",
+        `Role: ${data.role}\nSkills: ${data.skills}\nExperience: ${data.experience.map((e) => `${e.role}@${e.company}`).join("; ")}\nProjects: ${data.projects.map((p) => p.name).join("; ")}`
+      );
+      const qs = out.split("\n").map((s) => s.replace(/^[-•*\d.\s]+/, "").trim()).filter(Boolean);
+      setInterviewQs(qs);
+      toast.success("Interview questions ready");
+    } catch (e) { toast.error("AI failed: " + (e as Error).message); }
+    finally { setBusy(null); }
+  }
+
   return (
     <div className="space-y-4">
       <Section title="AI Resume Tools">
         <div className="grid gap-2">
           <AIButton label="Rewrite summary" busy={busy === "summary"} onClick={improveSummary} icon={<Sparkles className="h-4 w-4" />} />
           <AIButton label="Improve all bullet points" busy={busy === "bullets"} onClick={improveBullets} icon={<Wand2 className="h-4 w-4" />} />
+          <AIButton label="Improve project descriptions" busy={busy === "projects"} onClick={improveProjects} icon={<Wand2 className="h-4 w-4" />} />
+          <AIButton label="Suggest more skills" busy={busy === "skills"} onClick={suggestSkills} icon={<Sparkles className="h-4 w-4" />} />
           <AIButton label="Fix grammar in summary" busy={busy === "grammar"} onClick={fixGrammar} icon={<Wand2 className="h-4 w-4" />} />
+          <AIButton label="Generate interview questions" busy={busy === "interview"} onClick={generateInterviewQs} icon={<MessageSquare className="h-4 w-4" />} />
         </div>
+        {interviewQs.length > 0 && (
+          <div className="mt-3 rounded-lg border border-border bg-secondary/30 p-3">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Interview prep based on your resume</div>
+            <ol className="list-decimal list-outside ml-4 space-y-1 text-sm">
+              {interviewQs.map((q, i) => <li key={i}>{q}</li>)}
+            </ol>
+          </div>
+        )}
       </Section>
+
 
       <Section title="ATS Score Analyzer">
         <TextField
@@ -636,6 +817,7 @@ function ResumeView({ data, cust, mini }: { data: ResumeData; cust: Customizatio
       {cust.template === "creative"  && <CreativeTpl {...props} />}
       {cust.template === "tech"      && <TechTpl {...props} />}
       {cust.template === "academic"  && <AcademicTpl {...props} />}
+      {cust.template === "analyst"   && <AnalystTpl {...props} />}
     </div>
   );
 }
@@ -855,6 +1037,51 @@ function AcademicTpl({ data, accent }: { data: ResumeData; accent: string }) {
     </div>
   );
 }
+
+// ===== Analyst =====
+function AnalystTpl({ data, accent }: { data: ResumeData; accent: string }) {
+  return (
+    <div className="space-y-4">
+      <header className="flex items-start justify-between border-b-2 pb-3" style={{ borderColor: accent }}>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: accent }}>{data.name}</h1>
+          <p className="text-sm text-slate-700">{data.role}</p>
+          <div className="mt-1"><ContactRow data={data} /></div>
+        </div>
+        {data.photo && <img src={data.photo} alt="" className="h-16 w-16 rounded-md object-cover" />}
+      </header>
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <Kpi label="Years exp." value={String(data.experience.length)} accent={accent} />
+        <Kpi label="Projects" value={String(data.projects.length)} accent={accent} />
+        <Kpi label="Certifications" value={String(data.certifications.length)} accent={accent} />
+      </div>
+      <Block title="Profile" accent={accent}><p className="text-xs leading-relaxed">{data.summary}</p></Block>
+      <Block title="Core Skills" accent={accent}><SkillsList data={data} /></Block>
+      <Block title="Experience" accent={accent}>{data.experience.map((x) => <ExpItem key={x.id} x={x} accent={accent} />)}</Block>
+      {data.projects.length > 0 && <Block title="Analytics Projects" accent={accent}>{data.projects.map((p) => <ProjItem key={p.id} p={p} accent={accent} />)}</Block>}
+      <div className="grid grid-cols-2 gap-4">
+        <Block title="Education" accent={accent}>
+          {data.education.map((e) => (
+            <div key={e.id} className="text-xs mb-1"><strong>{e.degree}</strong><div>{e.school} · {e.period}</div><div className="text-slate-500">{e.details}</div></div>
+          ))}
+        </Block>
+        {data.certifications.length > 0 && <Block title="Certifications" accent={accent}>
+          <ul className="text-xs space-y-1">{data.certifications.map((c) => <li key={c.id}>• {c.name} — {c.issuer} ({c.year})</li>)}</ul>
+        </Block>}
+      </div>
+    </div>
+  );
+}
+function Kpi({ label, value, accent }: { label: string; value: string; accent: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 py-2">
+      <div className="text-lg font-bold" style={{ color: accent }}>{value}</div>
+      <div className="text-[10px] uppercase tracking-wider text-slate-500">{label}</div>
+    </div>
+  );
+}
+
+
 
 // shared block + atoms
 function H({ accent, children }: { accent: string; children: React.ReactNode }) {
