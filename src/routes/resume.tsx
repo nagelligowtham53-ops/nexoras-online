@@ -143,23 +143,31 @@ function ResumePage() {
     try {
       const node = document.getElementById("resume-print-area");
       if (!node) throw new Error("Preview not ready");
+      // html2canvas-pro supports oklch / lab / color() — the original html2canvas
+      // fails on Tailwind v4 design tokens and was the cause of past PDF errors.
       const [{ default: html2canvas }, jsPdfMod] = await Promise.all([
-        import("html2canvas"),
+        import("html2canvas-pro"),
         import("jspdf"),
       ]);
       const jsPDF = jsPdfMod.jsPDF;
-      // Render preview exactly as shown (WYSIWYG).
+      // Force pixel width to A4 ratio so output paginates predictably.
+      const prevWidth = node.style.width;
+      node.style.width = "794px"; // 210mm @ 96dpi
+      await new Promise((r) => requestAnimationFrame(r));
       const canvas = await html2canvas(node, {
-        scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false,
-        windowWidth: node.scrollWidth,
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        windowWidth: 794,
       });
+      node.style.width = prevWidth;
       const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const imgW = pageW;
       const imgH = (canvas.height * imgW) / canvas.width;
-      // Slice across multiple pages — preserves exact preview look.
       let heightLeft = imgH;
       let position = 0;
       pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
