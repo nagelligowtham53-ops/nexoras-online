@@ -105,9 +105,18 @@ function ResumePage() {
   const [tab, setTab] = useState<"templates" | "edit" | "ai">("edit");
   const [search, setSearch] = useState("");
 
-  // Load draft
+  // Load draft + share-link payload
   useEffect(() => {
     try {
+      // ?r=<base64 json> for shareable resume links
+      const url = new URL(window.location.href);
+      const r = url.searchParams.get("r");
+      if (r) {
+        const decoded = JSON.parse(decodeURIComponent(escape(atob(r))));
+        if (decoded?.data) setData(decoded.data);
+        if (decoded?.cust) setCust(decoded.cust);
+        return;
+      }
       const d = localStorage.getItem("nexoras-resume-data");
       const c = localStorage.getItem("nexoras-resume-cust");
       if (d) setData(JSON.parse(d));
@@ -121,9 +130,117 @@ function ResumePage() {
     toast.success("Draft saved locally");
   }
 
-  function exportPDF() {
+  const [exporting, setExporting] = useState<null | "pdf" | "docx">(null);
+
+  async function exportPDF() {
+    setExporting("pdf");
+    try {
+      const node = document.getElementById("resume-print-area");
+      if (!node) throw new Error("Preview not ready");
+      const [{ default: html2canvas }, jsPdfMod] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const jsPDF = jsPdfMod.jsPDF;
+      // Render preview exactly as shown (WYSIWYG).
+      const canvas = await html2canvas(node, {
+        scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false,
+        windowWidth: node.scrollWidth,
+      });
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      // Slice across multiple pages — preserves exact preview look.
+      let heightLeft = imgH;
+      let position = 0;
+      pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+      while (heightLeft > 0) {
+        position = heightLeft - imgH;
+        pdf.addPage();
+        pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
+        heightLeft -= pageH;
+      }
+      const fname = (data.name || "resume").replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+      pdf.save(`${fname}_resume.pdf`);
+      toast.success("PDF exported");
+    } catch (e) {
+      toast.error("PDF export failed: " + (e as Error).message);
+    } finally { setExporting(null); }
+  }
+
+  async function exportDOCX() {
+    setExporting("docx");
+    try {
+      const { Document, Packer, Paragraph, HeadingLevel, TextRun, AlignmentType } = await import("docx");
+      const para = (t: string, opts: { bold?: boolean; size?: number } = {}) =>
+        new Paragraph({ children: [new TextRun({ text: t, bold: opts.bold, size: opts.size ?? 22 })] });
+      const heading = (t: string) =>
+        new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 }, children: [new TextRun({ text: t.toUpperCase(), bold: true, color: cust.accent.replace("#",""), size: 24 })] });
+      const children: import("docx").Paragraph[] = [];
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.name, bold: true, size: 40 })] }));
+      children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.role, italics: true, size: 22 })] }));
+      const contact = [data.email, data.phone, data.location, data.website, data.linkedin, data.github].filter(Boolean).join("  •  ");
+      if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 20 })] }));
+      if (data.summary) { children.push(heading("Summary")); children.push(para(data.summary)); }
+      if (data.experience.length) {
+        children.push(heading("Experience"));
+        for (const x of data.experience) {
+          children.push(new Paragraph({ children: [new TextRun({ text: `${x.role} — ${x.company}`, bold: true, size: 22 }), new TextRun({ text: `   ${x.period}`, italics: true, size: 20 })] }));
+          for (const b of x.bullets.filter(Boolean)) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: 22 })] }));
+        }
+      }
+      if (data.education.length) {
+        children.push(heading("Education"));
+        for (const e of data.education) {
+          children.push(new Paragraph({ children: [new TextRun({ text: `${e.degree} — ${e.school}`, bold: true, size: 22 }), new TextRun({ text: `   ${e.period}`, italics: true, size: 20 })] }));
+          if (e.details) children.push(para(e.details, { size: 20 }));
+        }
+      }
+      if (data.skills) { children.push(heading("Skills")); children.push(para(data.skills)); }
+      if (data.projects.length) {
+        children.push(heading("Projects"));
+        for (const p of data.projects) {
+          children.push(new Paragraph({ children: [new TextRun({ text: `${p.name} — `, bold: true, size: 22 }), new TextRun({ text: p.tech, italics: true, size: 20 })] }));
+          if (p.description) children.push(para(p.description, { size: 20 }));
+          if (p.link) children.push(para(p.link, { size: 18 }));
+        }
+      }
+      if (data.certifications.length) {
+        children.push(heading("Certifications"));
+        for (const c of data.certifications) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: `${c.name} — ${c.issuer} (${c.year})`, size: 22 })] }));
+      }
+      const doc = new Document({ sections: [{ children }] });
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const fname = (data.name || "resume").replace(/[^a-z0-9]+/gi, "_").toLowerCase();
+      a.href = url; a.download = `${fname}_resume.docx`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("DOCX exported");
+    } catch (e) {
+      toast.error("DOCX export failed: " + (e as Error).message);
+    } finally { setExporting(null); }
+  }
+
+  function printResume() {
     saveDraft();
-    setTimeout(() => window.print(), 100);
+    setTimeout(() => window.print(), 80);
+  }
+
+  async function shareLink() {
+    try {
+      const payload = btoa(unescape(encodeURIComponent(JSON.stringify({ data, cust }))));
+      const url = `${window.location.origin}${window.location.pathname}?r=${encodeURIComponent(payload)}`;
+      await navigator.clipboard.writeText(url);
+      toast.success("Share link copied to clipboard");
+    } catch (e) {
+      toast.error("Could not copy link: " + (e as Error).message);
+    }
   }
 
   const filteredTemplates = useMemo(
