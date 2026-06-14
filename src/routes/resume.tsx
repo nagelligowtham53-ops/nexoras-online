@@ -535,6 +535,7 @@ function AIPanel({ data, setData }: { data: ResumeData; setData: (d: ResumeData)
   const [busy, setBusy] = useState<string | null>(null);
   const [ats, setAts] = useState<{ score: number; strengths: string[]; gaps: string[]; keywords: string[] } | null>(null);
   const [jobDesc, setJobDesc] = useState("");
+  const [interviewQs, setInterviewQs] = useState<string[]>([]);
 
   async function callAI(system: string, user: string): Promise<string> {
     const res = await authedFetch("/api/chat", {
