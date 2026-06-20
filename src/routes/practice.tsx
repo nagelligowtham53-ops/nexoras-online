@@ -142,7 +142,17 @@ function PracticePage() {
       />
 
       <section className="mx-auto max-w-4xl space-y-6 px-4 py-10 lg:px-8">
-        {/* Filters */}
+        <Link to="/custom-practice" className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 transition-colors hover:border-accent/60">
+          <div className="flex items-center gap-3">
+            <Sparkles className="h-5 w-5 text-accent" />
+            <div>
+              <p className="text-sm font-semibold">Build your own JEE / NEET test</p>
+              <p className="text-xs text-muted-foreground">Pick chapters, count, difficulty & timer. Full CBT interface with analytics.</p>
+            </div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-accent" />
+        </Link>
+
         <div className="glass rounded-2xl p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-2">
