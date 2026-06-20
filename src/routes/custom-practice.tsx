@@ -170,7 +170,7 @@ function Setup({
   const [classLevel, setClassLevel] = useState<ClassLevel>("all");
   const subjectsAvail = subjectsForExam(exam);
   const [subjects, setSubjects] = useState<Record<Subject, string[]>>(
-    () => Object.fromEntries(subjectsAvail.map((s) => [s, []])) as Record<Subject, string[]>,
+    () => Object.fromEntries(subjectsAvail.map((s) => [s, []])) as unknown as Record<Subject, string[]>,
   );
   const [count, setCount] = useState(25);
   const [customCount, setCustomCount] = useState("");
@@ -182,7 +182,7 @@ function Setup({
 
   // reset subject selection if exam changes
   useEffect(() => {
-    setSubjects(Object.fromEntries(subjectsForExam(exam).map((s) => [s, []])) as Record<Subject, string[]>);
+    setSubjects(Object.fromEntries(subjectsForExam(exam).map((s) => [s, []])) as unknown as Record<Subject, string[]>);
   }, [exam]);
 
   function toggleChapter(subject: Subject, chapter: string) {

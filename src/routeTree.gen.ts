@@ -30,6 +30,7 @@ import { Route as FutureCareersRouteImport } from './routes/future-careers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CustomPracticeRouteImport } from './routes/custom-practice'
 import { Route as CrackJeeRouteImport } from './routes/crack-jee'
 import { Route as CoursesRouteImport } from './routes/courses'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -158,6 +159,11 @@ const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomPracticeRoute = CustomPracticeRouteImport.update({
+  id: '/custom-practice',
+  path: '/custom-practice',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CrackJeeRoute = CrackJeeRouteImport.update({
@@ -296,6 +302,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
+  '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -343,6 +350,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
+  '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -391,6 +399,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
+  '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -440,6 +449,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/courses'
     | '/crack-jee'
+    | '/custom-practice'
     | '/dashboard'
     | '/engineering-roadmaps'
     | '/forgot-password'
@@ -487,6 +497,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/courses'
     | '/crack-jee'
+    | '/custom-practice'
     | '/dashboard'
     | '/engineering-roadmaps'
     | '/forgot-password'
@@ -534,6 +545,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/courses'
     | '/crack-jee'
+    | '/custom-practice'
     | '/dashboard'
     | '/engineering-roadmaps'
     | '/forgot-password'
@@ -582,6 +594,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   CoursesRoute: typeof CoursesRoute
   CrackJeeRoute: typeof CrackJeeRoute
+  CustomPracticeRoute: typeof CustomPracticeRoute
   DashboardRoute: typeof DashboardRoute
   EngineeringRoadmapsRoute: typeof EngineeringRoadmapsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -762,6 +775,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom-practice': {
+      id: '/custom-practice'
+      path: '/custom-practice'
+      fullPath: '/custom-practice'
+      preLoaderRoute: typeof CustomPracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/crack-jee': {
@@ -960,6 +980,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   CoursesRoute: CoursesRoute,
   CrackJeeRoute: CrackJeeRoute,
+  CustomPracticeRoute: CustomPracticeRoute,
   DashboardRoute: DashboardRoute,
   EngineeringRoadmapsRoute: EngineeringRoadmapsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
