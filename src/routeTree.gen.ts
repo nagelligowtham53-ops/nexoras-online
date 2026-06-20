@@ -45,8 +45,10 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
 import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
 import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
+import { Route as ApiGenerateCustomPracticeRouteImport } from './routes/api/generate-custom-practice'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
 import { Route as AdminBlogRouteImport } from './routes/admin.blog'
@@ -233,6 +235,11 @@ const BlogSlugRoute = BlogSlugRouteImport.update({
   path: '/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
+const ApiStudyRecommendationsRoute = ApiStudyRecommendationsRouteImport.update({
+  id: '/api/study-recommendations',
+  path: '/api/study-recommendations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiRecordAttemptRoute = ApiRecordAttemptRouteImport.update({
   id: '/api/record-attempt',
   path: '/api/record-attempt',
@@ -243,6 +250,12 @@ const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
   path: '/api/generate-questions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateCustomPracticeRoute =
+  ApiGenerateCustomPracticeRouteImport.update({
+    id: '/api/generate-custom-practice',
+    path: '/api/generate-custom-practice',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -307,8 +320,10 @@ export interface FileRoutesByFullPath {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
+  '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -352,8 +367,10 @@ export interface FileRoutesByTo {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
+  '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -398,8 +415,10 @@ export interface FileRoutesById {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
+  '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -445,8 +464,10 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
+    | '/api/generate-custom-practice'
     | '/api/generate-questions'
     | '/api/record-attempt'
+    | '/api/study-recommendations'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -490,8 +511,10 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
+    | '/api/generate-custom-practice'
     | '/api/generate-questions'
     | '/api/record-attempt'
+    | '/api/study-recommendations'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -535,8 +558,10 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
+    | '/api/generate-custom-practice'
     | '/api/generate-questions'
     | '/api/record-attempt'
+    | '/api/study-recommendations'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -581,8 +606,10 @@ export interface RootRouteChildren {
   AdminBlogRoute: typeof AdminBlogRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiGenerateCustomPracticeRoute: typeof ApiGenerateCustomPracticeRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
   ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
+  ApiStudyRecommendationsRoute: typeof ApiStudyRecommendationsRoute
   CheckoutPlanRoute: typeof CheckoutPlanRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   ApiPublicHooksPublishScheduledRoute: typeof ApiPublicHooksPublishScheduledRoute
@@ -842,6 +869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
     }
+    '/api/study-recommendations': {
+      id: '/api/study-recommendations'
+      path: '/api/study-recommendations'
+      fullPath: '/api/study-recommendations'
+      preLoaderRoute: typeof ApiStudyRecommendationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/record-attempt': {
       id: '/api/record-attempt'
       path: '/api/record-attempt'
@@ -854,6 +888,13 @@ declare module '@tanstack/react-router' {
       path: '/api/generate-questions'
       fullPath: '/api/generate-questions'
       preLoaderRoute: typeof ApiGenerateQuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-custom-practice': {
+      id: '/api/generate-custom-practice'
+      path: '/api/generate-custom-practice'
+      fullPath: '/api/generate-custom-practice'
+      preLoaderRoute: typeof ApiGenerateCustomPracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -943,8 +984,10 @@ const rootRouteChildren: RootRouteChildren = {
   AdminBlogRoute: AdminBlogRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiGenerateCustomPracticeRoute: ApiGenerateCustomPracticeRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
   ApiRecordAttemptRoute: ApiRecordAttemptRoute,
+  ApiStudyRecommendationsRoute: ApiStudyRecommendationsRoute,
   CheckoutPlanRoute: CheckoutPlanRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   ApiPublicHooksPublishScheduledRoute: ApiPublicHooksPublishScheduledRoute,
@@ -952,13 +995,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
