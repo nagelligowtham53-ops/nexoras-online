@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
-import { Atom, FlaskConical, Sigma, CheckCircle2, XCircle, Timer, ArrowRight } from "lucide-react";
+import { Atom, FlaskConical, Sigma, CheckCircle2, XCircle, Timer, ArrowRight, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/practice")({
   head: () => ({
