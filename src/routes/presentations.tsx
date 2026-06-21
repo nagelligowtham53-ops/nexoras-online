@@ -1052,6 +1052,15 @@ function SelectField({ label, value, options, onChange }: { label: string; value
   );
 }
 
+function TextField({ label, value, placeholder, onChange }: { label: string; value: string; placeholder?: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Input value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className="mt-1" />
+    </div>
+  );
+}
+
 function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <button onClick={() => onChange(!value)} className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm transition-all ${value ? "border-accent bg-accent/10" : "border-white/10 bg-white/5"}`}>
