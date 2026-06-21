@@ -626,7 +626,7 @@ function SlideCanvas({
   slide, theme, editable = false, onChange,
 }: {
   slide: Slide;
-  theme: { id: string; grad: string; text: string; accent: string };
+  theme: ThemeMeta;
   editable?: boolean;
   onChange?: (s: Slide) => void;
 }) {
@@ -915,7 +915,7 @@ function ChartView({ chart, accent, color, dark }: { chart: NonNullable<Slide["c
 // ------------------------------------------------------------
 // Presenter (fullscreen)
 // ------------------------------------------------------------
-function Presenter({ deck, theme, onClose }: { deck: Deck; theme: { id: string; grad: string; text: string; accent: string }; onClose: () => void }) {
+function Presenter({ deck, theme, onClose }: { deck: Deck; theme: ThemeMeta; onClose: () => void }) {
   const [i, setI] = useState(0);
   const [laser, setLaser] = useState(false);
   const [drawing, setDrawing] = useState(false);
@@ -1096,7 +1096,7 @@ function PresenterBtn({ icon: Icon, label, active, onClick }: { icon: React.Comp
 // ------------------------------------------------------------
 // Export menu
 // ------------------------------------------------------------
-function ExportMenu({ deck, theme }: { deck: Deck; theme: { id: string; grad: string; text: string; accent: string } }) {
+function ExportMenu({ deck, theme }: { deck: Deck; theme: ThemeMeta }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
