@@ -21,6 +21,7 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PresentationsRouteImport } from './routes/presentations'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as MockTestsRouteImport } from './routes/mock-tests'
@@ -115,6 +116,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PresentationsRoute = PresentationsRouteImport.update({
+  id: '/presentations',
+  path: '/presentations',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -318,6 +324,7 @@ export interface FileRoutesByFullPath {
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/practice': typeof PracticeRoute
+  '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -367,6 +374,7 @@ export interface FileRoutesByTo {
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/practice': typeof PracticeRoute
+  '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -417,6 +425,7 @@ export interface FileRoutesById {
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/practice': typeof PracticeRoute
+  '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -468,6 +477,7 @@ export interface FileRouteTypes {
     | '/mock-tests'
     | '/payment-success'
     | '/practice'
+    | '/presentations'
     | '/pricing'
     | '/privacy'
     | '/privacy-policy'
@@ -517,6 +527,7 @@ export interface FileRouteTypes {
     | '/mock-tests'
     | '/payment-success'
     | '/practice'
+    | '/presentations'
     | '/pricing'
     | '/privacy'
     | '/privacy-policy'
@@ -566,6 +577,7 @@ export interface FileRouteTypes {
     | '/mock-tests'
     | '/payment-success'
     | '/practice'
+    | '/presentations'
     | '/pricing'
     | '/privacy'
     | '/privacy-policy'
@@ -616,6 +628,7 @@ export interface RootRouteChildren {
   MockTestsRoute: typeof MockTestsRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   PracticeRoute: typeof PracticeRoute
+  PresentationsRoute: typeof PresentationsRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -725,6 +738,13 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/presentations': {
+      id: '/presentations'
+      path: '/presentations'
+      fullPath: '/presentations'
+      preLoaderRoute: typeof PresentationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -1010,6 +1030,7 @@ const rootRouteChildren: RootRouteChildren = {
   MockTestsRoute: MockTestsRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
   PracticeRoute: PracticeRoute,
+  PresentationsRoute: PresentationsRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
