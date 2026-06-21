@@ -316,7 +316,7 @@ function PresentationStudio() {
                       onClick={() => setWizard({ ...wizard, theme: t.id })}
                       className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all ${wizard.theme === t.id ? "border-accent ring-2 ring-accent" : "border-white/10 hover:border-white/30"}`}
                     >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${t.grad} opacity-90`} />
+                      {(() => { const b = themeBackground(t); return <div className={`absolute inset-0 ${b.className} opacity-90`} style={b.style} />; })()}
                       <div className="relative">
                         <div className="text-sm font-semibold" style={{ color: t.text }}>{t.id}</div>
                         <div className="mt-8 inline-flex items-center gap-1 rounded-full bg-black/30 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white">
@@ -454,7 +454,7 @@ function PresentationStudio() {
                 onClick={() => setActiveIdx(i)}
                 className={`group cursor-pointer overflow-hidden rounded-lg border transition-all ${activeIdx === i ? "border-accent ring-1 ring-accent" : "border-white/10 hover:border-white/30"}`}
               >
-                <div className={`relative aspect-video bg-gradient-to-br ${themeMeta.grad} p-2`}>
+                <div className={`relative aspect-video p-2 ${themeBackground(themeMeta).className}`} style={themeBackground(themeMeta).style}>
                   <div className="absolute left-1.5 top-1 text-[9px] text-white/70">{i + 1}</div>
                   <div className="line-clamp-3 pt-2 text-[10px] font-medium" style={{ color: themeMeta.text }}>
                     {s.title}
@@ -540,7 +540,8 @@ function PresentationStudio() {
                   key={t.id}
                   onClick={() => setWizard({ ...wizard, theme: t.id })}
                   title={t.id}
-                  className={`aspect-video rounded-md bg-gradient-to-br ${t.grad} ${wizard.theme === t.id ? "ring-2 ring-accent" : ""}`}
+                  className={`aspect-video rounded-md ${themeBackground(t).className} ${wizard.theme === t.id ? "ring-2 ring-accent" : ""}`}
+                  style={themeBackground(t).style}
                 />
               ))}
             </div>
@@ -690,7 +691,8 @@ function SlideCanvas({
       id="slide-canvas"
       key={`${t.layout}-${t.title}`}
       onMouseMove={handleParallax}
-      className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 ${animClass} animate-gradient-shift`}
+      className={`relative aspect-video w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10 ${themeBackground(theme).className} ${animClass} animate-gradient-shift`}
+      style={themeBackground(theme).style}
     >
       {/* glow orbs */}
       <div className="glow-orb animate-float-orb nx-parallax-deep" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
