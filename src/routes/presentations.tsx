@@ -901,11 +901,42 @@ function ChartView({ chart, accent, color, dark }: { chart: NonNullable<Slide["c
 // ------------------------------------------------------------
 function Presenter({ deck, theme, onClose }: { deck: Deck; theme: { id: string; grad: string; text: string; accent: string }; onClose: () => void }) {
   const [i, setI] = useState(0);
+  const [laser, setLaser] = useState(false);
+  const [drawing, setDrawing] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingActive = useRef(false);
+
+  // timer
+  useEffect(() => {
+    const id = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // auto-play
+  useEffect(() => {
+    if (!autoPlay) return;
+    const id = setInterval(() => setI((x) => (x + 1) % deck.slides.length), 6000);
+    return () => clearInterval(id);
+  }, [autoPlay, deck.slides.length]);
+
+  // keys
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight" || e.key === " ") setI((x) => Math.min(deck.slides.length - 1, x + 1));
       if (e.key === "ArrowLeft") setI((x) => Math.max(0, x - 1));
+      if (e.key.toLowerCase() === "l") setLaser((v) => !v);
+      if (e.key.toLowerCase() === "d") setDrawing((v) => !v);
+      if (e.key.toLowerCase() === "n") setShowNotes((v) => !v);
+      if (e.key.toLowerCase() === "p") setAutoPlay((v) => !v);
+      if (e.key.toLowerCase() === "c") {
+        const c = canvasRef.current;
+        if (c) c.getContext("2d")?.clearRect(0, 0, c.width, c.height);
+      }
     };
     window.addEventListener("keydown", onKey);
     document.documentElement.requestFullscreen?.().catch(() => {});
@@ -915,18 +946,134 @@ function Presenter({ deck, theme, onClose }: { deck: Deck; theme: { id: string; 
     };
   }, [deck.slides.length, onClose]);
 
+  // clear drawing on slide change
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (c) c.getContext("2d")?.clearRect(0, 0, c.width, c.height);
+  }, [i]);
+
+  function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (laser) setPointer({ x: e.clientX, y: e.clientY });
+    if (drawing && drawingActive.current) {
+      const c = canvasRef.current;
+      if (!c) return;
+      const rect = c.getBoundingClientRect();
+      const ctx = c.getContext("2d");
+      if (!ctx) return;
+      ctx.strokeStyle = theme.accent;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    }
+  }
+
+  // resize canvas to viewport
+  useEffect(() => {
+    const onResize = () => {
+      const c = canvasRef.current;
+      if (!c) return;
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
+  const ss = String(elapsed % 60).padStart(2, "0");
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      <div className="flex items-center justify-between p-3 text-xs text-white/70">
-        <span>{i + 1} / {deck.slides.length}</span>
-        <button onClick={onClose} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">Esc</button>
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-black"
+      onPointerMove={handlePointerMove}
+      onPointerDown={(e) => {
+        if (!drawing) return;
+        drawingActive.current = true;
+        const c = canvasRef.current; if (!c) return;
+        const rect = c.getBoundingClientRect();
+        const ctx = c.getContext("2d"); if (!ctx) return;
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      }}
+      onPointerUp={() => { drawingActive.current = false; }}
+      style={{ cursor: laser ? "none" : drawing ? "crosshair" : "default" }}
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between gap-2 p-3 text-xs text-white/80">
+        <div className="flex items-center gap-3">
+          <span className="rounded bg-white/10 px-2 py-1 font-mono">{i + 1} / {deck.slides.length}</span>
+          <span className="inline-flex items-center gap-1 rounded bg-white/10 px-2 py-1 font-mono">
+            <Timer className="h-3 w-3" /> {mm}:{ss}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <PresenterBtn active={laser} onClick={() => setLaser(!laser)} icon={MousePointer2} label="Laser (L)" />
+          <PresenterBtn active={drawing} onClick={() => setDrawing(!drawing)} icon={Pencil} label="Draw (D)" />
+          <PresenterBtn onClick={() => { const c = canvasRef.current; if (c) c.getContext("2d")?.clearRect(0,0,c.width,c.height); }} icon={Eraser} label="Clear (C)" />
+          <PresenterBtn active={showNotes} onClick={() => setShowNotes(!showNotes)} icon={FileText} label="Notes (N)" />
+          <PresenterBtn active={autoPlay} onClick={() => setAutoPlay(!autoPlay)} icon={autoPlay ? Pause : Play} label="Auto (P)" />
+          <PresenterBtn onClick={() => setElapsed(0)} icon={RotateCcw} label="Reset timer" />
+          <PresenterBtn onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})} icon={Maximize2} label="Fullscreen" />
+          <button onClick={onClose} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">Esc</button>
+        </div>
       </div>
+
+      {/* Slide */}
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="aspect-video w-full max-w-6xl">
           <SlideCanvas slide={deck.slides[i]} theme={theme} />
         </div>
       </div>
+
+      {/* Speaker notes drawer */}
+      {showNotes && deck.slides[i].notes && (
+        <div className="absolute bottom-16 left-4 right-4 max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-black/80 p-3 text-sm text-white/90 backdrop-blur">
+          <div className="mb-1 text-[10px] uppercase tracking-wider text-white/50">Speaker notes</div>
+          {deck.slides[i].notes}
+        </div>
+      )}
+
+      {/* Bottom nav touch */}
+      <div className="flex items-center justify-between p-3 text-xs text-white/60">
+        <button onClick={() => setI(Math.max(0, i - 1))} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">← Prev</button>
+        <span className="opacity-60">L laser · D draw · C clear · N notes · P auto · ←/→ navigate</span>
+        <button onClick={() => setI(Math.min(deck.slides.length - 1, i + 1))} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">Next →</button>
+      </div>
+
+      {/* Drawing canvas */}
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none absolute inset-0 z-40"
+        style={{ display: drawing ? "block" : "none" }}
+      />
+
+      {/* Laser pointer */}
+      {laser && pointer && (
+        <div
+          className="pointer-events-none fixed z-50 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            left: pointer.x,
+            top: pointer.y,
+            background: theme.accent,
+            boxShadow: `0 0 24px 8px ${theme.accent}, 0 0 60px 10px ${theme.accent}80`,
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function PresenterBtn({ icon: Icon, label, active, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; active?: boolean; onClick: () => void }) {
+  return (
+    <button
+      title={label}
+      onClick={onClick}
+      className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] transition-colors ${active ? "bg-accent text-accent-foreground" : "bg-white/10 text-white hover:bg-white/20"}`}
+    >
+      <Icon className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{label.split(" ")[0]}</span>
+    </button>
   );
 }
 
