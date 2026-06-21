@@ -137,6 +137,13 @@ function PresentationStudio() {
     includeCharts: true,
     includeReferences: true,
     customPrompt: "",
+    presenter: "",
+    college: "",
+    department: "",
+    subject: "",
+    professor: "",
+    rollNumber: "",
+    seminar: "",
   });
   const [loading, setLoading] = useState(false);
   const [deck, setDeck] = useState<Deck | null>(null);
