@@ -42,6 +42,7 @@ import { Route as CareerRouteImport } from './routes/career'
 import { Route as CalculatorsRouteImport } from './routes/calculators'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as BillingRouteImport } from './routes/billing'
+import { Route as AiPresentationRouteImport } from './routes/ai-presentation'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -224,6 +225,11 @@ const BillingRoute = BillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiPresentationRoute = AiPresentationRouteImport.update({
+  id: '/ai-presentation',
+  path: '/ai-presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AchievementsRoute = AchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
@@ -311,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/ai-presentation': typeof AiPresentationRoute
   '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
@@ -362,6 +369,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/ai-presentation': typeof AiPresentationRoute
   '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
@@ -414,6 +422,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/ai-presentation': typeof AiPresentationRoute
   '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
@@ -467,6 +476,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/achievements'
+    | '/ai-presentation'
     | '/billing'
     | '/blog'
     | '/calculators'
@@ -518,6 +528,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/achievements'
+    | '/ai-presentation'
     | '/billing'
     | '/blog'
     | '/calculators'
@@ -569,6 +580,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/achievements'
+    | '/ai-presentation'
     | '/billing'
     | '/blog'
     | '/calculators'
@@ -621,6 +633,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AchievementsRoute: typeof AchievementsRoute
+  AiPresentationRoute: typeof AiPresentationRoute
   BillingRoute: typeof BillingRoute
   BlogRoute: typeof BlogRouteWithChildren
   CalculatorsRoute: typeof CalculatorsRoute
@@ -900,6 +913,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-presentation': {
+      id: '/ai-presentation'
+      path: '/ai-presentation'
+      fullPath: '/ai-presentation'
+      preLoaderRoute: typeof AiPresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/achievements': {
       id: '/achievements'
       path: '/achievements'
@@ -1031,6 +1051,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AchievementsRoute: AchievementsRoute,
+  AiPresentationRoute: AiPresentationRoute,
   BillingRoute: BillingRoute,
   BlogRoute: BlogRouteWithChildren,
   CalculatorsRoute: CalculatorsRoute,
