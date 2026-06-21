@@ -661,34 +661,109 @@ function SlideCanvas({
     ) : <p className={props.className} style={{ color: theme.text, opacity: 0.8 }}>{t.subtitle}</p>
   ) : null;
 
+  const transitionClass: Record<NonNullable<Slide["transition"]>, string> = {
+    zoom: "slide-anim-zoom",
+    fade: "slide-anim-fade",
+    reveal: "slide-anim-reveal",
+    "3d": "slide-anim-3d",
+    blur: "slide-anim-blur",
+  };
+  const animClass = transitionClass[t.transition ?? "fade"] ?? "slide-anim-fade";
+  // staggered child animation helper
+  const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${0.15 + i * 0.08}s` });
+
   return (
     <div
       id="slide-canvas"
-      className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 animate-fade-in`}
+      key={`${t.layout}-${t.title}`}
+      className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 ${animClass} animate-gradient-shift`}
     >
+      {/* glow orbs */}
+      <div className="glow-orb animate-float-orb" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
+      <div className="glow-orb animate-float-orb" style={{ right: "6%", bottom: "10%", width: 320, height: 320, background: theme.accent, animationDelay: "3s" }} />
+
       <div className="absolute inset-0 opacity-30" style={{
         background: `radial-gradient(circle at 20% 20%, ${theme.accent}40, transparent 50%), radial-gradient(circle at 80% 80%, ${theme.accent}30, transparent 50%)`,
       }} />
+
+      {/* floating particles */}
+      {t.layout === "cover" && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {Array.from({ length: 14 }).map((_, i) => (
+            <span
+              key={i}
+              className="absolute block rounded-full"
+              style={{
+                left: `${(i * 37) % 100}%`,
+                bottom: `-10px`,
+                width: 4 + (i % 4) * 2,
+                height: 4 + (i % 4) * 2,
+                background: `${theme.accent}aa`,
+                animation: `particle-drift ${10 + (i % 6)}s linear ${i * 0.6}s infinite`,
+                opacity: 0.6,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="relative flex h-full flex-col p-6 sm:p-10 lg:p-14">
-        {t.layout === "title" && (
-          <div className="m-auto text-center">
-            <Title className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl" />
-            <div className="mt-4"><Sub className="text-base sm:text-lg lg:text-xl" /></div>
-            <div className="mx-auto mt-8 h-1 w-24 rounded-full" style={{ background: theme.accent }} />
+        {t.layout === "cover" && (
+          <div className="m-auto w-full max-w-3xl">
+            <div className="slide-element mb-4 flex items-center justify-center" style={stagger(0)}>
+              <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.25em]"
+                style={{ borderColor: `${theme.accent}80`, color: theme.text, background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" }}>
+                <Sparkles className="h-3 w-3" style={{ color: theme.accent }} /> AI Generated · Nexoras
+              </span>
+            </div>
+            <div className="rounded-3xl p-6 text-center backdrop-blur-xl sm:p-10 slide-element" style={{
+              ...stagger(1),
+              background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)",
+              border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+              boxShadow: `0 30px 80px -20px ${theme.accent}40`,
+            }}>
+              <Title className="text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl" />
+              {t.subtitle && <div className="mt-2"><Sub className="text-sm sm:text-base lg:text-lg" /></div>}
+              <div className="mx-auto mt-4 h-1 w-24 rounded-full" style={{ background: theme.accent }} />
+              {t.cover && (
+                <div className="mt-6 grid gap-2 text-left text-xs sm:grid-cols-2 sm:text-sm" style={{ color: theme.text }}>
+                  {t.cover.seminar && <CoverRow accent={theme.accent} k="Seminar" v={t.cover.seminar} />}
+                  {t.cover.subject && <CoverRow accent={theme.accent} k="Subject" v={t.cover.subject} />}
+                  {t.cover.presenter && <CoverRow accent={theme.accent} k="Presented by" v={t.cover.presenter} />}
+                  {t.cover.rollNumber && <CoverRow accent={theme.accent} k="Roll No" v={t.cover.rollNumber} />}
+                  {t.cover.department && <CoverRow accent={theme.accent} k="Department" v={t.cover.department} />}
+                  {t.cover.college && <CoverRow accent={theme.accent} k="College" v={t.cover.college} />}
+                  {t.cover.professor && <CoverRow accent={theme.accent} k="Guide" v={t.cover.professor} />}
+                  {t.cover.date && <CoverRow accent={theme.accent} k="Date" v={t.cover.date} />}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {t.layout !== "title" && (
+        {t.layout === "title" && (
+          <div className="m-auto text-center">
+            <div className="slide-element" style={stagger(0)}>
+              <Title className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl" />
+            </div>
+            <div className="mt-4 slide-element" style={stagger(1)}><Sub className="text-base sm:text-lg lg:text-xl" /></div>
+            <div className="mx-auto mt-8 h-1 w-24 rounded-full slide-element" style={{ background: theme.accent, ...stagger(2) }} />
+          </div>
+        )}
+
+        {t.layout !== "title" && t.layout !== "cover" && (
           <>
-            <Title className="text-2xl font-bold sm:text-3xl lg:text-4xl" />
-            <div className="mt-1"><Sub className="text-sm sm:text-base" /></div>
-            <div className="my-4 h-px w-16 rounded-full" style={{ background: theme.accent }} />
+            <div className="slide-element" style={stagger(0)}>
+              <Title className="text-2xl font-bold sm:text-3xl lg:text-4xl" />
+            </div>
+            <div className="mt-1 slide-element" style={stagger(1)}><Sub className="text-sm sm:text-base" /></div>
+            <div className="my-4 h-px w-16 rounded-full slide-element" style={{ background: theme.accent, ...stagger(2) }} />
 
             <div className="flex-1 overflow-hidden">
               {(t.layout === "bullets" || t.layout === "content" || t.layout === "agenda") && t.bullets && (
                 <ul className="space-y-2.5 text-sm sm:text-base lg:text-lg" style={{ color: theme.text }}>
                   {t.bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-3">
+                    <li key={i} className="flex items-start gap-3 slide-element" style={stagger(i + 3)}>
                       <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: theme.accent }} />
                       {editable ? (
                         <input
@@ -708,19 +783,19 @@ function SlideCanvas({
               )}
 
               {t.layout === "content" && t.body && (
-                <p className="mt-3 text-sm leading-relaxed sm:text-base lg:text-lg" style={{ color: theme.text, opacity: 0.9 }}>{t.body}</p>
+                <p className="mt-3 text-sm leading-relaxed sm:text-base lg:text-lg slide-element" style={{ color: theme.text, opacity: 0.9, ...stagger(3) }}>{t.body}</p>
               )}
 
               {t.layout === "two-column" && (
                 <div className="grid h-full gap-6 sm:grid-cols-2">
                   <ul className="space-y-2" style={{ color: theme.text }}>
                     {(t.bullets ?? []).slice(0, Math.ceil((t.bullets?.length ?? 0) / 2)).map((b, i) => (
-                      <li key={i} className="flex gap-2"><span style={{ color: theme.accent }}>▸</span>{b}</li>
+                      <li key={i} className="flex gap-2 slide-element" style={stagger(i + 3)}><span style={{ color: theme.accent }}>▸</span>{b}</li>
                     ))}
                   </ul>
                   <ul className="space-y-2" style={{ color: theme.text }}>
                     {(t.bullets ?? []).slice(Math.ceil((t.bullets?.length ?? 0) / 2)).map((b, i) => (
-                      <li key={i} className="flex gap-2"><span style={{ color: theme.accent }}>▸</span>{b}</li>
+                      <li key={i} className="flex gap-2 slide-element" style={stagger(i + 4)}><span style={{ color: theme.accent }}>▸</span>{b}</li>
                     ))}
                   </ul>
                 </div>
@@ -729,7 +804,7 @@ function SlideCanvas({
               {t.layout === "stats" && t.stats && (
                 <div className="mt-4 grid h-full gap-4 sm:grid-cols-3">
                   {t.stats.slice(0, 6).map((s, i) => (
-                    <div key={i} className="rounded-xl p-4 text-center" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" }}>
+                    <div key={i} className="rounded-xl p-4 text-center slide-element" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)", ...stagger(i + 3) }}>
                       <div className="text-3xl font-bold sm:text-4xl" style={{ color: theme.accent }}>{s.value}</div>
                       <div className="mt-1 text-xs sm:text-sm" style={{ color: theme.text, opacity: 0.8 }}>{s.label}</div>
                     </div>
@@ -738,11 +813,13 @@ function SlideCanvas({
               )}
 
               {t.layout === "chart" && t.chart && (
-                <ChartView chart={t.chart} accent={theme.accent} color={theme.text} dark={isDark} />
+                <div className="slide-element" style={stagger(3)}>
+                  <ChartView chart={t.chart} accent={theme.accent} color={theme.text} dark={isDark} />
+                </div>
               )}
 
               {t.layout === "quote" && t.quote && (
-                <blockquote className="my-auto text-center">
+                <blockquote className="my-auto text-center slide-element" style={stagger(3)}>
                   <div className="text-2xl font-light italic sm:text-3xl lg:text-4xl" style={{ color: theme.text }}>"{t.quote.text}"</div>
                   {t.quote.author && <div className="mt-4 text-sm uppercase tracking-widest" style={{ color: theme.accent }}>— {t.quote.author}</div>}
                 </blockquote>
@@ -751,15 +828,15 @@ function SlideCanvas({
               {t.layout === "references" && t.references && (
                 <ol className="space-y-1.5 text-xs sm:text-sm" style={{ color: theme.text, opacity: 0.85 }}>
                   {t.references.map((r, i) => (
-                    <li key={i} className="border-l-2 pl-3" style={{ borderColor: theme.accent }}>{i + 1}. {r}</li>
+                    <li key={i} className="border-l-2 pl-3 slide-element" style={{ borderColor: theme.accent, ...stagger(i + 3) }}>{i + 1}. {r}</li>
                   ))}
                 </ol>
               )}
 
               {t.layout === "thanks" && (
                 <div className="m-auto text-center">
-                  <div className="text-5xl font-bold sm:text-6xl lg:text-7xl" style={{ color: theme.text }}>Thank You</div>
-                  <div className="mt-3 text-base" style={{ color: theme.text, opacity: 0.8 }}>Questions & Discussion</div>
+                  <div className="text-5xl font-bold sm:text-6xl lg:text-7xl slide-element" style={{ color: theme.text, ...stagger(0) }}>Thank You</div>
+                  <div className="mt-3 text-base slide-element" style={{ color: theme.text, opacity: 0.8, ...stagger(1) }}>Questions & Discussion</div>
                 </div>
               )}
             </div>
