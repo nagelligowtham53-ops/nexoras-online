@@ -667,8 +667,17 @@ function SlideCanvas({
     reveal: "slide-anim-reveal",
     "3d": "slide-anim-3d",
     blur: "slide-anim-blur",
+    liquid: "slide-anim-liquid",
+    infinity: "slide-anim-infinity",
+    orbital: "slide-anim-orbital",
+    wave: "slide-anim-wave",
+    crystal: "slide-anim-crystal",
+    galaxy: "slide-anim-galaxy",
+    book: "slide-anim-book",
+    cinematic: "slide-anim-cinematic",
+    smart: "slide-anim-smart",
   };
-  const animClass = transitionClass[t.transition ?? "fade"] ?? "slide-anim-fade";
+  const animClass = transitionClass[t.transition ?? "cinematic"] ?? "slide-anim-cinematic";
   // staggered child animation helper
   const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${0.15 + i * 0.08}s` });
 
