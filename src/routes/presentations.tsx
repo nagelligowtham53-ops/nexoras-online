@@ -60,7 +60,7 @@ interface Slide {
   references?: string[];
   notes?: string;
   cover?: CoverMeta;
-  transition?: "zoom" | "fade" | "reveal" | "3d" | "blur";
+  transition?: "zoom" | "fade" | "reveal" | "3d" | "blur" | "liquid" | "infinity" | "orbital" | "wave" | "crystal" | "galaxy" | "book" | "cinematic" | "smart";
 }
 
 interface Deck {
@@ -201,16 +201,17 @@ function PresentationStudio() {
           seminar: wizard.seminar || wizard.type,
           date: new Date().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }),
         },
-        transition: "zoom",
+        transition: "cinematic",
       };
-      // Apply auto transitions per layout
+      // Nexoras AI-adaptive transition engine: picks the best cinematic effect per slide type
       const transitions: Record<string, Slide["transition"]> = {
-        title: "zoom", agenda: "reveal", content: "fade", "two-column": "reveal",
-        bullets: "fade", quote: "blur", stats: "3d", chart: "3d",
-        references: "fade", thanks: "zoom",
+        title: "infinity", agenda: "wave", content: "smart", "two-column": "orbital",
+        bullets: "liquid", quote: "cinematic", stats: "crystal", chart: "orbital",
+        references: "book", thanks: "galaxy",
       };
-      const annotated = (data.slides as Slide[]).map((s) => ({
-        ...s, transition: s.transition ?? transitions[s.layout] ?? "fade",
+      const annotated = (data.slides as Slide[]).map((s, idx) => ({
+        ...s,
+        transition: s.transition ?? transitions[s.layout] ?? (idx % 2 === 0 ? "cinematic" : "liquid"),
       }));
       const withCover: Deck = { ...(data as Deck), slides: [coverSlide, ...annotated] };
       setDeck(withCover);
@@ -667,20 +668,38 @@ function SlideCanvas({
     reveal: "slide-anim-reveal",
     "3d": "slide-anim-3d",
     blur: "slide-anim-blur",
+    liquid: "slide-anim-liquid",
+    infinity: "slide-anim-infinity",
+    orbital: "slide-anim-orbital",
+    wave: "slide-anim-wave",
+    crystal: "slide-anim-crystal",
+    galaxy: "slide-anim-galaxy",
+    book: "slide-anim-book",
+    cinematic: "slide-anim-cinematic",
+    smart: "slide-anim-smart",
   };
-  const animClass = transitionClass[t.transition ?? "fade"] ?? "slide-anim-fade";
+  const animClass = transitionClass[t.transition ?? "cinematic"] ?? "slide-anim-cinematic";
   // staggered child animation helper
   const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${0.15 + i * 0.08}s` });
+
+  const handleParallax = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const mx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+    const my = ((e.clientY - r.top) / r.height - 0.5) * 2;
+    e.currentTarget.style.setProperty("--nx-mx", String(mx));
+    e.currentTarget.style.setProperty("--nx-my", String(my));
+  };
 
   return (
     <div
       id="slide-canvas"
       key={`${t.layout}-${t.title}`}
+      onMouseMove={handleParallax}
       className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 ${animClass} animate-gradient-shift`}
     >
       {/* glow orbs */}
-      <div className="glow-orb animate-float-orb" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
-      <div className="glow-orb animate-float-orb" style={{ right: "6%", bottom: "10%", width: 320, height: 320, background: theme.accent, animationDelay: "3s" }} />
+      <div className="glow-orb animate-float-orb nx-parallax-deep" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
+      <div className="glow-orb animate-float-orb nx-parallax-deep" style={{ right: "6%", bottom: "10%", width: 320, height: 320, background: theme.accent, animationDelay: "3s" }} />
 
       <div className="absolute inset-0 opacity-30" style={{
         background: `radial-gradient(circle at 20% 20%, ${theme.accent}40, transparent 50%), radial-gradient(circle at 80% 80%, ${theme.accent}30, transparent 50%)`,
@@ -841,9 +860,11 @@ function SlideCanvas({
               )}
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t pt-3 text-[10px] sm:text-xs" style={{ borderColor: `${theme.text}20`, color: theme.text, opacity: 0.5 }}>
-              <span>Nexoras AI</span>
-            </div>
+            {t.layout === "thanks" && (
+              <div className="mt-4 flex items-center justify-end border-t pt-3 text-[9px] tracking-wider" style={{ borderColor: `${theme.text}15`, color: theme.text, opacity: 0.35 }}>
+                <span>designed with nexoras</span>
+              </div>
+            )}
           </>
         )}
       </div>
