@@ -234,9 +234,9 @@ function PresentationStudio() {
         <section className="mx-auto max-w-5xl px-4 pb-20 lg:px-8">
           <div className="glass rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/60 via-indigo-950/40 to-purple-950/40 p-6 backdrop-blur-xl lg:p-10">
             <div className="mb-6 flex items-center justify-between">
-              <div className="text-xs uppercase tracking-[0.3em] text-accent">Step {step} / 8</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-accent">Step {step} / 9</div>
               <div className="flex gap-1.5">
-                {Array.from({ length: 8 }, (_, i) => (
+                {Array.from({ length: 9 }, (_, i) => (
                   <div key={i} className={`h-1.5 w-8 rounded-full transition-all ${i < step ? "bg-accent" : "bg-white/10"}`} />
                 ))}
               </div>
