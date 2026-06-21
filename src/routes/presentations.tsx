@@ -851,9 +851,11 @@ function SlideCanvas({
               )}
             </div>
 
-            <div className="mt-4 flex items-center justify-between border-t pt-3 text-[10px] sm:text-xs" style={{ borderColor: `${theme.text}20`, color: theme.text, opacity: 0.5 }}>
-              <span>Nexoras AI</span>
-            </div>
+            {t.layout === "thanks" && (
+              <div className="mt-4 flex items-center justify-end border-t pt-3 text-[9px] tracking-wider" style={{ borderColor: `${theme.text}15`, color: theme.text, opacity: 0.35 }}>
+                <span>designed with nexoras</span>
+              </div>
+            )}
           </>
         )}
       </div>
