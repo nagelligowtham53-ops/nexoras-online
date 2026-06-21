@@ -101,17 +101,12 @@ const PRESENTATION_TYPES = [
 ];
 const AUDIENCES = ["School Students","College Students","Professors","Lecturers","Recruiters","Investors","Clients","Management","Researchers","General Public"];
 const GOALS = ["Inform","Explain","Teach","Convince","Sell","Research","Seminar","Viva","Assignment","Interview"];
-const THEMES = [
-  { id: "Modern", grad: "from-indigo-600 via-purple-600 to-pink-500", text: "#ffffff", accent: "#a78bfa" },
-  { id: "Glassmorphism", grad: "from-slate-900 via-blue-900 to-purple-900", text: "#ffffff", accent: "#60a5fa" },
-  { id: "Minimal", grad: "from-white via-slate-50 to-slate-100", text: "#0f172a", accent: "#6366f1" },
-  { id: "Corporate", grad: "from-slate-800 via-slate-900 to-blue-900", text: "#ffffff", accent: "#38bdf8" },
-  { id: "Academic", grad: "from-amber-50 via-stone-50 to-rose-50", text: "#1c1917", accent: "#b91c1c" },
-  { id: "Technology", grad: "from-black via-zinc-900 to-emerald-950", text: "#ffffff", accent: "#10b981" },
-  { id: "Dark", grad: "from-zinc-950 via-black to-zinc-900", text: "#ffffff", accent: "#f59e0b" },
-  { id: "Gradient", grad: "from-fuchsia-600 via-rose-500 to-orange-400", text: "#ffffff", accent: "#fde68a" },
-  { id: "Creative", grad: "from-emerald-400 via-cyan-500 to-blue-600", text: "#ffffff", accent: "#fbbf24" },
-];
+import {
+  THEMES_CATALOG, THEME_CATEGORIES, smartSuggestThemes, surpriseMeTheme, themeBackground,
+  type PresentationTheme, type ThemeCategory,
+} from "@/lib/presentation-themes";
+const THEMES = THEMES_CATALOG;
+type ThemeMeta = PresentationTheme;
 const DEPTHS = ["Quick Overview","Medium Detail","Very Detailed","Research Level","Professor Level"];
 const LANGUAGES = ["English","Hindi","Telugu","Tamil","Bengali","Marathi","Spanish","French","German","Japanese","Chinese","Arabic"];
 const ANIMS = ["No Animation","Basic","Smooth","Advanced","Premium Cinematic"];
