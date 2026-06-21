@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import {
   Sparkles, Wand2, Loader2, Plus, Trash2, ChevronLeft, ChevronRight,
   Download, FileText, Presentation as PresentationIcon,
-  Palette, Type, Edit3, Play, Copy, Check,
+  Palette, Type, Edit3, Play, Copy, Check, Pencil, Eraser, Timer, MousePointer2,
+  Pause, RotateCcw, Maximize2,
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
