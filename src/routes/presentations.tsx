@@ -504,7 +504,7 @@ function PresentationStudio() {
               }}
               className="mt-1 w-full rounded-md border border-input bg-transparent px-2 py-1.5 text-sm"
             >
-              {["title","agenda","content","two-column","bullets","quote","stats","references","thanks"].map((l) => (
+              {["cover","title","agenda","content","two-column","bullets","quote","stats","chart","references","thanks"].map((l) => (
                 <option key={l} value={l}>{l}</option>
               ))}
             </select>
