@@ -555,19 +555,28 @@ function PresentationStudio() {
           </div>
 
           <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-            <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
-              <Palette className="h-3.5 w-3.5" /> Theme
+            <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-wider text-accent">
+              <span className="flex items-center gap-2"><Palette className="h-3.5 w-3.5" /> Theme</span>
+              <button onClick={doSurprise} className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] hover:bg-white/20">Surprise</button>
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {THEMES.map((t) => (
+            <div className="mb-2 text-[10px] text-muted-foreground truncate">{themeMeta.name} · {themeMeta.category}</div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {THEMES.slice(0, 24).map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setWizard({ ...wizard, theme: t.id })}
-                  title={t.id}
-                  className={`aspect-video rounded-md ${themeBackground(t).className} ${wizard.theme === t.id ? "ring-2 ring-accent" : ""}`}
+                  onClick={() => applyTheme(t)}
+                  title={t.name}
+                  className={`aspect-video rounded-md ${themeBackground(t).className} ${!customTheme && wizard.theme === t.id ? "ring-2 ring-accent" : ""}`}
                   style={themeBackground(t).style}
                 />
               ))}
+            </div>
+            <div className="mt-3 space-y-2">
+              <Input value={themePrompt} onChange={(e) => setThemePrompt(e.target.value)} placeholder="Describe a theme…" className="h-8 text-xs" />
+              <Button size="sm" variant="outline" className="w-full" onClick={generateAITheme} disabled={themeBusy}>
+                {themeBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI Generate
+              </Button>
+              <ThemeCustomizer base={themeMeta} onApply={(t) => { setCustomTheme(t); setWizard((w) => ({ ...w, theme: t.id })); }} />
             </div>
           </div>
         </aside>
