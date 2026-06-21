@@ -4,7 +4,7 @@ import {
   Menu, X, Search, LogOut, User as UserIcon, ChevronDown,
   GraduationCap, FileText, Brain, Calculator, Briefcase, Target,
   Rocket, BookOpen, Trophy, Sparkles, Map, Cpu, MessageSquare,
-  ListChecks, LayoutDashboard,
+  ListChecks, LayoutDashboard, Presentation,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
