@@ -101,17 +101,12 @@ const PRESENTATION_TYPES = [
 ];
 const AUDIENCES = ["School Students","College Students","Professors","Lecturers","Recruiters","Investors","Clients","Management","Researchers","General Public"];
 const GOALS = ["Inform","Explain","Teach","Convince","Sell","Research","Seminar","Viva","Assignment","Interview"];
-const THEMES = [
-  { id: "Modern", grad: "from-indigo-600 via-purple-600 to-pink-500", text: "#ffffff", accent: "#a78bfa" },
-  { id: "Glassmorphism", grad: "from-slate-900 via-blue-900 to-purple-900", text: "#ffffff", accent: "#60a5fa" },
-  { id: "Minimal", grad: "from-white via-slate-50 to-slate-100", text: "#0f172a", accent: "#6366f1" },
-  { id: "Corporate", grad: "from-slate-800 via-slate-900 to-blue-900", text: "#ffffff", accent: "#38bdf8" },
-  { id: "Academic", grad: "from-amber-50 via-stone-50 to-rose-50", text: "#1c1917", accent: "#b91c1c" },
-  { id: "Technology", grad: "from-black via-zinc-900 to-emerald-950", text: "#ffffff", accent: "#10b981" },
-  { id: "Dark", grad: "from-zinc-950 via-black to-zinc-900", text: "#ffffff", accent: "#f59e0b" },
-  { id: "Gradient", grad: "from-fuchsia-600 via-rose-500 to-orange-400", text: "#ffffff", accent: "#fde68a" },
-  { id: "Creative", grad: "from-emerald-400 via-cyan-500 to-blue-600", text: "#ffffff", accent: "#fbbf24" },
-];
+import {
+  THEMES_CATALOG, THEME_CATEGORIES, smartSuggestThemes, surpriseMeTheme, themeBackground,
+  type PresentationTheme, type ThemeCategory,
+} from "@/lib/presentation-themes";
+const THEMES = THEMES_CATALOG;
+type ThemeMeta = PresentationTheme;
 const DEPTHS = ["Quick Overview","Medium Detail","Very Detailed","Research Level","Professor Level"];
 const LANGUAGES = ["English","Hindi","Telugu","Tamil","Bengali","Marathi","Spanish","French","German","Japanese","Chinese","Arabic"];
 const ANIMS = ["No Animation","Basic","Smooth","Advanced","Premium Cinematic"];
@@ -149,11 +144,41 @@ function PresentationStudio() {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [presenting, setPresenting] = useState(false);
+  const [customTheme, setCustomTheme] = useState<PresentationTheme | null>(null);
+  const [themePrompt, setThemePrompt] = useState("");
+  const [themeBusy, setThemeBusy] = useState(false);
+  const [themeCat, setThemeCat] = useState<ThemeCategory | "All" | "Smart">("Smart");
+  const [themeSearch, setThemeSearch] = useState("");
 
-  const themeMeta = useMemo(
-    () => THEMES.find((t) => t.id === wizard.theme) ?? THEMES[0],
-    [wizard.theme],
+  const themeMeta = useMemo<PresentationTheme>(
+    () => customTheme ?? THEMES.find((t) => t.id === wizard.theme) ?? THEMES[0],
+    [wizard.theme, customTheme],
   );
+
+  function applyTheme(t: PresentationTheme) {
+    setCustomTheme(t.category === "Custom" ? t : null);
+    setWizard((w) => ({ ...w, theme: t.id }));
+  }
+  function doSurprise() {
+    applyTheme(surpriseMeTheme(Date.now()));
+    toast.success("Surprise theme applied");
+  }
+  async function generateAITheme() {
+    if (!themePrompt.trim()) { toast.error("Describe the theme you want"); return; }
+    setThemeBusy(true);
+    try {
+      const res = await authedFetch("/api/generate-theme", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: themePrompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+      applyTheme(data as PresentationTheme);
+      toast.success(`Theme "${data.name}" applied`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI theme failed");
+    } finally { setThemeBusy(false); }
+  }
 
   async function generate() {
     if (!wizard.topic.trim()) {
@@ -313,24 +338,18 @@ function PresentationStudio() {
             )}
 
             {step === 6 && (
-              <Step title="Pick a design theme" subtitle="Each theme tunes colors, typography and accents.">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {THEMES.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setWizard({ ...wizard, theme: t.id })}
-                      className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all ${wizard.theme === t.id ? "border-accent ring-2 ring-accent" : "border-white/10 hover:border-white/30"}`}
-                    >
-                      <div className={`absolute inset-0 bg-gradient-to-br ${t.grad} opacity-90`} />
-                      <div className="relative">
-                        <div className="text-sm font-semibold" style={{ color: t.text }}>{t.id}</div>
-                        <div className="mt-8 inline-flex items-center gap-1 rounded-full bg-black/30 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white">
-                          Preview
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              <Step title="Pick a design theme" subtitle="60+ premium themes, AI generator, smart suggestions, and Surprise Me.">
+                <ThemeBrowser
+                  current={themeMeta}
+                  cat={themeCat} setCat={setThemeCat}
+                  search={themeSearch} setSearch={setThemeSearch}
+                  wizardCtx={{ type: wizard.type, audience: wizard.audience, topic: wizard.topic }}
+                  onPick={applyTheme}
+                  onSurprise={doSurprise}
+                  themePrompt={themePrompt} setThemePrompt={setThemePrompt}
+                  onAIGenerate={generateAITheme} aiBusy={themeBusy}
+                  customTheme={customTheme} onCustomize={setCustomTheme}
+                />
               </Step>
             )}
 
@@ -459,7 +478,7 @@ function PresentationStudio() {
                 onClick={() => setActiveIdx(i)}
                 className={`group cursor-pointer overflow-hidden rounded-lg border transition-all ${activeIdx === i ? "border-accent ring-1 ring-accent" : "border-white/10 hover:border-white/30"}`}
               >
-                <div className={`relative aspect-video bg-gradient-to-br ${themeMeta.grad} p-2`}>
+                <div className={`relative aspect-video p-2 ${themeBackground(themeMeta).className}`} style={themeBackground(themeMeta).style}>
                   <div className="absolute left-1.5 top-1 text-[9px] text-white/70">{i + 1}</div>
                   <div className="line-clamp-3 pt-2 text-[10px] font-medium" style={{ color: themeMeta.text }}>
                     {s.title}
@@ -536,18 +555,28 @@ function PresentationStudio() {
           </div>
 
           <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-            <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
-              <Palette className="h-3.5 w-3.5" /> Theme
+            <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-wider text-accent">
+              <span className="flex items-center gap-2"><Palette className="h-3.5 w-3.5" /> Theme</span>
+              <button onClick={doSurprise} className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] hover:bg-white/20">Surprise</button>
             </div>
-            <div className="grid grid-cols-3 gap-1.5">
-              {THEMES.map((t) => (
+            <div className="mb-2 text-[10px] text-muted-foreground truncate">{themeMeta.name} · {themeMeta.category}</div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {THEMES.slice(0, 24).map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setWizard({ ...wizard, theme: t.id })}
-                  title={t.id}
-                  className={`aspect-video rounded-md bg-gradient-to-br ${t.grad} ${wizard.theme === t.id ? "ring-2 ring-accent" : ""}`}
+                  onClick={() => applyTheme(t)}
+                  title={t.name}
+                  className={`aspect-video rounded-md ${themeBackground(t).className} ${!customTheme && wizard.theme === t.id ? "ring-2 ring-accent" : ""}`}
+                  style={themeBackground(t).style}
                 />
               ))}
+            </div>
+            <div className="mt-3 space-y-2">
+              <Input value={themePrompt} onChange={(e) => setThemePrompt(e.target.value)} placeholder="Describe a theme…" className="h-8 text-xs" />
+              <Button size="sm" variant="outline" className="w-full" onClick={generateAITheme} disabled={themeBusy}>
+                {themeBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI Generate
+              </Button>
+              <ThemeCustomizer base={themeMeta} onApply={(t) => { setCustomTheme(t); setWizard((w) => ({ ...w, theme: t.id })); }} />
             </div>
           </div>
         </aside>
@@ -631,7 +660,7 @@ function SlideCanvas({
   slide, theme, editable = false, onChange,
 }: {
   slide: Slide;
-  theme: { id: string; grad: string; text: string; accent: string };
+  theme: ThemeMeta;
   editable?: boolean;
   onChange?: (s: Slide) => void;
 }) {
@@ -695,7 +724,8 @@ function SlideCanvas({
       id="slide-canvas"
       key={`${t.layout}-${t.title}`}
       onMouseMove={handleParallax}
-      className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 ${animClass} animate-gradient-shift`}
+      className={`relative aspect-video w-full overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10 ${themeBackground(theme).className} ${animClass} animate-gradient-shift`}
+      style={themeBackground(theme).style}
     >
       {/* glow orbs */}
       <div className="glow-orb animate-float-orb nx-parallax-deep" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
@@ -920,7 +950,7 @@ function ChartView({ chart, accent, color, dark }: { chart: NonNullable<Slide["c
 // ------------------------------------------------------------
 // Presenter (fullscreen)
 // ------------------------------------------------------------
-function Presenter({ deck, theme, onClose }: { deck: Deck; theme: { id: string; grad: string; text: string; accent: string }; onClose: () => void }) {
+function Presenter({ deck, theme, onClose }: { deck: Deck; theme: ThemeMeta; onClose: () => void }) {
   const [i, setI] = useState(0);
   const [laser, setLaser] = useState(false);
   const [drawing, setDrawing] = useState(false);
@@ -1101,7 +1131,7 @@ function PresenterBtn({ icon: Icon, label, active, onClick }: { icon: React.Comp
 // ------------------------------------------------------------
 // Export menu
 // ------------------------------------------------------------
-function ExportMenu({ deck, theme }: { deck: Deck; theme: { id: string; grad: string; text: string; accent: string } }) {
+function ExportMenu({ deck, theme }: { deck: Deck; theme: ThemeMeta }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -1352,6 +1382,152 @@ function CoverRow({ k, v, accent }: { k: string; v: string; accent: string }) {
       <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
       <span className="text-[10px] uppercase tracking-wider opacity-60">{k}</span>
       <span className="font-medium">{v}</span>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------
+// Theme Browser (wizard step 6): categories + search + AI + Surprise
+// ------------------------------------------------------------
+function ThemeBrowser({
+  current, cat, setCat, search, setSearch, wizardCtx, onPick, onSurprise,
+  themePrompt, setThemePrompt, onAIGenerate, aiBusy, customTheme, onCustomize,
+}: {
+  current: PresentationTheme;
+  cat: ThemeCategory | "All" | "Smart";
+  setCat: (c: ThemeCategory | "All" | "Smart") => void;
+  search: string; setSearch: (s: string) => void;
+  wizardCtx: { type: string; audience: string; topic: string };
+  onPick: (t: PresentationTheme) => void;
+  onSurprise: () => void;
+  themePrompt: string; setThemePrompt: (s: string) => void;
+  onAIGenerate: () => void; aiBusy: boolean;
+  customTheme: PresentationTheme | null;
+  onCustomize: (t: PresentationTheme | null) => void;
+}) {
+  const list = useMemo(() => {
+    let arr: PresentationTheme[] = THEMES_CATALOG;
+    if (cat === "Smart") arr = smartSuggestThemes(wizardCtx);
+    else if (cat !== "All") arr = arr.filter((t) => t.category === cat);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      arr = arr.filter((t) => t.name.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
+    }
+    return arr;
+  }, [cat, search, wizardCtx]);
+
+  return (
+    <div className="space-y-4">
+      {/* AI generator + surprise */}
+      <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-indigo-950/40 to-purple-950/40 p-4">
+        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
+          <Sparkles className="h-3.5 w-3.5" /> AI Theme Generator
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            value={themePrompt}
+            onChange={(e) => setThemePrompt(e.target.value)}
+            placeholder="e.g. futuristic blue glassmorphism with floating particles"
+            className="flex-1"
+          />
+          <Button onClick={onAIGenerate} disabled={aiBusy} className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+            {aiBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Generate
+          </Button>
+          <Button variant="outline" onClick={onSurprise}><Sparkles className="h-4 w-4" /> Surprise Me</Button>
+        </div>
+        {customTheme && (
+          <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>Using custom theme: <span className="text-foreground">{customTheme.name}</span></span>
+            <button className="underline" onClick={() => onCustomize(null)}>Clear</button>
+          </div>
+        )}
+      </div>
+
+      {/* Category tabs + search */}
+      <div className="flex flex-wrap items-center gap-2">
+        {(["Smart","All", ...THEME_CATEGORIES] as Array<ThemeCategory | "All" | "Smart">).map((c) => (
+          <button
+            key={c}
+            onClick={() => setCat(c)}
+            className={`rounded-full border px-3 py-1 text-xs transition-all ${cat === c ? "border-accent bg-accent/20 text-accent" : "border-white/10 text-muted-foreground hover:border-white/30"}`}
+          >{c}</button>
+        ))}
+        <Input
+          value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search themes…" className="ml-auto h-8 w-40 text-xs"
+        />
+      </div>
+
+      {/* Grid */}
+      <div className="grid max-h-[60vh] gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
+        {list.map((t) => {
+          const b = themeBackground(t);
+          const active = current.id === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => onPick(t)}
+              className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all ${active ? "border-accent ring-2 ring-accent" : "border-white/10 hover:border-white/30"}`}
+            >
+              <div className={`absolute inset-0 ${b.className} opacity-90`} style={b.style} />
+              <div className="relative">
+                <div className="text-sm font-semibold drop-shadow" style={{ color: t.text }}>{t.name}</div>
+                <div className="text-[10px] uppercase tracking-wider opacity-70" style={{ color: t.text }}>{t.category}</div>
+                <div className="mt-6 flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border border-white/30" style={{ background: t.accent }} />
+                  <span className="text-[10px] uppercase tracking-wider opacity-80" style={{ color: t.text }}>Accent</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+        {list.length === 0 && (
+          <div className="col-span-full py-10 text-center text-sm text-muted-foreground">No themes match. Try another category or use AI Generate.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------
+// Theme Customizer (inline color editor)
+// ------------------------------------------------------------
+function ThemeCustomizer({ base, onApply }: { base: PresentationTheme; onApply: (t: PresentationTheme) => void }) {
+  const [open, setOpen] = useState(false);
+  const [a, setA] = useState("#0f172a");
+  const [b, setB] = useState("#1e1b4b");
+  const [c, setC] = useState("#7c3aed");
+  const [text, setText] = useState(base.text);
+  const [accent, setAccent] = useState(base.accent);
+  if (!open) {
+    return <Button variant="outline" size="sm" className="w-full" onClick={() => setOpen(true)}><Palette className="h-3 w-3" /> Customize</Button>;
+  }
+  const apply = () => {
+    onApply({
+      id: `Custom-${Date.now().toString(36)}`,
+      name: "Custom Theme", category: "Custom",
+      bg: `linear-gradient(135deg, ${a} 0%, ${b} 50%, ${c} 100%)`,
+      text, accent,
+    });
+    setOpen(false);
+  };
+  const Row = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+    <label className="flex items-center justify-between gap-2 text-[11px]">
+      <span className="text-muted-foreground">{label}</span>
+      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="h-6 w-10 cursor-pointer rounded border border-white/10 bg-transparent" />
+    </label>
+  );
+  return (
+    <div className="space-y-1.5 rounded-md border border-white/10 bg-black/30 p-2">
+      <Row label="BG 1" value={a} onChange={setA} />
+      <Row label="BG 2" value={b} onChange={setB} />
+      <Row label="BG 3" value={c} onChange={setC} />
+      <Row label="Text" value={text} onChange={setText} />
+      <Row label="Accent" value={accent} onChange={setAccent} />
+      <div className="flex gap-1.5">
+        <Button size="sm" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button size="sm" className="flex-1" onClick={apply}>Apply</Button>
+      </div>
     </div>
   );
 }
