@@ -1108,7 +1108,32 @@ function ExportMenu({ deck, theme }: { deck: Deck; theme: { id: string; grad: st
       deck.slides.forEach((s) => {
         const slide = pptx.addSlide();
         slide.background = { color: bg };
-        if (s.layout === "title") {
+        if (s.layout === "cover") {
+          // Premium cover slide
+          slide.addShape("rect", { x: 1.0, y: 1.2, w: 11.3, h: 5.3, fill: { color: textColor === "FFFFFF" ? "FFFFFF" : "000000", transparency: 92 }, line: { color: accentHex, width: 1 } });
+          slide.addText("AI GENERATED · NEXORAS", { x: 1.0, y: 1.4, w: 11.3, h: 0.4, fontSize: 11, color: accentHex, align: "center", bold: true });
+          slide.addText(s.title, { x: 1.0, y: 2.0, w: 11.3, h: 1.2, fontSize: 44, bold: true, color: textColor, align: "center", fontFace: "Calibri" });
+          if (s.subtitle) slide.addText(s.subtitle, { x: 1.0, y: 3.2, w: 11.3, h: 0.5, fontSize: 18, color: textColor, align: "center" });
+          slide.addShape("rect", { x: 6.2, y: 3.85, w: 0.9, h: 0.05, fill: { color: accentHex }, line: { color: accentHex } });
+          if (s.cover) {
+            const c = s.cover;
+            const rows: Array<[string, string | undefined]> = [
+              ["Seminar", c.seminar], ["Subject", c.subject],
+              ["Presented by", c.presenter], ["Roll No", c.rollNumber],
+              ["Department", c.department], ["College", c.college],
+              ["Guide", c.professor], ["Date", c.date],
+            ];
+            const visible = rows.filter(([, v]) => v && v.trim());
+            visible.forEach(([k, v], idx) => {
+              const col = idx % 2;
+              const row = Math.floor(idx / 2);
+              slide.addText(`${k}:  ${v}`, {
+                x: 1.6 + col * 5.4, y: 4.1 + row * 0.4, w: 5.2, h: 0.35,
+                fontSize: 12, color: textColor, align: "left",
+              });
+            });
+          }
+        } else if (s.layout === "title") {
           slide.addText(s.title, { x: 0.5, y: 2.5, w: 12.3, h: 1.5, fontSize: 54, bold: true, color: textColor, align: "center", fontFace: "Calibri" });
           if (s.subtitle) slide.addText(s.subtitle, { x: 0.5, y: 4.1, w: 12.3, h: 0.8, fontSize: 24, color: textColor, align: "center" });
         } else if (s.layout === "thanks") {
