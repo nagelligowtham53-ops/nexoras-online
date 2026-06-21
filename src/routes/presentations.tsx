@@ -144,11 +144,41 @@ function PresentationStudio() {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const [presenting, setPresenting] = useState(false);
+  const [customTheme, setCustomTheme] = useState<PresentationTheme | null>(null);
+  const [themePrompt, setThemePrompt] = useState("");
+  const [themeBusy, setThemeBusy] = useState(false);
+  const [themeCat, setThemeCat] = useState<ThemeCategory | "All" | "Smart">("Smart");
+  const [themeSearch, setThemeSearch] = useState("");
 
-  const themeMeta = useMemo(
-    () => THEMES.find((t) => t.id === wizard.theme) ?? THEMES[0],
-    [wizard.theme],
+  const themeMeta = useMemo<PresentationTheme>(
+    () => customTheme ?? THEMES.find((t) => t.id === wizard.theme) ?? THEMES[0],
+    [wizard.theme, customTheme],
   );
+
+  function applyTheme(t: PresentationTheme) {
+    setCustomTheme(t.category === "Custom" ? t : null);
+    setWizard((w) => ({ ...w, theme: t.id }));
+  }
+  function doSurprise() {
+    applyTheme(surpriseMeTheme(Date.now()));
+    toast.success("Surprise theme applied");
+  }
+  async function generateAITheme() {
+    if (!themePrompt.trim()) { toast.error("Describe the theme you want"); return; }
+    setThemeBusy(true);
+    try {
+      const res = await authedFetch("/api/generate-theme", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: themePrompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed");
+      applyTheme(data as PresentationTheme);
+      toast.success(`Theme "${data.name}" applied`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "AI theme failed");
+    } finally { setThemeBusy(false); }
+  }
 
   async function generate() {
     if (!wizard.topic.trim()) {
