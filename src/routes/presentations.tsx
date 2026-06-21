@@ -1152,3 +1152,13 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
 function Row({ k, v }: { k: string; v: string }) {
   return <div className="flex gap-2"><span className="w-20 text-xs uppercase tracking-wider text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>;
 }
+
+function CoverRow({ k, v, accent }: { k: string; v: string; accent: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
+      <span className="text-[10px] uppercase tracking-wider opacity-60">{k}</span>
+      <span className="font-medium">{v}</span>
+    </div>
+  );
+}
