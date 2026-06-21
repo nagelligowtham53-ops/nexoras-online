@@ -35,7 +35,18 @@ export const Route = createFileRoute("/presentations")({
 // ------------------------------------------------------------
 // Types
 // ------------------------------------------------------------
-type SlideLayout = "title" | "agenda" | "content" | "two-column" | "bullets" | "quote" | "stats" | "chart" | "references" | "thanks";
+type SlideLayout = "cover" | "title" | "agenda" | "content" | "two-column" | "bullets" | "quote" | "stats" | "chart" | "references" | "thanks";
+
+interface CoverMeta {
+  presenter?: string;
+  college?: string;
+  department?: string;
+  subject?: string;
+  professor?: string;
+  rollNumber?: string;
+  date?: string;
+  seminar?: string;
+}
 
 interface Slide {
   layout: SlideLayout;
@@ -48,6 +59,8 @@ interface Slide {
   quote?: { text: string; author?: string };
   references?: string[];
   notes?: string;
+  cover?: CoverMeta;
+  transition?: "zoom" | "fade" | "reveal" | "3d" | "blur";
 }
 
 interface Deck {
@@ -70,6 +83,14 @@ interface WizardState {
   includeCharts: boolean;
   includeReferences: boolean;
   customPrompt: string;
+  // Cover metadata
+  presenter: string;
+  college: string;
+  department: string;
+  subject: string;
+  professor: string;
+  rollNumber: string;
+  seminar: string;
 }
 
 const PRESENTATION_TYPES = [
