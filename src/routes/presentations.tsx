@@ -185,10 +185,38 @@ function PresentationStudio() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Generation failed");
       if (!data?.slides?.length) throw new Error("AI returned no slides");
-      setDeck(data as Deck);
+
+      // Build premium cover slide as slide 1
+      const coverSlide: Slide = {
+        layout: "cover",
+        title: data.title || wizard.topic,
+        subtitle: data.subtitle || wizard.type,
+        cover: {
+          presenter: wizard.presenter,
+          college: wizard.college,
+          department: wizard.department,
+          subject: wizard.subject,
+          professor: wizard.professor,
+          rollNumber: wizard.rollNumber,
+          seminar: wizard.seminar || wizard.type,
+          date: new Date().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }),
+        },
+        transition: "zoom",
+      };
+      // Apply auto transitions per layout
+      const transitions: Record<string, Slide["transition"]> = {
+        title: "zoom", agenda: "reveal", content: "fade", "two-column": "reveal",
+        bullets: "fade", quote: "blur", stats: "3d", chart: "3d",
+        references: "fade", thanks: "zoom",
+      };
+      const annotated = (data.slides as Slide[]).map((s) => ({
+        ...s, transition: s.transition ?? transitions[s.layout] ?? "fade",
+      }));
+      const withCover: Deck = { ...(data as Deck), slides: [coverSlide, ...annotated] };
+      setDeck(withCover);
       setActiveIdx(0);
       setPhase("studio");
-      toast.success(`Generated ${data.slides.length}-slide presentation`);
+      toast.success(`Generated ${withCover.slides.length}-slide presentation`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate");
     } finally {
