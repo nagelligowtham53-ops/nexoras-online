@@ -3,7 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Sparkles, Wand2, Loader2, Plus, Trash2, ChevronLeft, ChevronRight,
   Download, FileText, Presentation as PresentationIcon,
-  Palette, Type, Edit3, Play, Copy, Check,
+  Palette, Type, Edit3, Play, Copy, Check, Pencil, Eraser, Timer, MousePointer2,
+  Pause, RotateCcw, Maximize2,
 } from "lucide-react";
 import { PageShell } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
@@ -34,7 +35,18 @@ export const Route = createFileRoute("/presentations")({
 // ------------------------------------------------------------
 // Types
 // ------------------------------------------------------------
-type SlideLayout = "title" | "agenda" | "content" | "two-column" | "bullets" | "quote" | "stats" | "chart" | "references" | "thanks";
+type SlideLayout = "cover" | "title" | "agenda" | "content" | "two-column" | "bullets" | "quote" | "stats" | "chart" | "references" | "thanks";
+
+interface CoverMeta {
+  presenter?: string;
+  college?: string;
+  department?: string;
+  subject?: string;
+  professor?: string;
+  rollNumber?: string;
+  date?: string;
+  seminar?: string;
+}
 
 interface Slide {
   layout: SlideLayout;
@@ -47,6 +59,8 @@ interface Slide {
   quote?: { text: string; author?: string };
   references?: string[];
   notes?: string;
+  cover?: CoverMeta;
+  transition?: "zoom" | "fade" | "reveal" | "3d" | "blur";
 }
 
 interface Deck {
@@ -69,6 +83,14 @@ interface WizardState {
   includeCharts: boolean;
   includeReferences: boolean;
   customPrompt: string;
+  // Cover metadata
+  presenter: string;
+  college: string;
+  department: string;
+  subject: string;
+  professor: string;
+  rollNumber: string;
+  seminar: string;
 }
 
 const PRESENTATION_TYPES = [
@@ -115,6 +137,13 @@ function PresentationStudio() {
     includeCharts: true,
     includeReferences: true,
     customPrompt: "",
+    presenter: "",
+    college: "",
+    department: "",
+    subject: "",
+    professor: "",
+    rollNumber: "",
+    seminar: "",
   });
   const [loading, setLoading] = useState(false);
   const [deck, setDeck] = useState<Deck | null>(null);
@@ -156,10 +185,38 @@ function PresentationStudio() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Generation failed");
       if (!data?.slides?.length) throw new Error("AI returned no slides");
-      setDeck(data as Deck);
+
+      // Build premium cover slide as slide 1
+      const coverSlide: Slide = {
+        layout: "cover",
+        title: data.title || wizard.topic,
+        subtitle: data.subtitle || wizard.type,
+        cover: {
+          presenter: wizard.presenter,
+          college: wizard.college,
+          department: wizard.department,
+          subject: wizard.subject,
+          professor: wizard.professor,
+          rollNumber: wizard.rollNumber,
+          seminar: wizard.seminar || wizard.type,
+          date: new Date().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }),
+        },
+        transition: "zoom",
+      };
+      // Apply auto transitions per layout
+      const transitions: Record<string, Slide["transition"]> = {
+        title: "zoom", agenda: "reveal", content: "fade", "two-column": "reveal",
+        bullets: "fade", quote: "blur", stats: "3d", chart: "3d",
+        references: "fade", thanks: "zoom",
+      };
+      const annotated = (data.slides as Slide[]).map((s) => ({
+        ...s, transition: s.transition ?? transitions[s.layout] ?? "fade",
+      }));
+      const withCover: Deck = { ...(data as Deck), slides: [coverSlide, ...annotated] };
+      setDeck(withCover);
       setActiveIdx(0);
       setPhase("studio");
-      toast.success(`Generated ${data.slides.length}-slide presentation`);
+      toast.success(`Generated ${withCover.slides.length}-slide presentation`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate");
     } finally {
@@ -177,9 +234,9 @@ function PresentationStudio() {
         <section className="mx-auto max-w-5xl px-4 pb-20 lg:px-8">
           <div className="glass rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/60 via-indigo-950/40 to-purple-950/40 p-6 backdrop-blur-xl lg:p-10">
             <div className="mb-6 flex items-center justify-between">
-              <div className="text-xs uppercase tracking-[0.3em] text-accent">Step {step} / 8</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-accent">Step {step} / 9</div>
               <div className="flex gap-1.5">
-                {Array.from({ length: 8 }, (_, i) => (
+                {Array.from({ length: 9 }, (_, i) => (
                   <div key={i} className={`h-1.5 w-8 rounded-full transition-all ${i < step ? "bg-accent" : "bg-white/10"}`} />
                 ))}
               </div>
@@ -287,7 +344,21 @@ function PresentationStudio() {
             )}
 
             {step === 8 && (
-              <Step title="AI extras" subtitle="Pick what should be included in your deck.">
+              <Step title="Cover slide details" subtitle="Personalize your premium cover slide. All fields optional.">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <TextField label="Your name" value={wizard.presenter} placeholder="e.g. Aarav Sharma" onChange={(v) => setWizard({ ...wizard, presenter: v })} />
+                  <TextField label="Roll number" value={wizard.rollNumber} placeholder="e.g. 22BCE1234" onChange={(v) => setWizard({ ...wizard, rollNumber: v })} />
+                  <TextField label="College / School" value={wizard.college} placeholder="e.g. IIT Bombay" onChange={(v) => setWizard({ ...wizard, college: v })} />
+                  <TextField label="Department" value={wizard.department} placeholder="e.g. Computer Science" onChange={(v) => setWizard({ ...wizard, department: v })} />
+                  <TextField label="Subject" value={wizard.subject} placeholder="e.g. Artificial Intelligence" onChange={(v) => setWizard({ ...wizard, subject: v })} />
+                  <TextField label="Professor / Guide" value={wizard.professor} placeholder="e.g. Dr. Priya Verma" onChange={(v) => setWizard({ ...wizard, professor: v })} />
+                  <TextField label="Seminar / Project name" value={wizard.seminar} placeholder="e.g. Final Year Seminar" onChange={(v) => setWizard({ ...wizard, seminar: v })} />
+                </div>
+              </Step>
+            )}
+
+            {step === 9 && (
+              <Step title="AI extras & review" subtitle="Pick what should be included in your deck.">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <ToggleRow label="Speaker notes" value={wizard.includeNotes} onChange={(v) => setWizard({ ...wizard, includeNotes: v })} />
                   <ToggleRow label="Charts / data slides" value={wizard.includeCharts} onChange={(v) => setWizard({ ...wizard, includeCharts: v })} />
@@ -314,7 +385,7 @@ function PresentationStudio() {
               <Button variant="outline" disabled={step === 1} onClick={() => setStep(Math.max(1, step - 1))}>
                 <ChevronLeft className="h-4 w-4" /> Back
               </Button>
-              {step < 8 ? (
+              {step < 9 ? (
                 <Button onClick={() => setStep(step + 1)} disabled={step === 2 && !wizard.topic.trim()}>
                   Next <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -433,7 +504,7 @@ function PresentationStudio() {
               }}
               className="mt-1 w-full rounded-md border border-input bg-transparent px-2 py-1.5 text-sm"
             >
-              {["title","agenda","content","two-column","bullets","quote","stats","references","thanks"].map((l) => (
+              {["cover","title","agenda","content","two-column","bullets","quote","stats","chart","references","thanks"].map((l) => (
                 <option key={l} value={l}>{l}</option>
               ))}
             </select>
@@ -590,34 +661,109 @@ function SlideCanvas({
     ) : <p className={props.className} style={{ color: theme.text, opacity: 0.8 }}>{t.subtitle}</p>
   ) : null;
 
+  const transitionClass: Record<NonNullable<Slide["transition"]>, string> = {
+    zoom: "slide-anim-zoom",
+    fade: "slide-anim-fade",
+    reveal: "slide-anim-reveal",
+    "3d": "slide-anim-3d",
+    blur: "slide-anim-blur",
+  };
+  const animClass = transitionClass[t.transition ?? "fade"] ?? "slide-anim-fade";
+  // staggered child animation helper
+  const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${0.15 + i * 0.08}s` });
+
   return (
     <div
       id="slide-canvas"
-      className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 animate-fade-in`}
+      key={`${t.layout}-${t.title}`}
+      className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 ${animClass} animate-gradient-shift`}
     >
+      {/* glow orbs */}
+      <div className="glow-orb animate-float-orb" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
+      <div className="glow-orb animate-float-orb" style={{ right: "6%", bottom: "10%", width: 320, height: 320, background: theme.accent, animationDelay: "3s" }} />
+
       <div className="absolute inset-0 opacity-30" style={{
         background: `radial-gradient(circle at 20% 20%, ${theme.accent}40, transparent 50%), radial-gradient(circle at 80% 80%, ${theme.accent}30, transparent 50%)`,
       }} />
+
+      {/* floating particles */}
+      {t.layout === "cover" && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {Array.from({ length: 14 }).map((_, i) => (
+            <span
+              key={i}
+              className="absolute block rounded-full"
+              style={{
+                left: `${(i * 37) % 100}%`,
+                bottom: `-10px`,
+                width: 4 + (i % 4) * 2,
+                height: 4 + (i % 4) * 2,
+                background: `${theme.accent}aa`,
+                animation: `particle-drift ${10 + (i % 6)}s linear ${i * 0.6}s infinite`,
+                opacity: 0.6,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       <div className="relative flex h-full flex-col p-6 sm:p-10 lg:p-14">
-        {t.layout === "title" && (
-          <div className="m-auto text-center">
-            <Title className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl" />
-            <div className="mt-4"><Sub className="text-base sm:text-lg lg:text-xl" /></div>
-            <div className="mx-auto mt-8 h-1 w-24 rounded-full" style={{ background: theme.accent }} />
+        {t.layout === "cover" && (
+          <div className="m-auto w-full max-w-3xl">
+            <div className="slide-element mb-4 flex items-center justify-center" style={stagger(0)}>
+              <span className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.25em]"
+                style={{ borderColor: `${theme.accent}80`, color: theme.text, background: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" }}>
+                <Sparkles className="h-3 w-3" style={{ color: theme.accent }} /> AI Generated · Nexoras
+              </span>
+            </div>
+            <div className="rounded-3xl p-6 text-center backdrop-blur-xl sm:p-10 slide-element" style={{
+              ...stagger(1),
+              background: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.55)",
+              border: `1px solid ${isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"}`,
+              boxShadow: `0 30px 80px -20px ${theme.accent}40`,
+            }}>
+              <Title className="text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl" />
+              {t.subtitle && <div className="mt-2"><Sub className="text-sm sm:text-base lg:text-lg" /></div>}
+              <div className="mx-auto mt-4 h-1 w-24 rounded-full" style={{ background: theme.accent }} />
+              {t.cover && (
+                <div className="mt-6 grid gap-2 text-left text-xs sm:grid-cols-2 sm:text-sm" style={{ color: theme.text }}>
+                  {t.cover.seminar && <CoverRow accent={theme.accent} k="Seminar" v={t.cover.seminar} />}
+                  {t.cover.subject && <CoverRow accent={theme.accent} k="Subject" v={t.cover.subject} />}
+                  {t.cover.presenter && <CoverRow accent={theme.accent} k="Presented by" v={t.cover.presenter} />}
+                  {t.cover.rollNumber && <CoverRow accent={theme.accent} k="Roll No" v={t.cover.rollNumber} />}
+                  {t.cover.department && <CoverRow accent={theme.accent} k="Department" v={t.cover.department} />}
+                  {t.cover.college && <CoverRow accent={theme.accent} k="College" v={t.cover.college} />}
+                  {t.cover.professor && <CoverRow accent={theme.accent} k="Guide" v={t.cover.professor} />}
+                  {t.cover.date && <CoverRow accent={theme.accent} k="Date" v={t.cover.date} />}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {t.layout !== "title" && (
+        {t.layout === "title" && (
+          <div className="m-auto text-center">
+            <div className="slide-element" style={stagger(0)}>
+              <Title className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl" />
+            </div>
+            <div className="mt-4 slide-element" style={stagger(1)}><Sub className="text-base sm:text-lg lg:text-xl" /></div>
+            <div className="mx-auto mt-8 h-1 w-24 rounded-full slide-element" style={{ background: theme.accent, ...stagger(2) }} />
+          </div>
+        )}
+
+        {t.layout !== "title" && t.layout !== "cover" && (
           <>
-            <Title className="text-2xl font-bold sm:text-3xl lg:text-4xl" />
-            <div className="mt-1"><Sub className="text-sm sm:text-base" /></div>
-            <div className="my-4 h-px w-16 rounded-full" style={{ background: theme.accent }} />
+            <div className="slide-element" style={stagger(0)}>
+              <Title className="text-2xl font-bold sm:text-3xl lg:text-4xl" />
+            </div>
+            <div className="mt-1 slide-element" style={stagger(1)}><Sub className="text-sm sm:text-base" /></div>
+            <div className="my-4 h-px w-16 rounded-full slide-element" style={{ background: theme.accent, ...stagger(2) }} />
 
             <div className="flex-1 overflow-hidden">
               {(t.layout === "bullets" || t.layout === "content" || t.layout === "agenda") && t.bullets && (
                 <ul className="space-y-2.5 text-sm sm:text-base lg:text-lg" style={{ color: theme.text }}>
                   {t.bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-3">
+                    <li key={i} className="flex items-start gap-3 slide-element" style={stagger(i + 3)}>
                       <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full" style={{ background: theme.accent }} />
                       {editable ? (
                         <input
@@ -637,19 +783,19 @@ function SlideCanvas({
               )}
 
               {t.layout === "content" && t.body && (
-                <p className="mt-3 text-sm leading-relaxed sm:text-base lg:text-lg" style={{ color: theme.text, opacity: 0.9 }}>{t.body}</p>
+                <p className="mt-3 text-sm leading-relaxed sm:text-base lg:text-lg slide-element" style={{ color: theme.text, opacity: 0.9, ...stagger(3) }}>{t.body}</p>
               )}
 
               {t.layout === "two-column" && (
                 <div className="grid h-full gap-6 sm:grid-cols-2">
                   <ul className="space-y-2" style={{ color: theme.text }}>
                     {(t.bullets ?? []).slice(0, Math.ceil((t.bullets?.length ?? 0) / 2)).map((b, i) => (
-                      <li key={i} className="flex gap-2"><span style={{ color: theme.accent }}>▸</span>{b}</li>
+                      <li key={i} className="flex gap-2 slide-element" style={stagger(i + 3)}><span style={{ color: theme.accent }}>▸</span>{b}</li>
                     ))}
                   </ul>
                   <ul className="space-y-2" style={{ color: theme.text }}>
                     {(t.bullets ?? []).slice(Math.ceil((t.bullets?.length ?? 0) / 2)).map((b, i) => (
-                      <li key={i} className="flex gap-2"><span style={{ color: theme.accent }}>▸</span>{b}</li>
+                      <li key={i} className="flex gap-2 slide-element" style={stagger(i + 4)}><span style={{ color: theme.accent }}>▸</span>{b}</li>
                     ))}
                   </ul>
                 </div>
@@ -658,7 +804,7 @@ function SlideCanvas({
               {t.layout === "stats" && t.stats && (
                 <div className="mt-4 grid h-full gap-4 sm:grid-cols-3">
                   {t.stats.slice(0, 6).map((s, i) => (
-                    <div key={i} className="rounded-xl p-4 text-center" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)" }}>
+                    <div key={i} className="rounded-xl p-4 text-center slide-element" style={{ background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)", ...stagger(i + 3) }}>
                       <div className="text-3xl font-bold sm:text-4xl" style={{ color: theme.accent }}>{s.value}</div>
                       <div className="mt-1 text-xs sm:text-sm" style={{ color: theme.text, opacity: 0.8 }}>{s.label}</div>
                     </div>
@@ -667,11 +813,13 @@ function SlideCanvas({
               )}
 
               {t.layout === "chart" && t.chart && (
-                <ChartView chart={t.chart} accent={theme.accent} color={theme.text} dark={isDark} />
+                <div className="slide-element" style={stagger(3)}>
+                  <ChartView chart={t.chart} accent={theme.accent} color={theme.text} dark={isDark} />
+                </div>
               )}
 
               {t.layout === "quote" && t.quote && (
-                <blockquote className="my-auto text-center">
+                <blockquote className="my-auto text-center slide-element" style={stagger(3)}>
                   <div className="text-2xl font-light italic sm:text-3xl lg:text-4xl" style={{ color: theme.text }}>"{t.quote.text}"</div>
                   {t.quote.author && <div className="mt-4 text-sm uppercase tracking-widest" style={{ color: theme.accent }}>— {t.quote.author}</div>}
                 </blockquote>
@@ -680,15 +828,15 @@ function SlideCanvas({
               {t.layout === "references" && t.references && (
                 <ol className="space-y-1.5 text-xs sm:text-sm" style={{ color: theme.text, opacity: 0.85 }}>
                   {t.references.map((r, i) => (
-                    <li key={i} className="border-l-2 pl-3" style={{ borderColor: theme.accent }}>{i + 1}. {r}</li>
+                    <li key={i} className="border-l-2 pl-3 slide-element" style={{ borderColor: theme.accent, ...stagger(i + 3) }}>{i + 1}. {r}</li>
                   ))}
                 </ol>
               )}
 
               {t.layout === "thanks" && (
                 <div className="m-auto text-center">
-                  <div className="text-5xl font-bold sm:text-6xl lg:text-7xl" style={{ color: theme.text }}>Thank You</div>
-                  <div className="mt-3 text-base" style={{ color: theme.text, opacity: 0.8 }}>Questions & Discussion</div>
+                  <div className="text-5xl font-bold sm:text-6xl lg:text-7xl slide-element" style={{ color: theme.text, ...stagger(0) }}>Thank You</div>
+                  <div className="mt-3 text-base slide-element" style={{ color: theme.text, opacity: 0.8, ...stagger(1) }}>Questions & Discussion</div>
                 </div>
               )}
             </div>
@@ -753,11 +901,42 @@ function ChartView({ chart, accent, color, dark }: { chart: NonNullable<Slide["c
 // ------------------------------------------------------------
 function Presenter({ deck, theme, onClose }: { deck: Deck; theme: { id: string; grad: string; text: string; accent: string }; onClose: () => void }) {
   const [i, setI] = useState(0);
+  const [laser, setLaser] = useState(false);
+  const [drawing, setDrawing] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [autoPlay, setAutoPlay] = useState(false);
+  const [elapsed, setElapsed] = useState(0);
+  const [pointer, setPointer] = useState<{ x: number; y: number } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingActive = useRef(false);
+
+  // timer
+  useEffect(() => {
+    const id = setInterval(() => setElapsed((e) => e + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // auto-play
+  useEffect(() => {
+    if (!autoPlay) return;
+    const id = setInterval(() => setI((x) => (x + 1) % deck.slides.length), 6000);
+    return () => clearInterval(id);
+  }, [autoPlay, deck.slides.length]);
+
+  // keys
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight" || e.key === " ") setI((x) => Math.min(deck.slides.length - 1, x + 1));
       if (e.key === "ArrowLeft") setI((x) => Math.max(0, x - 1));
+      if (e.key.toLowerCase() === "l") setLaser((v) => !v);
+      if (e.key.toLowerCase() === "d") setDrawing((v) => !v);
+      if (e.key.toLowerCase() === "n") setShowNotes((v) => !v);
+      if (e.key.toLowerCase() === "p") setAutoPlay((v) => !v);
+      if (e.key.toLowerCase() === "c") {
+        const c = canvasRef.current;
+        if (c) c.getContext("2d")?.clearRect(0, 0, c.width, c.height);
+      }
     };
     window.addEventListener("keydown", onKey);
     document.documentElement.requestFullscreen?.().catch(() => {});
@@ -767,18 +946,134 @@ function Presenter({ deck, theme, onClose }: { deck: Deck; theme: { id: string; 
     };
   }, [deck.slides.length, onClose]);
 
+  // clear drawing on slide change
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (c) c.getContext("2d")?.clearRect(0, 0, c.width, c.height);
+  }, [i]);
+
+  function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    if (laser) setPointer({ x: e.clientX, y: e.clientY });
+    if (drawing && drawingActive.current) {
+      const c = canvasRef.current;
+      if (!c) return;
+      const rect = c.getBoundingClientRect();
+      const ctx = c.getContext("2d");
+      if (!ctx) return;
+      ctx.strokeStyle = theme.accent;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      ctx.stroke();
+    }
+  }
+
+  // resize canvas to viewport
+  useEffect(() => {
+    const onResize = () => {
+      const c = canvasRef.current;
+      if (!c) return;
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+    };
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  const mm = String(Math.floor(elapsed / 60)).padStart(2, "0");
+  const ss = String(elapsed % 60).padStart(2, "0");
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black">
-      <div className="flex items-center justify-between p-3 text-xs text-white/70">
-        <span>{i + 1} / {deck.slides.length}</span>
-        <button onClick={onClose} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">Esc</button>
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-black"
+      onPointerMove={handlePointerMove}
+      onPointerDown={(e) => {
+        if (!drawing) return;
+        drawingActive.current = true;
+        const c = canvasRef.current; if (!c) return;
+        const rect = c.getBoundingClientRect();
+        const ctx = c.getContext("2d"); if (!ctx) return;
+        ctx.beginPath();
+        ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+      }}
+      onPointerUp={() => { drawingActive.current = false; }}
+      style={{ cursor: laser ? "none" : drawing ? "crosshair" : "default" }}
+    >
+      {/* Top bar */}
+      <div className="flex items-center justify-between gap-2 p-3 text-xs text-white/80">
+        <div className="flex items-center gap-3">
+          <span className="rounded bg-white/10 px-2 py-1 font-mono">{i + 1} / {deck.slides.length}</span>
+          <span className="inline-flex items-center gap-1 rounded bg-white/10 px-2 py-1 font-mono">
+            <Timer className="h-3 w-3" /> {mm}:{ss}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <PresenterBtn active={laser} onClick={() => setLaser(!laser)} icon={MousePointer2} label="Laser (L)" />
+          <PresenterBtn active={drawing} onClick={() => setDrawing(!drawing)} icon={Pencil} label="Draw (D)" />
+          <PresenterBtn onClick={() => { const c = canvasRef.current; if (c) c.getContext("2d")?.clearRect(0,0,c.width,c.height); }} icon={Eraser} label="Clear (C)" />
+          <PresenterBtn active={showNotes} onClick={() => setShowNotes(!showNotes)} icon={FileText} label="Notes (N)" />
+          <PresenterBtn active={autoPlay} onClick={() => setAutoPlay(!autoPlay)} icon={autoPlay ? Pause : Play} label="Auto (P)" />
+          <PresenterBtn onClick={() => setElapsed(0)} icon={RotateCcw} label="Reset timer" />
+          <PresenterBtn onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})} icon={Maximize2} label="Fullscreen" />
+          <button onClick={onClose} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">Esc</button>
+        </div>
       </div>
+
+      {/* Slide */}
       <div className="flex flex-1 items-center justify-center p-6">
         <div className="aspect-video w-full max-w-6xl">
           <SlideCanvas slide={deck.slides[i]} theme={theme} />
         </div>
       </div>
+
+      {/* Speaker notes drawer */}
+      {showNotes && deck.slides[i].notes && (
+        <div className="absolute bottom-16 left-4 right-4 max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-black/80 p-3 text-sm text-white/90 backdrop-blur">
+          <div className="mb-1 text-[10px] uppercase tracking-wider text-white/50">Speaker notes</div>
+          {deck.slides[i].notes}
+        </div>
+      )}
+
+      {/* Bottom nav touch */}
+      <div className="flex items-center justify-between p-3 text-xs text-white/60">
+        <button onClick={() => setI(Math.max(0, i - 1))} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">← Prev</button>
+        <span className="opacity-60">L laser · D draw · C clear · N notes · P auto · ←/→ navigate</span>
+        <button onClick={() => setI(Math.min(deck.slides.length - 1, i + 1))} className="rounded bg-white/10 px-3 py-1 hover:bg-white/20">Next →</button>
+      </div>
+
+      {/* Drawing canvas */}
+      <canvas
+        ref={canvasRef}
+        className="pointer-events-none absolute inset-0 z-40"
+        style={{ display: drawing ? "block" : "none" }}
+      />
+
+      {/* Laser pointer */}
+      {laser && pointer && (
+        <div
+          className="pointer-events-none fixed z-50 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{
+            left: pointer.x,
+            top: pointer.y,
+            background: theme.accent,
+            boxShadow: `0 0 24px 8px ${theme.accent}, 0 0 60px 10px ${theme.accent}80`,
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+function PresenterBtn({ icon: Icon, label, active, onClick }: { icon: React.ComponentType<{ className?: string }>; label: string; active?: boolean; onClick: () => void }) {
+  return (
+    <button
+      title={label}
+      onClick={onClick}
+      className={`inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] transition-colors ${active ? "bg-accent text-accent-foreground" : "bg-white/10 text-white hover:bg-white/20"}`}
+    >
+      <Icon className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{label.split(" ")[0]}</span>
+    </button>
   );
 }
 
@@ -813,7 +1108,32 @@ function ExportMenu({ deck, theme }: { deck: Deck; theme: { id: string; grad: st
       deck.slides.forEach((s) => {
         const slide = pptx.addSlide();
         slide.background = { color: bg };
-        if (s.layout === "title") {
+        if (s.layout === "cover") {
+          // Premium cover slide
+          slide.addShape("rect", { x: 1.0, y: 1.2, w: 11.3, h: 5.3, fill: { color: textColor === "FFFFFF" ? "FFFFFF" : "000000", transparency: 92 }, line: { color: accentHex, width: 1 } });
+          slide.addText("AI GENERATED · NEXORAS", { x: 1.0, y: 1.4, w: 11.3, h: 0.4, fontSize: 11, color: accentHex, align: "center", bold: true });
+          slide.addText(s.title, { x: 1.0, y: 2.0, w: 11.3, h: 1.2, fontSize: 44, bold: true, color: textColor, align: "center", fontFace: "Calibri" });
+          if (s.subtitle) slide.addText(s.subtitle, { x: 1.0, y: 3.2, w: 11.3, h: 0.5, fontSize: 18, color: textColor, align: "center" });
+          slide.addShape("rect", { x: 6.2, y: 3.85, w: 0.9, h: 0.05, fill: { color: accentHex }, line: { color: accentHex } });
+          if (s.cover) {
+            const c = s.cover;
+            const rows: Array<[string, string | undefined]> = [
+              ["Seminar", c.seminar], ["Subject", c.subject],
+              ["Presented by", c.presenter], ["Roll No", c.rollNumber],
+              ["Department", c.department], ["College", c.college],
+              ["Guide", c.professor], ["Date", c.date],
+            ];
+            const visible = rows.filter(([, v]) => v && v.trim());
+            visible.forEach(([k, v], idx) => {
+              const col = idx % 2;
+              const row = Math.floor(idx / 2);
+              slide.addText(`${k}:  ${v}`, {
+                x: 1.6 + col * 5.4, y: 4.1 + row * 0.4, w: 5.2, h: 0.35,
+                fontSize: 12, color: textColor, align: "left",
+              });
+            });
+          }
+        } else if (s.layout === "title") {
           slide.addText(s.title, { x: 0.5, y: 2.5, w: 12.3, h: 1.5, fontSize: 54, bold: true, color: textColor, align: "center", fontFace: "Calibri" });
           if (s.subtitle) slide.addText(s.subtitle, { x: 0.5, y: 4.1, w: 12.3, h: 0.8, fontSize: 24, color: textColor, align: "center" });
         } else if (s.layout === "thanks") {
@@ -981,6 +1301,15 @@ function SelectField({ label, value, options, onChange }: { label: string; value
   );
 }
 
+function TextField({ label, value, placeholder, onChange }: { label: string; value: string; placeholder?: string; onChange: (v: string) => void }) {
+  return (
+    <div>
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <Input value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className="mt-1" />
+    </div>
+  );
+}
+
 function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (v: boolean) => void }) {
   return (
     <button onClick={() => onChange(!value)} className={`flex items-center justify-between rounded-xl border px-4 py-3 text-sm transition-all ${value ? "border-accent bg-accent/10" : "border-white/10 bg-white/5"}`}>
@@ -994,4 +1323,14 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
 
 function Row({ k, v }: { k: string; v: string }) {
   return <div className="flex gap-2"><span className="w-20 text-xs uppercase tracking-wider text-muted-foreground">{k}</span><span className="font-medium">{v}</span></div>;
+}
+
+function CoverRow({ k, v, accent }: { k: string; v: string; accent: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
+      <span className="text-[10px] uppercase tracking-wider opacity-60">{k}</span>
+      <span className="font-medium">{v}</span>
+    </div>
+  );
 }
