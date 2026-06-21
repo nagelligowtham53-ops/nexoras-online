@@ -23,6 +23,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PresentationsRouteImport } from './routes/presentations'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as PptMakerRouteImport } from './routes/ppt-maker'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as MockTestsRouteImport } from './routes/mock-tests'
 import { Route as MockInterviewRouteImport } from './routes/mock-interview'
@@ -126,6 +127,11 @@ const PresentationsRoute = PresentationsRouteImport.update({
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PptMakerRoute = PptMakerRouteImport.update({
+  id: '/ppt-maker',
+  path: '/ppt-maker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
@@ -323,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -373,6 +380,7 @@ export interface FileRoutesByTo {
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -424,6 +432,7 @@ export interface FileRoutesById {
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -476,6 +485,7 @@ export interface FileRouteTypes {
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
+    | '/ppt-maker'
     | '/practice'
     | '/presentations'
     | '/pricing'
@@ -526,6 +536,7 @@ export interface FileRouteTypes {
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
+    | '/ppt-maker'
     | '/practice'
     | '/presentations'
     | '/pricing'
@@ -576,6 +587,7 @@ export interface FileRouteTypes {
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
+    | '/ppt-maker'
     | '/practice'
     | '/presentations'
     | '/pricing'
@@ -627,6 +639,7 @@ export interface RootRouteChildren {
   MockInterviewRoute: typeof MockInterviewRoute
   MockTestsRoute: typeof MockTestsRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
+  PptMakerRoute: typeof PptMakerRoute
   PracticeRoute: typeof PracticeRoute
   PresentationsRoute: typeof PresentationsRoute
   PricingRoute: typeof PricingRoute
@@ -752,6 +765,13 @@ declare module '@tanstack/react-router' {
       path: '/practice'
       fullPath: '/practice'
       preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ppt-maker': {
+      id: '/ppt-maker'
+      path: '/ppt-maker'
+      fullPath: '/ppt-maker'
+      preLoaderRoute: typeof PptMakerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payment-success': {
@@ -1029,6 +1049,7 @@ const rootRouteChildren: RootRouteChildren = {
   MockInterviewRoute: MockInterviewRoute,
   MockTestsRoute: MockTestsRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
+  PptMakerRoute: PptMakerRoute,
   PracticeRoute: PracticeRoute,
   PresentationsRoute: PresentationsRoute,
   PricingRoute: PricingRoute,
