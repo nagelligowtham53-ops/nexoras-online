@@ -21,7 +21,9 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PresentationsRouteImport } from './routes/presentations'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as PptMakerRouteImport } from './routes/ppt-maker'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as MockTestsRouteImport } from './routes/mock-tests'
 import { Route as MockInterviewRouteImport } from './routes/mock-interview'
@@ -40,6 +42,7 @@ import { Route as CareerRouteImport } from './routes/career'
 import { Route as CalculatorsRouteImport } from './routes/calculators'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as BillingRouteImport } from './routes/billing'
+import { Route as AiPresentationRouteImport } from './routes/ai-presentation'
 import { Route as AchievementsRouteImport } from './routes/achievements'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
@@ -49,6 +52,7 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
 import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
+import { Route as ApiGeneratePresentationRouteImport } from './routes/api/generate-presentation'
 import { Route as ApiGenerateCustomPracticeRouteImport } from './routes/api/generate-custom-practice'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
@@ -116,9 +120,19 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PresentationsRoute = PresentationsRouteImport.update({
+  id: '/presentations',
+  path: '/presentations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PptMakerRoute = PptMakerRouteImport.update({
+  id: '/ppt-maker',
+  path: '/ppt-maker',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
@@ -211,6 +225,11 @@ const BillingRoute = BillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiPresentationRoute = AiPresentationRouteImport.update({
+  id: '/ai-presentation',
+  path: '/ai-presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AchievementsRoute = AchievementsRouteImport.update({
   id: '/achievements',
   path: '/achievements',
@@ -256,6 +275,11 @@ const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
   path: '/api/generate-questions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGeneratePresentationRoute = ApiGeneratePresentationRouteImport.update({
+  id: '/api/generate-presentation',
+  path: '/api/generate-presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGenerateCustomPracticeRoute =
   ApiGenerateCustomPracticeRouteImport.update({
     id: '/api/generate-custom-practice',
@@ -293,6 +317,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/ai-presentation': typeof AiPresentationRoute
   '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
@@ -311,7 +336,9 @@ export interface FileRoutesByFullPath {
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -328,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
+  '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -341,6 +369,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/ai-presentation': typeof AiPresentationRoute
   '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
@@ -359,7 +388,9 @@ export interface FileRoutesByTo {
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -376,6 +407,7 @@ export interface FileRoutesByTo {
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
+  '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -390,6 +422,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/achievements': typeof AchievementsRoute
+  '/ai-presentation': typeof AiPresentationRoute
   '/billing': typeof BillingRoute
   '/blog': typeof BlogRouteWithChildren
   '/calculators': typeof CalculatorsRoute
@@ -408,7 +441,9 @@ export interface FileRoutesById {
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
+  '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
@@ -425,6 +460,7 @@ export interface FileRoutesById {
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
+  '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -440,6 +476,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/achievements'
+    | '/ai-presentation'
     | '/billing'
     | '/blog'
     | '/calculators'
@@ -458,7 +495,9 @@ export interface FileRouteTypes {
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
+    | '/ppt-maker'
     | '/practice'
+    | '/presentations'
     | '/pricing'
     | '/privacy'
     | '/privacy-policy'
@@ -475,6 +514,7 @@ export interface FileRouteTypes {
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-custom-practice'
+    | '/api/generate-presentation'
     | '/api/generate-questions'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -488,6 +528,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/achievements'
+    | '/ai-presentation'
     | '/billing'
     | '/blog'
     | '/calculators'
@@ -506,7 +547,9 @@ export interface FileRouteTypes {
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
+    | '/ppt-maker'
     | '/practice'
+    | '/presentations'
     | '/pricing'
     | '/privacy'
     | '/privacy-policy'
@@ -523,6 +566,7 @@ export interface FileRouteTypes {
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-custom-practice'
+    | '/api/generate-presentation'
     | '/api/generate-questions'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -536,6 +580,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/achievements'
+    | '/ai-presentation'
     | '/billing'
     | '/blog'
     | '/calculators'
@@ -554,7 +599,9 @@ export interface FileRouteTypes {
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
+    | '/ppt-maker'
     | '/practice'
+    | '/presentations'
     | '/pricing'
     | '/privacy'
     | '/privacy-policy'
@@ -571,6 +618,7 @@ export interface FileRouteTypes {
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/generate-custom-practice'
+    | '/api/generate-presentation'
     | '/api/generate-questions'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -585,6 +633,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   AchievementsRoute: typeof AchievementsRoute
+  AiPresentationRoute: typeof AiPresentationRoute
   BillingRoute: typeof BillingRoute
   BlogRoute: typeof BlogRouteWithChildren
   CalculatorsRoute: typeof CalculatorsRoute
@@ -603,7 +652,9 @@ export interface RootRouteChildren {
   MockInterviewRoute: typeof MockInterviewRoute
   MockTestsRoute: typeof MockTestsRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
+  PptMakerRoute: typeof PptMakerRoute
   PracticeRoute: typeof PracticeRoute
+  PresentationsRoute: typeof PresentationsRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
@@ -620,6 +671,7 @@ export interface RootRouteChildren {
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateCustomPracticeRoute: typeof ApiGenerateCustomPracticeRoute
+  ApiGeneratePresentationRoute: typeof ApiGeneratePresentationRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
   ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
   ApiStudyRecommendationsRoute: typeof ApiStudyRecommendationsRoute
@@ -714,11 +766,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/presentations': {
+      id: '/presentations'
+      path: '/presentations'
+      fullPath: '/presentations'
+      preLoaderRoute: typeof PresentationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice': {
       id: '/practice'
       path: '/practice'
       fullPath: '/practice'
       preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ppt-maker': {
+      id: '/ppt-maker'
+      path: '/ppt-maker'
+      fullPath: '/ppt-maker'
+      preLoaderRoute: typeof PptMakerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payment-success': {
@@ -847,6 +913,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-presentation': {
+      id: '/ai-presentation'
+      path: '/ai-presentation'
+      fullPath: '/ai-presentation'
+      preLoaderRoute: typeof AiPresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/achievements': {
       id: '/achievements'
       path: '/achievements'
@@ -910,6 +983,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerateQuestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-presentation': {
+      id: '/api/generate-presentation'
+      path: '/api/generate-presentation'
+      fullPath: '/api/generate-presentation'
+      preLoaderRoute: typeof ApiGeneratePresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/generate-custom-practice': {
       id: '/api/generate-custom-practice'
       path: '/api/generate-custom-practice'
@@ -971,6 +1051,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   AchievementsRoute: AchievementsRoute,
+  AiPresentationRoute: AiPresentationRoute,
   BillingRoute: BillingRoute,
   BlogRoute: BlogRouteWithChildren,
   CalculatorsRoute: CalculatorsRoute,
@@ -989,7 +1070,9 @@ const rootRouteChildren: RootRouteChildren = {
   MockInterviewRoute: MockInterviewRoute,
   MockTestsRoute: MockTestsRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
+  PptMakerRoute: PptMakerRoute,
   PracticeRoute: PracticeRoute,
+  PresentationsRoute: PresentationsRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
@@ -1006,6 +1089,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateCustomPracticeRoute: ApiGenerateCustomPracticeRoute,
+  ApiGeneratePresentationRoute: ApiGeneratePresentationRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
   ApiRecordAttemptRoute: ApiRecordAttemptRoute,
   ApiStudyRecommendationsRoute: ApiStudyRecommendationsRoute,

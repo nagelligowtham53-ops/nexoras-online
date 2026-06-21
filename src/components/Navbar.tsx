@@ -4,7 +4,7 @@ import {
   Menu, X, Search, LogOut, User as UserIcon, ChevronDown,
   GraduationCap, FileText, Brain, Calculator, Briefcase, Target,
   Rocket, BookOpen, Trophy, Sparkles, Map, Cpu, MessageSquare,
-  ListChecks, LayoutDashboard,
+  ListChecks, LayoutDashboard, Presentation,
 } from "lucide-react";
 import { Logo } from "./Logo";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,7 @@ const NAV: NavEntry[] = [
     label: "Tools",
     items: [
       { to: "/resume", label: "Resume Builder", desc: "AI + ATS-optimized resumes", icon: FileText },
+      { to: "/presentations", label: "AI Presentation Studio", desc: "Generate stunning decks in seconds", icon: Presentation },
       { to: "/tools", label: "AI Study Planner", desc: "Adaptive weekly schedules", icon: Brain },
       { to: "/dashboard", label: "Productivity Dashboard", desc: "All your stats in one view", icon: LayoutDashboard },
       { to: "/calculators", label: "Smart Calculators", desc: "CGPA, attendance & more", icon: Calculator },
