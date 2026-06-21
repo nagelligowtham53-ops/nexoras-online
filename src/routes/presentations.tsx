@@ -344,7 +344,21 @@ function PresentationStudio() {
             )}
 
             {step === 8 && (
-              <Step title="AI extras" subtitle="Pick what should be included in your deck.">
+              <Step title="Cover slide details" subtitle="Personalize your premium cover slide. All fields optional.">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <TextField label="Your name" value={wizard.presenter} placeholder="e.g. Aarav Sharma" onChange={(v) => setWizard({ ...wizard, presenter: v })} />
+                  <TextField label="Roll number" value={wizard.rollNumber} placeholder="e.g. 22BCE1234" onChange={(v) => setWizard({ ...wizard, rollNumber: v })} />
+                  <TextField label="College / School" value={wizard.college} placeholder="e.g. IIT Bombay" onChange={(v) => setWizard({ ...wizard, college: v })} />
+                  <TextField label="Department" value={wizard.department} placeholder="e.g. Computer Science" onChange={(v) => setWizard({ ...wizard, department: v })} />
+                  <TextField label="Subject" value={wizard.subject} placeholder="e.g. Artificial Intelligence" onChange={(v) => setWizard({ ...wizard, subject: v })} />
+                  <TextField label="Professor / Guide" value={wizard.professor} placeholder="e.g. Dr. Priya Verma" onChange={(v) => setWizard({ ...wizard, professor: v })} />
+                  <TextField label="Seminar / Project name" value={wizard.seminar} placeholder="e.g. Final Year Seminar" onChange={(v) => setWizard({ ...wizard, seminar: v })} />
+                </div>
+              </Step>
+            )}
+
+            {step === 9 && (
+              <Step title="AI extras & review" subtitle="Pick what should be included in your deck.">
                 <div className="grid gap-2 sm:grid-cols-2">
                   <ToggleRow label="Speaker notes" value={wizard.includeNotes} onChange={(v) => setWizard({ ...wizard, includeNotes: v })} />
                   <ToggleRow label="Charts / data slides" value={wizard.includeCharts} onChange={(v) => setWizard({ ...wizard, includeCharts: v })} />
@@ -371,7 +385,7 @@ function PresentationStudio() {
               <Button variant="outline" disabled={step === 1} onClick={() => setStep(Math.max(1, step - 1))}>
                 <ChevronLeft className="h-4 w-4" /> Back
               </Button>
-              {step < 8 ? (
+              {step < 9 ? (
                 <Button onClick={() => setStep(step + 1)} disabled={step === 2 && !wizard.topic.trim()}>
                   Next <ChevronRight className="h-4 w-4" />
                 </Button>
