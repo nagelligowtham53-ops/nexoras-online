@@ -1385,3 +1385,149 @@ function CoverRow({ k, v, accent }: { k: string; v: string; accent: string }) {
     </div>
   );
 }
+
+// ------------------------------------------------------------
+// Theme Browser (wizard step 6): categories + search + AI + Surprise
+// ------------------------------------------------------------
+function ThemeBrowser({
+  current, cat, setCat, search, setSearch, wizardCtx, onPick, onSurprise,
+  themePrompt, setThemePrompt, onAIGenerate, aiBusy, customTheme, onCustomize,
+}: {
+  current: PresentationTheme;
+  cat: ThemeCategory | "All" | "Smart";
+  setCat: (c: ThemeCategory | "All" | "Smart") => void;
+  search: string; setSearch: (s: string) => void;
+  wizardCtx: { type: string; audience: string; topic: string };
+  onPick: (t: PresentationTheme) => void;
+  onSurprise: () => void;
+  themePrompt: string; setThemePrompt: (s: string) => void;
+  onAIGenerate: () => void; aiBusy: boolean;
+  customTheme: PresentationTheme | null;
+  onCustomize: (t: PresentationTheme | null) => void;
+}) {
+  const list = useMemo(() => {
+    let arr: PresentationTheme[] = THEMES_CATALOG;
+    if (cat === "Smart") arr = smartSuggestThemes(wizardCtx);
+    else if (cat !== "All") arr = arr.filter((t) => t.category === cat);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      arr = arr.filter((t) => t.name.toLowerCase().includes(q) || t.category.toLowerCase().includes(q));
+    }
+    return arr;
+  }, [cat, search, wizardCtx]);
+
+  return (
+    <div className="space-y-4">
+      {/* AI generator + surprise */}
+      <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-indigo-950/40 to-purple-950/40 p-4">
+        <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
+          <Sparkles className="h-3.5 w-3.5" /> AI Theme Generator
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Input
+            value={themePrompt}
+            onChange={(e) => setThemePrompt(e.target.value)}
+            placeholder="e.g. futuristic blue glassmorphism with floating particles"
+            className="flex-1"
+          />
+          <Button onClick={onAIGenerate} disabled={aiBusy} className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+            {aiBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />} Generate
+          </Button>
+          <Button variant="outline" onClick={onSurprise}><Sparkles className="h-4 w-4" /> Surprise Me</Button>
+        </div>
+        {customTheme && (
+          <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+            <span>Using custom theme: <span className="text-foreground">{customTheme.name}</span></span>
+            <button className="underline" onClick={() => onCustomize(null)}>Clear</button>
+          </div>
+        )}
+      </div>
+
+      {/* Category tabs + search */}
+      <div className="flex flex-wrap items-center gap-2">
+        {(["Smart","All", ...THEME_CATEGORIES] as Array<ThemeCategory | "All" | "Smart">).map((c) => (
+          <button
+            key={c}
+            onClick={() => setCat(c)}
+            className={`rounded-full border px-3 py-1 text-xs transition-all ${cat === c ? "border-accent bg-accent/20 text-accent" : "border-white/10 text-muted-foreground hover:border-white/30"}`}
+          >{c}</button>
+        ))}
+        <Input
+          value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search themes…" className="ml-auto h-8 w-40 text-xs"
+        />
+      </div>
+
+      {/* Grid */}
+      <div className="grid max-h-[60vh] gap-3 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
+        {list.map((t) => {
+          const b = themeBackground(t);
+          const active = current.id === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => onPick(t)}
+              className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all ${active ? "border-accent ring-2 ring-accent" : "border-white/10 hover:border-white/30"}`}
+            >
+              <div className={`absolute inset-0 ${b.className} opacity-90`} style={b.style} />
+              <div className="relative">
+                <div className="text-sm font-semibold drop-shadow" style={{ color: t.text }}>{t.name}</div>
+                <div className="text-[10px] uppercase tracking-wider opacity-70" style={{ color: t.text }}>{t.category}</div>
+                <div className="mt-6 flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border border-white/30" style={{ background: t.accent }} />
+                  <span className="text-[10px] uppercase tracking-wider opacity-80" style={{ color: t.text }}>Accent</span>
+                </div>
+              </div>
+            </button>
+          );
+        })}
+        {list.length === 0 && (
+          <div className="col-span-full py-10 text-center text-sm text-muted-foreground">No themes match. Try another category or use AI Generate.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------
+// Theme Customizer (inline color editor)
+// ------------------------------------------------------------
+function ThemeCustomizer({ base, onApply }: { base: PresentationTheme; onApply: (t: PresentationTheme) => void }) {
+  const [open, setOpen] = useState(false);
+  const [a, setA] = useState("#0f172a");
+  const [b, setB] = useState("#1e1b4b");
+  const [c, setC] = useState("#7c3aed");
+  const [text, setText] = useState(base.text);
+  const [accent, setAccent] = useState(base.accent);
+  if (!open) {
+    return <Button variant="outline" size="sm" className="w-full" onClick={() => setOpen(true)}><Palette className="h-3 w-3" /> Customize</Button>;
+  }
+  const apply = () => {
+    onApply({
+      id: `Custom-${Date.now().toString(36)}`,
+      name: "Custom Theme", category: "Custom",
+      bg: `linear-gradient(135deg, ${a} 0%, ${b} 50%, ${c} 100%)`,
+      text, accent,
+    });
+    setOpen(false);
+  };
+  const Row = ({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) => (
+    <label className="flex items-center justify-between gap-2 text-[11px]">
+      <span className="text-muted-foreground">{label}</span>
+      <input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="h-6 w-10 cursor-pointer rounded border border-white/10 bg-transparent" />
+    </label>
+  );
+  return (
+    <div className="space-y-1.5 rounded-md border border-white/10 bg-black/30 p-2">
+      <Row label="BG 1" value={a} onChange={setA} />
+      <Row label="BG 2" value={b} onChange={setB} />
+      <Row label="BG 3" value={c} onChange={setC} />
+      <Row label="Text" value={text} onChange={setText} />
+      <Row label="Accent" value={accent} onChange={setAccent} />
+      <div className="flex gap-1.5">
+        <Button size="sm" variant="outline" className="flex-1" onClick={() => setOpen(false)}>Cancel</Button>
+        <Button size="sm" className="flex-1" onClick={apply}>Apply</Button>
+      </div>
+    </div>
+  );
+}
