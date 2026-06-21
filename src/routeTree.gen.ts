@@ -51,6 +51,7 @@ import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
 import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
+import { Route as ApiGenerateThemeRouteImport } from './routes/api/generate-theme'
 import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiGeneratePresentationRouteImport } from './routes/api/generate-presentation'
 import { Route as ApiGenerateCustomPracticeRouteImport } from './routes/api/generate-custom-practice'
@@ -270,6 +271,11 @@ const ApiRecordAttemptRoute = ApiRecordAttemptRouteImport.update({
   path: '/api/record-attempt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateThemeRoute = ApiGenerateThemeRouteImport.update({
+  id: '/api/generate-theme',
+  path: '/api/generate-theme',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
   id: '/api/generate-questions',
   path: '/api/generate-questions',
@@ -357,6 +363,7 @@ export interface FileRoutesByFullPath {
   '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -409,6 +416,7 @@ export interface FileRoutesByTo {
   '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -462,6 +470,7 @@ export interface FileRoutesById {
   '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-questions': typeof ApiGenerateQuestionsRoute
+  '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -516,6 +525,7 @@ export interface FileRouteTypes {
     | '/api/generate-custom-practice'
     | '/api/generate-presentation'
     | '/api/generate-questions'
+    | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
     | '/blog/$slug'
@@ -568,6 +578,7 @@ export interface FileRouteTypes {
     | '/api/generate-custom-practice'
     | '/api/generate-presentation'
     | '/api/generate-questions'
+    | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
     | '/blog/$slug'
@@ -620,6 +631,7 @@ export interface FileRouteTypes {
     | '/api/generate-custom-practice'
     | '/api/generate-presentation'
     | '/api/generate-questions'
+    | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
     | '/blog/$slug'
@@ -673,6 +685,7 @@ export interface RootRouteChildren {
   ApiGenerateCustomPracticeRoute: typeof ApiGenerateCustomPracticeRoute
   ApiGeneratePresentationRoute: typeof ApiGeneratePresentationRoute
   ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
+  ApiGenerateThemeRoute: typeof ApiGenerateThemeRoute
   ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
   ApiStudyRecommendationsRoute: typeof ApiStudyRecommendationsRoute
   CheckoutPlanRoute: typeof CheckoutPlanRoute
@@ -976,6 +989,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRecordAttemptRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-theme': {
+      id: '/api/generate-theme'
+      path: '/api/generate-theme'
+      fullPath: '/api/generate-theme'
+      preLoaderRoute: typeof ApiGenerateThemeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/generate-questions': {
       id: '/api/generate-questions'
       path: '/api/generate-questions'
@@ -1091,6 +1111,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGenerateCustomPracticeRoute: ApiGenerateCustomPracticeRoute,
   ApiGeneratePresentationRoute: ApiGeneratePresentationRoute,
   ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
+  ApiGenerateThemeRoute: ApiGenerateThemeRoute,
   ApiRecordAttemptRoute: ApiRecordAttemptRoute,
   ApiStudyRecommendationsRoute: ApiStudyRecommendationsRoute,
   CheckoutPlanRoute: CheckoutPlanRoute,
