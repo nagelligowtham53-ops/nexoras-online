@@ -60,7 +60,7 @@ interface Slide {
   references?: string[];
   notes?: string;
   cover?: CoverMeta;
-  transition?: "zoom" | "fade" | "reveal" | "3d" | "blur";
+  transition?: "zoom" | "fade" | "reveal" | "3d" | "blur" | "liquid" | "infinity" | "orbital" | "wave" | "crystal" | "galaxy" | "book" | "cinematic" | "smart";
 }
 
 interface Deck {
