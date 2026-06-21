@@ -338,24 +338,18 @@ function PresentationStudio() {
             )}
 
             {step === 6 && (
-              <Step title="Pick a design theme" subtitle="Each theme tunes colors, typography and accents.">
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {THEMES.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setWizard({ ...wizard, theme: t.id })}
-                      className={`group relative overflow-hidden rounded-xl border p-4 text-left transition-all ${wizard.theme === t.id ? "border-accent ring-2 ring-accent" : "border-white/10 hover:border-white/30"}`}
-                    >
-                      {(() => { const b = themeBackground(t); return <div className={`absolute inset-0 ${b.className} opacity-90`} style={b.style} />; })()}
-                      <div className="relative">
-                        <div className="text-sm font-semibold" style={{ color: t.text }}>{t.id}</div>
-                        <div className="mt-8 inline-flex items-center gap-1 rounded-full bg-black/30 px-2 py-0.5 text-[10px] uppercase tracking-wider text-white">
-                          Preview
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              <Step title="Pick a design theme" subtitle="60+ premium themes, AI generator, smart suggestions, and Surprise Me.">
+                <ThemeBrowser
+                  current={themeMeta}
+                  cat={themeCat} setCat={setThemeCat}
+                  search={themeSearch} setSearch={setThemeSearch}
+                  wizardCtx={{ type: wizard.type, audience: wizard.audience, topic: wizard.topic }}
+                  onPick={applyTheme}
+                  onSurprise={doSurprise}
+                  themePrompt={themePrompt} setThemePrompt={setThemePrompt}
+                  onAIGenerate={generateAITheme} aiBusy={themeBusy}
+                  customTheme={customTheme} onCustomize={setCustomTheme}
+                />
               </Step>
             )}
 
