@@ -201,16 +201,17 @@ function PresentationStudio() {
           seminar: wizard.seminar || wizard.type,
           date: new Date().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }),
         },
-        transition: "zoom",
+        transition: "cinematic",
       };
-      // Apply auto transitions per layout
+      // Nexoras AI-adaptive transition engine: picks the best cinematic effect per slide type
       const transitions: Record<string, Slide["transition"]> = {
-        title: "zoom", agenda: "reveal", content: "fade", "two-column": "reveal",
-        bullets: "fade", quote: "blur", stats: "3d", chart: "3d",
-        references: "fade", thanks: "zoom",
+        title: "infinity", agenda: "wave", content: "smart", "two-column": "orbital",
+        bullets: "liquid", quote: "cinematic", stats: "crystal", chart: "orbital",
+        references: "book", thanks: "galaxy",
       };
-      const annotated = (data.slides as Slide[]).map((s) => ({
-        ...s, transition: s.transition ?? transitions[s.layout] ?? "fade",
+      const annotated = (data.slides as Slide[]).map((s, idx) => ({
+        ...s,
+        transition: s.transition ?? transitions[s.layout] ?? (idx % 2 === 0 ? "cinematic" : "liquid"),
       }));
       const withCover: Deck = { ...(data as Deck), slides: [coverSlide, ...annotated] };
       setDeck(withCover);
