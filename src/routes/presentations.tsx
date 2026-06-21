@@ -682,15 +682,24 @@ function SlideCanvas({
   // staggered child animation helper
   const stagger = (i: number): React.CSSProperties => ({ animationDelay: `${0.15 + i * 0.08}s` });
 
+  const handleParallax = (e: React.MouseEvent<HTMLDivElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const mx = ((e.clientX - r.left) / r.width - 0.5) * 2;
+    const my = ((e.clientY - r.top) / r.height - 0.5) * 2;
+    e.currentTarget.style.setProperty("--nx-mx", String(mx));
+    e.currentTarget.style.setProperty("--nx-my", String(my));
+  };
+
   return (
     <div
       id="slide-canvas"
       key={`${t.layout}-${t.title}`}
+      onMouseMove={handleParallax}
       className={`relative aspect-video w-full overflow-hidden rounded-2xl bg-gradient-to-br ${theme.grad} shadow-2xl ring-1 ring-white/10 ${animClass} animate-gradient-shift`}
     >
       {/* glow orbs */}
-      <div className="glow-orb animate-float-orb" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
-      <div className="glow-orb animate-float-orb" style={{ right: "6%", bottom: "10%", width: 320, height: 320, background: theme.accent, animationDelay: "3s" }} />
+      <div className="glow-orb animate-float-orb nx-parallax-deep" style={{ left: "8%", top: "12%", width: 280, height: 280, background: theme.accent }} />
+      <div className="glow-orb animate-float-orb nx-parallax-deep" style={{ right: "6%", bottom: "10%", width: 320, height: 320, background: theme.accent, animationDelay: "3s" }} />
 
       <div className="absolute inset-0 opacity-30" style={{
         background: `radial-gradient(circle at 20% 20%, ${theme.accent}40, transparent 50%), radial-gradient(circle at 80% 80%, ${theme.accent}30, transparent 50%)`,
