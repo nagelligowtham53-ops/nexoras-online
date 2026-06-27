@@ -192,35 +192,77 @@ function PresentationStudio() {
       setPhase("wizard");
       return;
     }
+
+    const settings = loadSettings();
+
+    // Daily rate limit (built-in only)
+    const rl = checkRateLimit(settings);
+    if (!rl.ok) {
+      toast.error(`Daily limit reached (${settings.dailyLimit}/day). Add your own API key in Settings to keep going.`);
+      return;
+    }
+
+    const requestPayload = {
+      topic: wizard.topic,
+      type: wizard.type,
+      audience: wizard.audience,
+      goal: wizard.goal,
+      slides: wizard.slides,
+      theme: wizard.theme,
+      depth: wizard.depth,
+      language: wizard.language,
+      includeNotes: wizard.includeNotes,
+      includeCharts: wizard.includeCharts,
+      includeReferences: wizard.includeReferences,
+      customPrompt: wizard.customPrompt,
+    };
+
     setLoading(true);
     try {
-      const res = await authedFetch("/api/generate-presentation", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: wizard.topic,
-          type: wizard.type,
-          audience: wizard.audience,
-          goal: wizard.goal,
-          slides: wizard.slides,
-          theme: wizard.theme,
-          depth: wizard.depth,
-          language: wizard.language,
-          includeNotes: wizard.includeNotes,
-          includeCharts: wizard.includeCharts,
-          includeReferences: wizard.includeReferences,
-          customPrompt: wizard.customPrompt,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Generation failed");
-      if (!data?.slides?.length) throw new Error("AI returned no slides");
+      // Cache hit?
+      const cacheKey = await buildCacheKey(requestPayload);
+      const cached = getCached(cacheKey) as { title?: string; subtitle?: string; slides?: Slide[] } | null;
+      let data: { title?: string; subtitle?: string; slides?: Slide[] } | null = cached;
+
+      if (data) {
+        toast.success("Loaded from cache — no AI credits used");
+      } else {
+        const res = await authedFetch("/api/generate-presentation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...requestPayload,
+            provider: settings.provider,
+            userApiKey: activeKey(settings),
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || json?.friendly) {
+          const msg = json?.error ?? "Generation failed";
+          if (json?.code === "credits" || json?.code === "no_key" || json?.code === "rate_limit") {
+            toast.error(msg, {
+              action: { label: "Open Settings", onClick: () => { window.location.href = "/presentation-settings"; } },
+              duration: 8000,
+            });
+          } else {
+            toast.error(msg);
+          }
+          return;
+        }
+        if (!json?.slides?.length) {
+          toast.error("AI returned no slides. Try a more specific topic.");
+          return;
+        }
+        data = json;
+        setCached(cacheKey, data);
+        if (settings.provider === "lovable") recordUsage();
+      }
 
       // Build premium cover slide as slide 1
       const coverSlide: Slide = {
         layout: "cover",
-        title: data.title || wizard.topic,
-        subtitle: data.subtitle || wizard.type,
+        title: data!.title || wizard.topic,
+        subtitle: data!.subtitle || wizard.type,
         cover: {
           presenter: wizard.presenter,
           college: wizard.college,
@@ -233,17 +275,16 @@ function PresentationStudio() {
         },
         transition: "cinematic",
       };
-      // Nexoras AI-adaptive transition engine: picks the best cinematic effect per slide type
       const transitions: Record<string, Slide["transition"]> = {
         title: "infinity", agenda: "wave", content: "smart", "two-column": "orbital",
         bullets: "liquid", quote: "cinematic", stats: "crystal", chart: "orbital",
         references: "book", thanks: "galaxy",
       };
-      const annotated = (data.slides as Slide[]).map((s, idx) => ({
+      const annotated = (data!.slides as Slide[]).map((s, idx) => ({
         ...s,
         transition: s.transition ?? transitions[s.layout] ?? (idx % 2 === 0 ? "cinematic" : "liquid"),
       }));
-      const withCover: Deck = { ...(data as Deck), slides: [coverSlide, ...annotated] };
+      const withCover: Deck = { title: data!.title ?? wizard.topic, subtitle: data!.subtitle, slides: [coverSlide, ...annotated] };
       setDeck(withCover);
       setActiveIdx(0);
       setPhase("studio");
