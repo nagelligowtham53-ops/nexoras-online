@@ -22,6 +22,7 @@ import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PresentationsRouteImport } from './routes/presentations'
+import { Route as PresentationSettingsRouteImport } from './routes/presentation-settings'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PptMakerRouteImport } from './routes/ppt-maker'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
@@ -124,6 +125,11 @@ const PricingRoute = PricingRouteImport.update({
 const PresentationsRoute = PresentationsRouteImport.update({
   id: '/presentations',
   path: '/presentations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PresentationSettingsRoute = PresentationSettingsRouteImport.update({
+  id: '/presentation-settings',
+  path: '/presentation-settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -344,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -397,6 +404,7 @@ export interface FileRoutesByTo {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -451,6 +459,7 @@ export interface FileRoutesById {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
@@ -506,6 +515,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/presentation-settings'
     | '/presentations'
     | '/pricing'
     | '/privacy'
@@ -559,6 +569,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/presentation-settings'
     | '/presentations'
     | '/pricing'
     | '/privacy'
@@ -612,6 +623,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/presentation-settings'
     | '/presentations'
     | '/pricing'
     | '/privacy'
@@ -666,6 +678,7 @@ export interface RootRouteChildren {
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   PptMakerRoute: typeof PptMakerRoute
   PracticeRoute: typeof PracticeRoute
+  PresentationSettingsRoute: typeof PresentationSettingsRoute
   PresentationsRoute: typeof PresentationsRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -784,6 +797,13 @@ declare module '@tanstack/react-router' {
       path: '/presentations'
       fullPath: '/presentations'
       preLoaderRoute: typeof PresentationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/presentation-settings': {
+      id: '/presentation-settings'
+      path: '/presentation-settings'
+      fullPath: '/presentation-settings'
+      preLoaderRoute: typeof PresentationSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -1092,6 +1112,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentSuccessRoute: PaymentSuccessRoute,
   PptMakerRoute: PptMakerRoute,
   PracticeRoute: PracticeRoute,
+  PresentationSettingsRoute: PresentationSettingsRoute,
   PresentationsRoute: PresentationsRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
