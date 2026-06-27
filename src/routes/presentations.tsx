@@ -664,6 +664,11 @@ function Hero({ onStart }: { onStart: () => void }) {
           <Button size="lg" variant="outline" onClick={onStart} className="border-white/20 bg-white/5 text-white hover:bg-white/10">
             <FileText className="h-4 w-4" /> From Topic
           </Button>
+          <Link to="/presentation-settings">
+            <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10">
+              <Palette className="h-4 w-4" /> AI Settings & Keys
+            </Button>
+          </Link>
         </div>
         <div className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/50">
           <span>✓ 1000+ Templates</span>
