@@ -15,6 +15,11 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { authedFetch } from "@/lib/authed-fetch";
 import jsPDF from "jspdf";
+import {
+  loadSettings, activeKey, checkRateLimit, recordUsage,
+  buildCacheKey, getCached, setCached,
+} from "@/lib/presentation-settings";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/presentations")({
   head: () => ({
