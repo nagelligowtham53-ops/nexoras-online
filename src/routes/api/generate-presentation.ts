@@ -107,17 +107,21 @@ function aiError(message: string, status: number): AIError {
   const e = new Error(message) as AIError; e.status = status; return e;
 }
 
-async function callLovable(key: string, sys: string, user: string) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+async function callGroq(key: string, sys: string, user: string) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Lovable-API-Key": key, "Content-Type": "application/json" },
+    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "llama-3.3-70b-versatile",
       messages: [{ role: "system", content: sys }, { role: "user", content: user }],
       response_format: { type: "json_object" },
     }),
   });
-  if (!res.ok) throw aiError(`Lovable AI error ${res.status}`, res.status);
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    console.error(`[generate-presentation] Groq error ${res.status}:`, errText.slice(0, 500));
+    throw aiError(`Groq error ${res.status}`, res.status);
+  }
   const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
   return parseJson(data.choices?.[0]?.message?.content ?? "");
 }
