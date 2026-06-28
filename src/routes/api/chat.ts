@@ -70,7 +70,6 @@ export const Route = createFileRoute("/api/chat")({
               method: "POST",
               headers: {
                 "Authorization": `Bearer ${apiKey}`,
-                "X-Lovable-AIG-SDK": "vercel-ai-sdk",
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
