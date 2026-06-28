@@ -2,10 +2,11 @@ import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
 
-type Provider = "lovable" | "openai" | "anthropic" | "gemini";
+type Provider = "groq" | "openai" | "anthropic" | "gemini";
 
 const FRIENDLY_EXHAUSTED =
   "AI generation is temporarily unavailable. Add your own API key in Presentation Settings to keep creating decks, or try again later.";
+
 
 export const Route = createFileRoute("/api/generate-presentation")({
   server: {
