@@ -80,7 +80,7 @@ export const Route = createFileRoute("/api/chat")({
             },
           );
         } catch (err) {
-          console.error("[/api/chat] fetch to Lovable AI failed:", err);
+          console.error("[/api/chat] fetch to Groq failed:", err);
           return new Response(
             JSON.stringify({ error: "Failed to reach AI gateway" }),
             { status: 502, headers: { "content-type": "application/json" } },
