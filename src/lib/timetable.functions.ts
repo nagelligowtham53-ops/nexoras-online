@@ -29,8 +29,8 @@ export const generateTimetable = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }): Promise<WeeklyTimetable> => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
 
     const system =
       "You are Nexoras, an expert AI study planner for students. Build a realistic, balanced 7-day study timetable. Distribute heavier focus to subjects with nearer deadlines. Include short breaks, revision, and at least one mock test slot. Keep blocks 45–90 minutes.";
@@ -38,7 +38,7 @@ export const generateTimetable = createServerFn({ method: "POST" })
     const user = `Goals:\n${data.goals || "(none specified)"}\n\nSubjects:\n${data.subjects || "(none specified)"}\n\nDeadlines:\n${data.deadlines || "(none specified)"}\n\nAvailable hours per day: ${data.hoursPerDay}`;
 
     const body = {
-      model: "google/gemini-2.5-flash",
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -88,7 +88,7 @@ export const generateTimetable = createServerFn({ method: "POST" })
       tool_choice: { type: "function", function: { name: "emit_timetable" } },
     };
 
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,

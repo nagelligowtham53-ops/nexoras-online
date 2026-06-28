@@ -11,7 +11,7 @@ export const Route = createFileRoute("/api/generate-custom-practice")({
         const auth = await requireAuthFromRequest(request);
         if (auth instanceof Response) return auth;
 
-        const apiKey = process.env.LOVABLE_API_KEY;
+        const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500 });
 
         let body: {
@@ -66,11 +66,11 @@ Rules:
 
         let upstream: Response;
         try {
-          upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
-            headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+            headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
+              model: "llama-3.3-70b-versatile",
               messages: [
                 { role: "system", content: "You are an expert Indian competitive-exam (JEE/NEET) question setter. Output JSON only." },
                 { role: "user", content: prompt },
