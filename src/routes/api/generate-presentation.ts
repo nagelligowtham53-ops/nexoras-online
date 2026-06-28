@@ -29,14 +29,14 @@ export const Route = createFileRoute("/api/generate-presentation")({
         const topic = String(body.topic ?? "").slice(0, 200).trim();
         if (!topic) return Response.json({ error: "Topic required" }, { status: 400 });
 
-        const provider: Provider = (["lovable", "openai", "anthropic", "gemini"] as const)
-          .includes(body.provider as Provider) ? (body.provider as Provider) : "lovable";
+        const provider: Provider = (["groq", "openai", "anthropic", "gemini"] as const)
+          .includes(body.provider as Provider) ? (body.provider as Provider) : "groq";
         const userKey = String(body.userApiKey ?? "").trim();
 
-        if (provider === "lovable" && !process.env.LOVABLE_API_KEY) {
+        if (provider === "groq" && !process.env.GROQ_API_KEY) {
           return Response.json({ error: FRIENDLY_EXHAUSTED, friendly: true, code: "no_key" }, { status: 503 });
         }
-        if (provider !== "lovable" && !userKey) {
+        if (provider !== "groq" && !userKey) {
           return Response.json({ error: `Add your ${provider} API key in Presentation Settings.`, friendly: true, code: "missing_user_key" }, { status: 400 });
         }
 
