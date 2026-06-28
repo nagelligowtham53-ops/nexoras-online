@@ -65,7 +65,7 @@ async function generateArticle(
   topic: string | undefined,
   category: string | undefined,
 ): Promise<PostInput | { error: string; status: number }> {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return { error: "AI not configured", status: 500 };
   const cat = category || "Exams";
   const seedTopic =
@@ -102,11 +102,11 @@ Rules:
 - Naturally weave 1-2 internal links by mentioning Nexoras pages: /mock-tests, /mock-interview, /roadmaps, /competitive-exams, /resume — as plain text references like "(see /mock-tests)" inside paragraphs.
 - No images. No HTML. No code fences. JSON only.`;
 
-  const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "llama-3.3-70b-versatile",
       messages: [
         {
           role: "system",

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/presentation-settings")({
 });
 
 const PROVIDERS: { id: AIProvider; name: string; sub: string; help: string }[] = [
-  { id: "lovable", name: "Built-in (Nexoras AI)", sub: "Uses shared credits — daily limit applies", help: "No key needed. Subject to a daily rate limit." },
+  { id: "groq", name: "Built-in (Nexoras AI · Groq)", sub: "Free shared tier — daily limit applies", help: "No key needed. Subject to a daily rate limit." },
   { id: "gemini", name: "Google Gemini", sub: "gemini-2.5-flash · fast & generous free tier", help: "Get a key at aistudio.google.com/app/apikey" },
   { id: "openai", name: "OpenAI", sub: "gpt-4o-mini · reliable JSON output", help: "Get a key at platform.openai.com/api-keys" },
   { id: "anthropic", name: "Anthropic Claude", sub: "claude-3-5-haiku · great for structure", help: "Get a key at console.anthropic.com/settings/keys" },
@@ -54,7 +54,7 @@ function SettingsPage() {
     update({ provider: p });
   }
 
-  const remaining = s.provider === "lovable" ? Math.max(0, s.dailyLimit - usage.count) : Infinity;
+  const remaining = s.provider === "groq" ? Math.max(0, s.dailyLimit - usage.count) : Infinity;
 
   return (
     <PageShell>

@@ -2,10 +2,11 @@ import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
 
-type Provider = "lovable" | "openai" | "anthropic" | "gemini";
+type Provider = "groq" | "openai" | "anthropic" | "gemini";
 
 const FRIENDLY_EXHAUSTED =
   "AI generation is temporarily unavailable. Add your own API key in Presentation Settings to keep creating decks, or try again later.";
+
 
 export const Route = createFileRoute("/api/generate-presentation")({
   server: {
@@ -28,14 +29,14 @@ export const Route = createFileRoute("/api/generate-presentation")({
         const topic = String(body.topic ?? "").slice(0, 200).trim();
         if (!topic) return Response.json({ error: "Topic required" }, { status: 400 });
 
-        const provider: Provider = (["lovable", "openai", "anthropic", "gemini"] as const)
-          .includes(body.provider as Provider) ? (body.provider as Provider) : "lovable";
+        const provider: Provider = (["groq", "openai", "anthropic", "gemini"] as const)
+          .includes(body.provider as Provider) ? (body.provider as Provider) : "groq";
         const userKey = String(body.userApiKey ?? "").trim();
 
-        if (provider === "lovable" && !process.env.LOVABLE_API_KEY) {
+        if (provider === "groq" && !process.env.GROQ_API_KEY) {
           return Response.json({ error: FRIENDLY_EXHAUSTED, friendly: true, code: "no_key" }, { status: 503 });
         }
-        if (provider !== "lovable" && !userKey) {
+        if (provider !== "groq" && !userKey) {
           return Response.json({ error: `Add your ${provider} API key in Presentation Settings.`, friendly: true, code: "missing_user_key" }, { status: 400 });
         }
 
@@ -72,8 +73,8 @@ Rules: exactly ${slideCount} slides; bullets <90 chars; 3-6 bullets max; concise
             const r = await callGemini(userKey, sys, user);
             return Response.json(r);
           }
-          // lovable
-          const r = await callLovable(process.env.LOVABLE_API_KEY!, sys, user);
+          // groq (default)
+          const r = await callGroq(process.env.GROQ_API_KEY!, sys, user);
           return Response.json(r);
         } catch (e) {
           const err = e as { status?: number; message?: string; friendly?: boolean };
@@ -106,17 +107,21 @@ function aiError(message: string, status: number): AIError {
   const e = new Error(message) as AIError; e.status = status; return e;
 }
 
-async function callLovable(key: string, sys: string, user: string) {
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+async function callGroq(key: string, sys: string, user: string) {
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Lovable-API-Key": key, "Content-Type": "application/json" },
+    headers: { "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "llama-3.3-70b-versatile",
       messages: [{ role: "system", content: sys }, { role: "user", content: user }],
       response_format: { type: "json_object" },
     }),
   });
-  if (!res.ok) throw aiError(`Lovable AI error ${res.status}`, res.status);
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    console.error(`[generate-presentation] Groq error ${res.status}:`, errText.slice(0, 500));
+    throw aiError(`Groq error ${res.status}`, res.status);
+  }
   const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> };
   return parseJson(data.choices?.[0]?.message?.content ?? "");
 }

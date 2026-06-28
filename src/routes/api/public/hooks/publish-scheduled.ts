@@ -42,7 +42,7 @@ async function publishDue() {
 }
 
 async function generateWeeklyDraft() {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return { skipped: "no api key" };
 
   // Rotate topic by ISO week number for deterministic variety.
@@ -64,11 +64,11 @@ Return STRICT JSON only, shape:
 
 Rules: 900-1300 words, only block types p/h2/h3/ul/quote, ul blocks use items[], no markdown/HTML/images, mention internal pages like /mock-tests /mock-interview /roadmaps /competitive-exams /resume naturally inside paragraphs.`;
 
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+  const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
-    headers: { "Lovable-API-Key": apiKey, "Content-Type": "application/json" },
+    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "google/gemini-3-flash-preview",
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: "You are an expert education SEO writer. JSON only." },
         { role: "user", content: prompt },

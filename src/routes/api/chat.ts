@@ -11,10 +11,10 @@ export const Route = createFileRoute("/api/chat")({
         const auth = await requireAuthFromRequest(request);
         if (auth instanceof Response) return auth;
 
-        const apiKey = process.env.LOVABLE_API_KEY;
+        const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) {
           return new Response(
-            JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+            JSON.stringify({ error: "GROQ_API_KEY not configured" }),
             { status: 500, headers: { "content-type": "application/json" } },
           );
         }
@@ -60,17 +60,16 @@ export const Route = createFileRoute("/api/chat")({
         const model =
           typeof body.model === "string" && body.model.length > 0
             ? body.model
-            : "google/gemini-3-flash-preview";
+            : "llama-3.3-70b-versatile";
 
         let upstream: Response;
         try {
           upstream = await fetch(
-            "https://ai.gateway.lovable.dev/v1/chat/completions",
+            "https://api.groq.com/openai/v1/chat/completions",
             {
               method: "POST",
               headers: {
-                "Lovable-API-Key": apiKey,
-                "X-Lovable-AIG-SDK": "vercel-ai-sdk",
+                "Authorization": `Bearer ${apiKey}`,
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
@@ -81,7 +80,7 @@ export const Route = createFileRoute("/api/chat")({
             },
           );
         } catch (err) {
-          console.error("[/api/chat] fetch to Lovable AI failed:", err);
+          console.error("[/api/chat] fetch to Groq failed:", err);
           return new Response(
             JSON.stringify({ error: "Failed to reach AI gateway" }),
             { status: 502, headers: { "content-type": "application/json" } },
@@ -97,9 +96,9 @@ export const Route = createFileRoute("/api/chat")({
           let userMsg = `AI error (${upstream.status})`;
           if (upstream.status === 429)
             userMsg = "Rate limit reached. Please try again in a moment.";
-          if (upstream.status === 402)
+          if (upstream.status === 402 || upstream.status === 503)
             userMsg =
-              "AI credits exhausted. Add credits in Workspace Settings → Usage.";
+              "AI is temporarily unavailable. Please try again in a moment.";
           return new Response(
             JSON.stringify({ error: userMsg, details: errText.slice(0, 500) }),
             {

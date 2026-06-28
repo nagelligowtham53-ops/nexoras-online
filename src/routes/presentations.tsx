@@ -255,7 +255,7 @@ function PresentationStudio() {
         }
         data = json;
         setCached(cacheKey, data);
-        if (settings.provider === "lovable") recordUsage();
+        if (settings.provider === "groq") recordUsage();
       }
 
       // Build premium cover slide as slide 1
