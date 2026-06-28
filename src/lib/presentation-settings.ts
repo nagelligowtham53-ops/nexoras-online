@@ -1,7 +1,7 @@
 // Client-side helpers for AI Presentation Studio:
 // BYO API keys, provider switch, response cache, daily rate limit, usage tracking.
 
-export type AIProvider = "lovable" | "openai" | "anthropic" | "gemini";
+export type AIProvider = "groq" | "openai" | "anthropic" | "gemini";
 
 export interface PresentationAISettings {
   provider: AIProvider;
@@ -17,7 +17,7 @@ const CACHE_KEY = "nx_pres_ai_cache_v1";
 const CACHE_MAX = 20;
 
 export const DEFAULT_SETTINGS: PresentationAISettings = {
-  provider: "lovable",
+  provider: "groq",
   openaiKey: "",
   anthropicKey: "",
   geminiKey: "",
@@ -67,7 +67,7 @@ export function recordUsage() {
 
 export function checkRateLimit(s: PresentationAISettings): { ok: boolean; remaining: number } {
   // BYO keys are not rate-limited locally (the user owns the bill)
-  if (s.provider !== "lovable") return { ok: true, remaining: Infinity };
+  if (s.provider !== "groq") return { ok: true, remaining: Infinity };
   const u = getUsage();
   const remaining = Math.max(0, s.dailyLimit - u.count);
   return { ok: remaining > 0, remaining };
