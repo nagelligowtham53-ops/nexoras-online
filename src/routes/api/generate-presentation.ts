@@ -73,8 +73,8 @@ Rules: exactly ${slideCount} slides; bullets <90 chars; 3-6 bullets max; concise
             const r = await callGemini(userKey, sys, user);
             return Response.json(r);
           }
-          // lovable
-          const r = await callLovable(process.env.LOVABLE_API_KEY!, sys, user);
+          // groq (default)
+          const r = await callGroq(process.env.GROQ_API_KEY!, sys, user);
           return Response.json(r);
         } catch (e) {
           const err = e as { status?: number; message?: string; friendly?: boolean };
