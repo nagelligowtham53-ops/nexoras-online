@@ -96,9 +96,9 @@ export const Route = createFileRoute("/api/chat")({
           let userMsg = `AI error (${upstream.status})`;
           if (upstream.status === 429)
             userMsg = "Rate limit reached. Please try again in a moment.";
-          if (upstream.status === 402)
+          if (upstream.status === 402 || upstream.status === 503)
             userMsg =
-              "AI credits exhausted. Add credits in Workspace Settings → Usage.";
+              "AI is temporarily unavailable. Please try again in a moment.";
           return new Response(
             JSON.stringify({ error: userMsg, details: errText.slice(0, 500) }),
             {
