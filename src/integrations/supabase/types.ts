@@ -101,6 +101,120 @@ export type Database = {
         }
         Relationships: []
       }
+      practice_answers: {
+        Row: {
+          awarded_marks: number
+          created_at: string
+          id: string
+          is_correct: boolean | null
+          is_skipped: boolean
+          marked_for_review: boolean
+          question_id: string
+          question_order: number
+          session_id: string
+          time_spent_seconds: number
+          user_answer: Json | null
+          user_id: string
+        }
+        Insert: {
+          awarded_marks?: number
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          is_skipped?: boolean
+          marked_for_review?: boolean
+          question_id: string
+          question_order?: number
+          session_id: string
+          time_spent_seconds?: number
+          user_answer?: Json | null
+          user_id: string
+        }
+        Update: {
+          awarded_marks?: number
+          created_at?: string
+          id?: string
+          is_correct?: boolean | null
+          is_skipped?: boolean
+          marked_for_review?: boolean
+          question_id?: string
+          question_order?: number
+          session_id?: string
+          time_spent_seconds?: number
+          user_answer?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "practice_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "practice_answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "practice_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      practice_sessions: {
+        Row: {
+          completed_at: string | null
+          config: Json
+          correct_count: number
+          created_at: string
+          id: string
+          max_score: number
+          mode: string
+          score: number
+          skipped_count: number
+          started_at: string
+          time_taken_seconds: number
+          total_questions: number
+          updated_at: string
+          user_id: string
+          wrong_count: number
+        }
+        Insert: {
+          completed_at?: string | null
+          config?: Json
+          correct_count?: number
+          created_at?: string
+          id?: string
+          max_score?: number
+          mode?: string
+          score?: number
+          skipped_count?: number
+          started_at?: string
+          time_taken_seconds?: number
+          total_questions?: number
+          updated_at?: string
+          user_id: string
+          wrong_count?: number
+        }
+        Update: {
+          completed_at?: string | null
+          config?: Json
+          correct_count?: number
+          created_at?: string
+          id?: string
+          max_score?: number
+          mode?: string
+          score?: number
+          skipped_count?: number
+          started_at?: string
+          time_taken_seconds?: number
+          total_questions?: number
+          updated_at?: string
+          user_id?: string
+          wrong_count?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -122,6 +236,125 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      question_bookmarks: {
+        Row: {
+          created_at: string
+          note: string | null
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          note?: string | null
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          note?: string | null
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_bookmarks_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          chapter: string
+          class_level: number
+          concepts: string[]
+          correct_answer: Json
+          created_at: string
+          difficulty: string
+          exams: string[]
+          explanation: string | null
+          external_id: string | null
+          id: string
+          is_ncert: boolean
+          is_pyq: boolean
+          marks: number
+          ncert_unit: string | null
+          negative_marks: number
+          options: Json | null
+          question_text: string
+          question_type: string
+          solution: string | null
+          source: string | null
+          subject: string
+          subtopic: string | null
+          tags: string[]
+          time_estimate_seconds: number
+          topic: string | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          chapter: string
+          class_level: number
+          concepts?: string[]
+          correct_answer: Json
+          created_at?: string
+          difficulty: string
+          exams?: string[]
+          explanation?: string | null
+          external_id?: string | null
+          id?: string
+          is_ncert?: boolean
+          is_pyq?: boolean
+          marks?: number
+          ncert_unit?: string | null
+          negative_marks?: number
+          options?: Json | null
+          question_text: string
+          question_type: string
+          solution?: string | null
+          source?: string | null
+          subject: string
+          subtopic?: string | null
+          tags?: string[]
+          time_estimate_seconds?: number
+          topic?: string | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          chapter?: string
+          class_level?: number
+          concepts?: string[]
+          correct_answer?: Json
+          created_at?: string
+          difficulty?: string
+          exams?: string[]
+          explanation?: string | null
+          external_id?: string | null
+          id?: string
+          is_ncert?: boolean
+          is_pyq?: boolean
+          marks?: number
+          ncert_unit?: string | null
+          negative_marks?: number
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          solution?: string | null
+          source?: string | null
+          subject?: string
+          subtopic?: string | null
+          tags?: string[]
+          time_estimate_seconds?: number
+          topic?: string | null
+          updated_at?: string
+          year?: number | null
         }
         Relationships: []
       }
@@ -173,6 +406,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_stats: {
         Row: {
           created_at: string
@@ -206,15 +460,53 @@ export type Database = {
         }
         Relationships: []
       }
+      wrong_questions: {
+        Row: {
+          last_wrong_at: string
+          question_id: string
+          resolved: boolean
+          user_id: string
+          wrong_count: number
+        }
+        Insert: {
+          last_wrong_at?: string
+          question_id: string
+          resolved?: boolean
+          user_id: string
+          wrong_count?: number
+        }
+        Update: {
+          last_wrong_at?: string
+          question_id?: string
+          resolved?: boolean
+          user_id?: string
+          wrong_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wrong_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -341,6 +633,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
