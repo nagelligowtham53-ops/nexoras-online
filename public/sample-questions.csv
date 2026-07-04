@@ -1,0 +1,3 @@
+external_id,exams,class_level,subject,chapter,topic,difficulty,question_type,year,source,is_pyq,is_ncert,marks,negative_marks,time_estimate_seconds,question_text,options,correct_answer,solution,explanation,concepts,tags
+sample-csv-1,JEE Main,11,Physics,Kinematics,Uniform Acceleration,Easy,single_correct,,Original,false,true,4,1,90,"A body starts from rest with a=2 m/s². Distance in 5 s?",10 m|25 m|50 m|100 m,"{""type"":""single"",""value"":1}","s=½at²=25 m","Basic kinematics","equations of motion","ncert-11"
+sample-csv-2,NEET|JEE Main,11,Chemistry,Ionic Equilibrium,pH,Easy,single_correct,,Original,false,true,4,1,60,"pH of 0.001 M HCl?",1|2|3|4,"{""type"":""single"",""value"":2}","pH=3","Strong acid","pH|strong acid","ncert-11"

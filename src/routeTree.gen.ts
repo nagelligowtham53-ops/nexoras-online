@@ -23,6 +23,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PresentationsRouteImport } from './routes/presentations'
 import { Route as PresentationSettingsRouteImport } from './routes/presentation-settings'
+import { Route as PracticeHistoryRouteImport } from './routes/practice-history'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PptMakerRouteImport } from './routes/ppt-maker'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
@@ -53,11 +54,11 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
 import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
 import { Route as ApiGenerateThemeRouteImport } from './routes/api/generate-theme'
-import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiGeneratePresentationRouteImport } from './routes/api/generate-presentation'
-import { Route as ApiGenerateCustomPracticeRouteImport } from './routes/api/generate-custom-practice'
+import { Route as ApiExplainQuestionRouteImport } from './routes/api/explain-question'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
+import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminBlogRouteImport } from './routes/admin.blog'
 import { Route as BlogCategoryCatRouteImport } from './routes/blog.category.$cat'
 import { Route as ApiPublicHooksPublishScheduledRouteImport } from './routes/api/public/hooks/publish-scheduled'
@@ -130,6 +131,11 @@ const PresentationsRoute = PresentationsRouteImport.update({
 const PresentationSettingsRoute = PresentationSettingsRouteImport.update({
   id: '/presentation-settings',
   path: '/presentation-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeHistoryRoute = PracticeHistoryRouteImport.update({
+  id: '/practice-history',
+  path: '/practice-history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -282,22 +288,16 @@ const ApiGenerateThemeRoute = ApiGenerateThemeRouteImport.update({
   path: '/api/generate-theme',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
-  id: '/api/generate-questions',
-  path: '/api/generate-questions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiGeneratePresentationRoute = ApiGeneratePresentationRouteImport.update({
   id: '/api/generate-presentation',
   path: '/api/generate-presentation',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGenerateCustomPracticeRoute =
-  ApiGenerateCustomPracticeRouteImport.update({
-    id: '/api/generate-custom-practice',
-    path: '/api/generate-custom-practice',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const ApiExplainQuestionRoute = ApiExplainQuestionRouteImport.update({
+  id: '/api/explain-question',
+  path: '/api/explain-question',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -306,6 +306,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
 const ApiBlogAdminRoute = ApiBlogAdminRouteImport.update({
   id: '/api/blog-admin',
   path: '/api/blog-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
+  id: '/admin/questions',
+  path: '/admin/questions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminBlogRoute = AdminBlogRouteImport.update({
@@ -350,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/practice-history': typeof PracticeHistoryRoute
   '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -365,11 +371,11 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
-  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
+  '/api/explain-question': typeof ApiExplainQuestionRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
-  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -404,6 +410,7 @@ export interface FileRoutesByTo {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/practice-history': typeof PracticeHistoryRoute
   '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -419,11 +426,11 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
-  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
+  '/api/explain-question': typeof ApiExplainQuestionRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
-  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -459,6 +466,7 @@ export interface FileRoutesById {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/practice-history': typeof PracticeHistoryRoute
   '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -474,11 +482,11 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
-  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
+  '/api/explain-question': typeof ApiExplainQuestionRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
-  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -515,6 +523,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/practice-history'
     | '/presentation-settings'
     | '/presentations'
     | '/pricing'
@@ -530,11 +539,11 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tools'
     | '/admin/blog'
+    | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
-    | '/api/generate-custom-practice'
+    | '/api/explain-question'
     | '/api/generate-presentation'
-    | '/api/generate-questions'
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -569,6 +578,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/practice-history'
     | '/presentation-settings'
     | '/presentations'
     | '/pricing'
@@ -584,11 +594,11 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tools'
     | '/admin/blog'
+    | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
-    | '/api/generate-custom-practice'
+    | '/api/explain-question'
     | '/api/generate-presentation'
-    | '/api/generate-questions'
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -623,6 +633,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/practice-history'
     | '/presentation-settings'
     | '/presentations'
     | '/pricing'
@@ -638,11 +649,11 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tools'
     | '/admin/blog'
+    | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
-    | '/api/generate-custom-practice'
+    | '/api/explain-question'
     | '/api/generate-presentation'
-    | '/api/generate-questions'
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -678,6 +689,7 @@ export interface RootRouteChildren {
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   PptMakerRoute: typeof PptMakerRoute
   PracticeRoute: typeof PracticeRoute
+  PracticeHistoryRoute: typeof PracticeHistoryRoute
   PresentationSettingsRoute: typeof PresentationSettingsRoute
   PresentationsRoute: typeof PresentationsRoute
   PricingRoute: typeof PricingRoute
@@ -693,11 +705,11 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ToolsRoute: typeof ToolsRoute
   AdminBlogRoute: typeof AdminBlogRoute
+  AdminQuestionsRoute: typeof AdminQuestionsRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
-  ApiGenerateCustomPracticeRoute: typeof ApiGenerateCustomPracticeRoute
+  ApiExplainQuestionRoute: typeof ApiExplainQuestionRoute
   ApiGeneratePresentationRoute: typeof ApiGeneratePresentationRoute
-  ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
   ApiGenerateThemeRoute: typeof ApiGenerateThemeRoute
   ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
   ApiStudyRecommendationsRoute: typeof ApiStudyRecommendationsRoute
@@ -804,6 +816,13 @@ declare module '@tanstack/react-router' {
       path: '/presentation-settings'
       fullPath: '/presentation-settings'
       preLoaderRoute: typeof PresentationSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice-history': {
+      id: '/practice-history'
+      path: '/practice-history'
+      fullPath: '/practice-history'
+      preLoaderRoute: typeof PracticeHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -1016,13 +1035,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerateThemeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/generate-questions': {
-      id: '/api/generate-questions'
-      path: '/api/generate-questions'
-      fullPath: '/api/generate-questions'
-      preLoaderRoute: typeof ApiGenerateQuestionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/generate-presentation': {
       id: '/api/generate-presentation'
       path: '/api/generate-presentation'
@@ -1030,11 +1042,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGeneratePresentationRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/generate-custom-practice': {
-      id: '/api/generate-custom-practice'
-      path: '/api/generate-custom-practice'
-      fullPath: '/api/generate-custom-practice'
-      preLoaderRoute: typeof ApiGenerateCustomPracticeRouteImport
+    '/api/explain-question': {
+      id: '/api/explain-question'
+      path: '/api/explain-question'
+      fullPath: '/api/explain-question'
+      preLoaderRoute: typeof ApiExplainQuestionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -1049,6 +1061,13 @@ declare module '@tanstack/react-router' {
       path: '/api/blog-admin'
       fullPath: '/api/blog-admin'
       preLoaderRoute: typeof ApiBlogAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/questions': {
+      id: '/admin/questions'
+      path: '/admin/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/blog': {
@@ -1112,6 +1131,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentSuccessRoute: PaymentSuccessRoute,
   PptMakerRoute: PptMakerRoute,
   PracticeRoute: PracticeRoute,
+  PracticeHistoryRoute: PracticeHistoryRoute,
   PresentationSettingsRoute: PresentationSettingsRoute,
   PresentationsRoute: PresentationsRoute,
   PricingRoute: PricingRoute,
@@ -1127,11 +1147,11 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   ToolsRoute: ToolsRoute,
   AdminBlogRoute: AdminBlogRoute,
+  AdminQuestionsRoute: AdminQuestionsRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
-  ApiGenerateCustomPracticeRoute: ApiGenerateCustomPracticeRoute,
+  ApiExplainQuestionRoute: ApiExplainQuestionRoute,
   ApiGeneratePresentationRoute: ApiGeneratePresentationRoute,
-  ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
   ApiGenerateThemeRoute: ApiGenerateThemeRoute,
   ApiRecordAttemptRoute: ApiRecordAttemptRoute,
   ApiStudyRecommendationsRoute: ApiStudyRecommendationsRoute,
@@ -1142,13 +1162,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

@@ -1,115 +1,164 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
-import { PremiumGate } from "@/components/PremiumGate";
+import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
-import {
-  chaptersFor,
-  subjectsForExam,
-  type ExamTrack,
-  type ClassLevel,
-  type Subject,
-} from "@/lib/jee-neet-chapters";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchQuestions, fetchChapters, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
 import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
   Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Flag, Loader2,
-  Sparkles, TrendingUp, TrendingDown, ArrowRight, RotateCcw,
+  Sparkles, TrendingUp, TrendingDown, ArrowRight, RotateCcw, Database,
 } from "lucide-react";
 
 export const Route = createFileRoute("/custom-practice")({
   head: () => ({
     meta: [
-      { title: "Custom JEE & NEET Practice — Build Your Own Test | Nexoras" },
-      { name: "description", content: "Build personalized JEE & NEET practice tests. Pick subjects, chapters, difficulty, and timer. CBT interface with palette, bookmarks, analytics & AI study plan." },
+      { title: "Custom JEE & NEET Practice — Nexoras" },
+      { name: "description", content: "Build personalized JEE & NEET practice tests from a curated question bank. Filter by chapter, difficulty, PYQ. Full analytics and AI explanations." },
     ],
   }),
   component: () => (
-    <PremiumGate feature="Custom Practice">
+    <RequireAuth>
       <CustomPracticePage />
-    </PremiumGate>
+    </RequireAuth>
   ),
 });
 
-type Question = {
-  subject: Subject;
-  chapter: string;
-  level: "Easy" | "Medium" | "Hard";
-  q: string;
-  options: string[];
-  correct: number;
-  explanation: string;
-};
-
+type ExamCode = "JEE Main" | "JEE Advanced" | "NEET";
+type ClassSel = 11 | 12 | "both";
+type Phase = "setup" | "exam" | "result";
+type TimeMode = "untimed" | "timed" | "real";
 type Status = "unseen" | "answered" | "review" | "skipped";
 
-type Phase = "setup" | "exam" | "result";
-
-type TimeMode = "untimed" | "timed" | "real";
-
 type Config = {
-  exam: ExamTrack;
-  classLevel: ClassLevel;
-  subjects: Record<Subject, string[]>; // subject -> chapters
+  exam: ExamCode;
+  classSel: ClassSel;
+  subjects: Record<string, string[]>;   // subject -> chapters
   count: number;
-  difficulty: "easy" | "medium" | "hard" | "mixed";
+  difficulties: Difficulty[];
+  pyqOnly: boolean;
+  ncertOnly: boolean;
   timeMode: TimeMode;
-  minutes: number; // for timed
+  minutes: number;
 };
 
-const ICONS: Record<Subject, React.ComponentType<{ className?: string }>> = {
+const SUBJECT_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Physics: Atom, Chemistry: FlaskConical, Mathematics: Sigma, Biology: Dna,
 };
 
-const EXAM_LABELS: Record<ExamTrack, string> = {
-  "jee-main": "JEE Main",
-  "jee-adv": "JEE Advanced",
-  "neet": "NEET",
+const EXAM_SUBJECTS: Record<ExamCode, string[]> = {
+  "JEE Main": ["Physics", "Chemistry", "Mathematics"],
+  "JEE Advanced": ["Physics", "Chemistry", "Mathematics"],
+  "NEET": ["Physics", "Chemistry", "Biology"],
 };
-
-const BOOKMARK_KEY = "nexoras_practice_bookmarks_v1";
-
-function loadBookmarks(): Question[] {
-  if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(BOOKMARK_KEY) || "[]"); } catch { return []; }
-}
-function saveBookmarks(b: Question[]) {
-  try { localStorage.setItem(BOOKMARK_KEY, JSON.stringify(b)); } catch { /* noop */ }
-}
 
 function CustomPracticePage() {
   const [phase, setPhase] = useState<Phase>("setup");
   const [config, setConfig] = useState<Config | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions, setQuestions] = useState<DbQuestion[]>([]);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
-  const [bookmarks, setBookmarks] = useState<Question[]>([]);
+  const [perQTime, setPerQTime] = useState<number[]>([]);
+  const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
-  useEffect(() => { setBookmarks(loadBookmarks()); }, []);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("question_bookmarks").select("question_id");
+      setBookmarks(new Set((data ?? []).map((r) => r.question_id as string)));
+    })();
+  }, []);
 
-  function startExam(cfg: Config, qs: Question[]) {
+  async function startExam(cfg: Config, qs: DbQuestion[]) {
     setConfig(cfg);
     setQuestions(qs);
     setAnswers(new Array(qs.length).fill(null));
     setStatuses(new Array(qs.length).fill("unseen"));
+    setPerQTime(new Array(qs.length).fill(0));
     setCurrentIdx(0);
     setElapsed(0);
+    // Create session record
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData.user) {
+      const { data } = await supabase.from("practice_sessions").insert({
+        user_id: userData.user.id,
+        mode: "custom",
+        config: cfg as unknown as never,
+        total_questions: qs.length,
+        max_score: qs.reduce((a, q) => a + Number(q.marks), 0),
+      }).select("id").single();
+      if (data) setSessionId(data.id as string);
+    }
     setPhase("exam");
   }
 
-  function submitExam() { setPhase("result"); }
-
-  function reset() { setPhase("setup"); setQuestions([]); setAnswers([]); setStatuses([]); }
-
-  function toggleBookmark(q: Question) {
-    setBookmarks((prev) => {
-      const exists = prev.some((p) => p.q === q.q);
-      const next = exists ? prev.filter((p) => p.q !== q.q) : [...prev, q];
-      saveBookmarks(next);
-      return next;
+  async function submitExam() {
+    setPhase("result");
+    // Persist answers + wrong_questions
+    if (!sessionId) return;
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) return;
+    let correct = 0, wrong = 0, skipped = 0, score = 0;
+    const rows = questions.map((q, i) => {
+      const pick = answers[i];
+      const isSkip = pick === null;
+      const ok = !isSkip && isCorrect(q, pick);
+      if (isSkip) skipped++;
+      else if (ok) { correct++; score += Number(q.marks); }
+      else { wrong++; score -= Number(q.negative_marks); }
+      return {
+        session_id: sessionId,
+        user_id: uid,
+        question_id: q.id,
+        question_order: i,
+        user_answer: pick === null ? null : { value: pick } as unknown as never,
+        is_correct: isSkip ? null : ok,
+        is_skipped: isSkip,
+        marked_for_review: statuses[i] === "review",
+        time_spent_seconds: perQTime[i] ?? 0,
+        awarded_marks: isSkip ? 0 : (ok ? Number(q.marks) : -Number(q.negative_marks)),
+      };
     });
+    await supabase.from("practice_answers").insert(rows as never);
+    await supabase.from("practice_sessions").update({
+      correct_count: correct, wrong_count: wrong, skipped_count: skipped,
+      score, time_taken_seconds: elapsed, completed_at: new Date().toISOString(),
+    }).eq("id", sessionId);
+    // Wrong questions upsert
+    const wrongIds = questions.filter((q, i) => answers[i] !== null && !isCorrect(q, answers[i])).map((q) => q.id);
+    if (wrongIds.length) {
+      // upsert with increment: use RPC or read-then-write; simple approach: fetch existing, upsert new
+      const { data: existing } = await supabase.from("wrong_questions").select("question_id, wrong_count").eq("user_id", uid).in("question_id", wrongIds);
+      const existMap = new Map((existing ?? []).map((r) => [r.question_id as string, r.wrong_count as number]));
+      const wrongRows = wrongIds.map((qid) => ({
+        user_id: uid,
+        question_id: qid,
+        wrong_count: (existMap.get(qid) ?? 0) + 1,
+        last_wrong_at: new Date().toISOString(),
+        resolved: false,
+      }));
+      await supabase.from("wrong_questions").upsert(wrongRows as never, { onConflict: "user_id,question_id" });
+    }
+  }
+
+  function reset() { setPhase("setup"); setQuestions([]); setAnswers([]); setStatuses([]); setSessionId(null); }
+
+  async function toggleBookmark(q: DbQuestion) {
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+    if (!uid) return;
+    if (bookmarks.has(q.id)) {
+      await supabase.from("question_bookmarks").delete().eq("user_id", uid).eq("question_id", q.id);
+      setBookmarks((prev) => { const n = new Set(prev); n.delete(q.id); return n; });
+    } else {
+      await supabase.from("question_bookmarks").insert({ user_id: uid, question_id: q.id });
+      setBookmarks((prev) => new Set(prev).add(q.id));
+    }
   }
 
   return (
@@ -117,39 +166,27 @@ function CustomPracticePage() {
       <PageHeader
         eyebrow="Custom Practice"
         title="Build your own JEE / NEET test"
-        description="Pick subjects, chapters, difficulty, count and timer. Practice on a real CBT-style interface with analytics and an AI study plan."
+        description="Questions come from our curated question bank. Filter by chapter, difficulty, PYQs, or NCERT-only. Full CBT interface with analytics."
       />
-      {phase === "setup" && (
-        <Setup
-          bookmarksCount={bookmarks.length}
-          onStart={startExam}
-        />
-      )}
+      {phase === "setup" && <Setup bookmarksCount={bookmarks.size} onStart={startExam} />}
       {phase === "exam" && config && (
         <Exam
           config={config}
           questions={questions}
-          answers={answers}
-          setAnswers={setAnswers}
-          statuses={statuses}
-          setStatuses={setStatuses}
-          currentIdx={currentIdx}
-          setCurrentIdx={setCurrentIdx}
-          elapsed={elapsed}
-          setElapsed={setElapsed}
-          bookmarks={bookmarks}
-          toggleBookmark={toggleBookmark}
+          answers={answers} setAnswers={setAnswers}
+          statuses={statuses} setStatuses={setStatuses}
+          currentIdx={currentIdx} setCurrentIdx={setCurrentIdx}
+          elapsed={elapsed} setElapsed={setElapsed}
+          perQTime={perQTime} setPerQTime={setPerQTime}
+          bookmarks={bookmarks} toggleBookmark={toggleBookmark}
           onSubmit={submitExam}
         />
       )}
       {phase === "result" && config && (
         <Result
-          config={config}
-          questions={questions}
-          answers={answers}
-          elapsed={elapsed}
-          bookmarks={bookmarks}
-          toggleBookmark={toggleBookmark}
+          config={config} questions={questions} answers={answers}
+          perQTime={perQTime} elapsed={elapsed}
+          bookmarks={bookmarks} toggleBookmark={toggleBookmark}
           onReset={reset}
         />
       )}
@@ -157,179 +194,187 @@ function CustomPracticePage() {
   );
 }
 
-/* ------------------------------- SETUP ------------------------------- */
+/* ============================== SETUP ============================== */
 
-function Setup({
-  bookmarksCount,
-  onStart,
-}: {
-  bookmarksCount: number;
-  onStart: (cfg: Config, qs: Question[]) => void;
-}) {
-  const [exam, setExam] = useState<ExamTrack>("jee-main");
-  const [classLevel, setClassLevel] = useState<ClassLevel>("all");
-  const subjectsAvail = subjectsForExam(exam);
-  const [subjects, setSubjects] = useState<Record<Subject, string[]>>(
-    () => Object.fromEntries(subjectsAvail.map((s) => [s, []])) as unknown as Record<Subject, string[]>,
-  );
+function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (cfg: Config, qs: DbQuestion[]) => void }) {
+  const [exam, setExam] = useState<ExamCode>("JEE Main");
+  const [classSel, setClassSel] = useState<ClassSel>("both");
+  const availSubjects = EXAM_SUBJECTS[exam];
+  const [subjects, setSubjects] = useState<Record<string, string[]>>({});
+  const [chaptersMap, setChaptersMap] = useState<Record<string, string[]>>({});
   const [count, setCount] = useState(25);
   const [customCount, setCustomCount] = useState("");
-  const [difficulty, setDifficulty] = useState<Config["difficulty"]>("mixed");
+  const [difficulties, setDifficulties] = useState<Difficulty[]>(["Easy", "Medium", "Hard"]);
+  const [pyqOnly, setPyqOnly] = useState(false);
+  const [ncertOnly, setNcertOnly] = useState(false);
   const [timeMode, setTimeMode] = useState<TimeMode>("timed");
   const [minutes, setMinutes] = useState(30);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // reset subject selection if exam changes
-  useEffect(() => {
-    setSubjects(Object.fromEntries(subjectsForExam(exam).map((s) => [s, []])) as unknown as Record<Subject, string[]>);
-  }, [exam]);
+  useEffect(() => { setSubjects({}); setChaptersMap({}); }, [exam, classSel]);
 
-  function toggleChapter(subject: Subject, chapter: string) {
+  async function loadChapters(subject: string) {
+    if (chaptersMap[subject]) return;
+    const levels = classSel === "both" ? undefined : [classSel];
+    const chs = await fetchChapters(subject, levels);
+    setChaptersMap((m) => ({ ...m, [subject]: chs }));
+  }
+
+  function toggleChapter(subject: string, chapter: string) {
     setSubjects((prev) => {
       const cur = prev[subject] ?? [];
       const next = cur.includes(chapter) ? cur.filter((c) => c !== chapter) : [...cur, chapter];
       return { ...prev, [subject]: next };
     });
   }
-  function selectAll(subject: Subject) {
-    setSubjects((prev) => ({ ...prev, [subject]: chaptersFor(subject, classLevel) }));
+  function selectAllChapters(subject: string) {
+    setSubjects((p) => ({ ...p, [subject]: chaptersMap[subject] ?? [] }));
   }
-  function clearSubject(subject: Subject) {
-    setSubjects((prev) => ({ ...prev, [subject]: [] }));
+  function clearSubject(subject: string) { setSubjects((p) => ({ ...p, [subject]: [] })); }
+
+  function toggleDifficulty(d: Difficulty) {
+    setDifficulties((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
   }
 
   const totalChapters = Object.values(subjects).reduce((a, c) => a + c.length, 0);
+  const selectedSubjects = Object.entries(subjects).filter(([, c]) => c.length > 0).map(([s]) => s);
 
   async function start() {
     setError(null);
-    const selected = Object.entries(subjects)
-      .filter(([, ch]) => ch.length > 0)
-      .map(([s, ch]) => ({ subject: s, chapters: ch }));
-    if (selected.length === 0) { setError("Pick at least one chapter."); return; }
-    const finalCount = count === -1 ? Math.max(5, Math.min(100, Number(customCount) || 25)) : count;
+    const finalCount = count === -1 ? Math.max(5, Math.min(200, Number(customCount) || 25)) : count;
+    if (difficulties.length === 0) { setError("Pick at least one difficulty."); return; }
     setLoading(true);
     try {
-      const res = await authedFetch("/api/generate-custom-practice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          exam: EXAM_LABELS[exam],
-          classLevel,
-          subjects: selected,
-          count: finalCount,
-          difficulty,
-        }),
+      const allChapters = Object.values(subjects).flat();
+      const qs = await fetchQuestions({
+        exams: [exam],
+        classLevels: classSel === "both" ? undefined : [classSel],
+        subjects: selectedSubjects.length ? selectedSubjects : undefined,
+        chapters: allChapters.length ? allChapters : undefined,
+        difficulties,
+        pyqOnly, ncertOnly,
+        questionTypes: ["single_correct"], // v1 runner supports single-correct
+        count: finalCount,
       });
-      const data = await res.json();
-      if (!res.ok) { setError(data.error || "Failed to generate"); setLoading(false); return; }
-      const qs: Question[] = (data.questions || []).map((q: Record<string, unknown>) => ({
-        subject: q.subject as Subject,
-        chapter: String(q.chapter ?? "General"),
-        level: (q.level as Question["level"]) ?? "Medium",
-        q: String(q.q ?? ""),
-        options: Array.isArray(q.options) ? (q.options as string[]).slice(0, 4) : [],
-        correct: Number(q.correct ?? 0),
-        explanation: String(q.explanation ?? ""),
-      })).filter((q: Question) => q.q && q.options.length === 4);
-      if (qs.length === 0) { setError("AI returned no valid questions. Try again."); setLoading(false); return; }
-      const realMin = exam === "neet" ? Math.round(qs.length * 1.08) : Math.round(qs.length * 1.2);
+      if (qs.length === 0) {
+        setError("No questions match these filters yet. Ask an admin to import more or loosen the filters.");
+        setLoading(false); return;
+      }
+      const realMin = exam === "NEET" ? Math.round(qs.length * 1.08) : Math.round(qs.length * 1.2);
       const finalMinutes = timeMode === "real" ? realMin : timeMode === "timed" ? minutes : 0;
       onStart(
-        { exam, classLevel, subjects, count: qs.length, difficulty, timeMode, minutes: finalMinutes },
+        { exam, classSel, subjects, count: qs.length, difficulties, pyqOnly, ncertOnly, timeMode, minutes: finalMinutes },
         qs,
       );
-    } catch {
-      setError("Network error");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) {
+      setError((e as Error).message || "Failed to load questions");
+    } finally { setLoading(false); }
   }
 
   return (
     <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 lg:px-8">
-      {bookmarksCount > 0 && (
-        <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4">
-          <div className="flex items-center gap-2 text-sm">
-            <BookmarkCheck className="h-4 w-4 text-accent" />
-            You have <strong>{bookmarksCount}</strong> bookmarked question{bookmarksCount === 1 ? "" : "s"}.
-          </div>
-          <Link to="/custom-practice" hash="bookmarks" className="text-xs text-accent underline">
-            Use them as a revision set below
-          </Link>
+      <div className="glass flex flex-wrap items-center justify-between gap-3 rounded-2xl p-4 text-sm">
+        <div className="flex items-center gap-2">
+          <Database className="h-4 w-4 text-accent" />
+          Questions are served from Nexoras' curated question bank — no AI generation during practice.
         </div>
-      )}
+        <div className="flex gap-3 text-xs">
+          {bookmarksCount > 0 && <span>{bookmarksCount} bookmarked</span>}
+          <Link to="/practice-history" className="text-accent underline">History & analytics</Link>
+        </div>
+      </div>
 
       <div className="glass space-y-6 rounded-2xl p-6">
         <h2 className="text-lg font-semibold">1 · Exam & Class</h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Picker label="JEE Main" active={exam === "jee-main"} onClick={() => setExam("jee-main")} />
-          <Picker label="JEE Advanced" active={exam === "jee-adv"} onClick={() => setExam("jee-adv")} />
-          <Picker label="NEET" active={exam === "neet"} onClick={() => setExam("neet")} />
+          {(["JEE Main", "JEE Advanced", "NEET"] as ExamCode[]).map((e) => (
+            <Picker key={e} label={e} active={exam === e} onClick={() => setExam(e)} />
+          ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
-          <Picker label={exam === "neet" ? "Class 11 NEET" : "Class 11 JEE"} active={classLevel === "11"} onClick={() => setClassLevel("11")} />
-          <Picker label={exam === "neet" ? "Class 12 NEET" : "Class 12 JEE"} active={classLevel === "12"} onClick={() => setClassLevel("12")} />
-          <Picker label={exam === "neet" ? "Full NEET" : exam === "jee-adv" ? "Full JEE Advanced" : "Full JEE Main"} active={classLevel === "all"} onClick={() => setClassLevel("all")} />
+          <Picker label="Class 11" active={classSel === 11} onClick={() => setClassSel(11)} />
+          <Picker label="Class 12" active={classSel === 12} onClick={() => setClassSel(12)} />
+          <Picker label="Both (11 + 12)" active={classSel === "both"} onClick={() => setClassSel("both")} />
         </div>
       </div>
 
       <div className="glass space-y-4 rounded-2xl p-6">
         <h2 className="text-lg font-semibold">2 · Subjects & Chapters</h2>
         <div className="grid gap-4 lg:grid-cols-2">
-          {subjectsAvail.map((s) => {
-            const Icon = ICONS[s];
-            const chapters = chaptersFor(s, classLevel);
+          {availSubjects.map((s) => {
+            const Icon = SUBJECT_ICONS[s] ?? Database;
+            const chapters = chaptersMap[s];
             const selected = subjects[s] ?? [];
             return (
               <div key={s} className="rounded-xl border border-border bg-background/40 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2 font-medium">
                     <Icon className="h-4 w-4 text-accent" /> {s}
-                    <span className="text-xs text-muted-foreground">({selected.length}/{chapters.length})</span>
+                    {chapters && <span className="text-xs text-muted-foreground">({selected.length}/{chapters.length})</span>}
                   </div>
                   <div className="flex gap-1.5 text-[11px]">
-                    <button onClick={() => selectAll(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All</button>
-                    <button onClick={() => clearSubject(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Clear</button>
+                    {!chapters ? (
+                      <button onClick={() => loadChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Load</button>
+                    ) : (
+                      <>
+                        <button onClick={() => selectAllChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All</button>
+                        <button onClick={() => clearSubject(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Clear</button>
+                      </>
+                    )}
                   </div>
                 </div>
-                <div className="flex max-h-48 flex-wrap gap-1.5 overflow-y-auto pr-1">
-                  {chapters.map((c) => {
-                    const on = selected.includes(c);
-                    return (
-                      <button key={c} onClick={() => toggleChapter(s, c)}
-                        className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
-                        {c}
-                      </button>
-                    );
-                  })}
-                </div>
+                {chapters ? (
+                  chapters.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No {s} questions yet in the bank.</p>
+                  ) : (
+                    <div className="flex max-h-48 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                      {chapters.map((c) => {
+                        const on = selected.includes(c);
+                        return (
+                          <button key={c} onClick={() => toggleChapter(s, c)}
+                            className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
+                            {c}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )
+                ) : (
+                  <p className="text-xs text-muted-foreground">Click <em>Load</em> to see available chapters. Leave empty to include the whole subject.</p>
+                )}
               </div>
             );
           })}
         </div>
-        <p className="text-xs text-muted-foreground">{totalChapters} chapter{totalChapters === 1 ? "" : "s"} selected</p>
+        <p className="text-xs text-muted-foreground">
+          {selectedSubjects.length === 0
+            ? "No subjects selected — all subjects will be included."
+            : `${selectedSubjects.length} subject${selectedSubjects.length === 1 ? "" : "s"} · ${totalChapters} chapter${totalChapters === 1 ? "" : "s"} selected`}
+        </p>
       </div>
 
       <div className="glass space-y-4 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold">3 · Questions</h2>
+        <h2 className="text-lg font-semibold">3 · Questions & Difficulty</h2>
         <div className="flex flex-wrap gap-2">
           {[10, 25, 50, 100].map((n) => (
             <Picker key={n} label={`${n} Questions`} active={count === n} onClick={() => setCount(n)} />
           ))}
           <Picker label="Custom" active={count === -1} onClick={() => setCount(-1)} />
           {count === -1 && (
-            <input
-              type="number" min={5} max={100} value={customCount} onChange={(e) => setCustomCount(e.target.value)}
-              placeholder="5 – 100"
-              className="w-28 rounded-lg border border-border bg-background/60 px-3 py-1.5 text-xs"
-            />
+            <input type="number" min={5} max={200} value={customCount} onChange={(e) => setCustomCount(e.target.value)}
+              placeholder="5 – 200" className="w-28 rounded-lg border border-border bg-background/60 px-3 py-1.5 text-xs" />
           )}
         </div>
-        <div className="flex flex-wrap gap-2 pt-2">
-          {(["easy", "medium", "hard", "mixed"] as const).map((d) => (
-            <Picker key={d} label={d[0].toUpperCase() + d.slice(1)} active={difficulty === d} onClick={() => setDifficulty(d)} />
+        <div className="flex flex-wrap gap-2">
+          {(["Easy", "Medium", "Hard"] as Difficulty[]).map((d) => (
+            <Picker key={d} label={d} active={difficulties.includes(d)} onClick={() => toggleDifficulty(d)} />
           ))}
+        </div>
+        <div className="flex flex-wrap gap-2 pt-2">
+          <Picker label="Previous Year Only" active={pyqOnly} onClick={() => setPyqOnly((v) => !v)} />
+          <Picker label="NCERT-based Only" active={ncertOnly} onClick={() => setNcertOnly((v) => !v)} />
+          <Picker label="Mixed" active={!pyqOnly && !ncertOnly} onClick={() => { setPyqOnly(false); setNcertOnly(false); }} />
         </div>
       </div>
 
@@ -348,7 +393,7 @@ function Setup({
           </div>
         )}
         {timeMode === "real" && (
-          <p className="text-xs text-muted-foreground">Duration auto-calibrated to {exam === "neet" ? "≈1 min/Q (NEET)" : "≈1.2 min/Q (JEE)"}.</p>
+          <p className="text-xs text-muted-foreground">Duration auto-calibrated to {exam === "NEET" ? "≈1 min/Q (NEET)" : "≈1.2 min/Q (JEE)"}.</p>
         )}
       </div>
 
@@ -356,7 +401,7 @@ function Setup({
 
       <div className="flex justify-end">
         <Button onClick={start} disabled={loading} className="bg-gradient-primary text-primary-foreground shadow-glow">
-          {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating…</> : <>Start practice <ArrowRight className="h-4 w-4" /></>}
+          {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Loading…</> : <>Start practice <ArrowRight className="h-4 w-4" /></>}
         </Button>
       </div>
     </section>
@@ -372,14 +417,15 @@ function Picker({ label, active, onClick }: { label: string; active: boolean; on
   );
 }
 
-/* ------------------------------- EXAM ------------------------------- */
+/* ============================== EXAM ============================== */
 
 function Exam({
   config, questions, answers, setAnswers, statuses, setStatuses,
-  currentIdx, setCurrentIdx, elapsed, setElapsed, bookmarks, toggleBookmark, onSubmit,
+  currentIdx, setCurrentIdx, elapsed, setElapsed, perQTime, setPerQTime,
+  bookmarks, toggleBookmark, onSubmit,
 }: {
   config: Config;
-  questions: Question[];
+  questions: DbQuestion[];
   answers: (number | null)[];
   setAnswers: React.Dispatch<React.SetStateAction<(number | null)[]>>;
   statuses: Status[];
@@ -388,47 +434,45 @@ function Exam({
   setCurrentIdx: React.Dispatch<React.SetStateAction<number>>;
   elapsed: number;
   setElapsed: React.Dispatch<React.SetStateAction<number>>;
-  bookmarks: Question[];
-  toggleBookmark: (q: Question) => void;
+  perQTime: number[];
+  setPerQTime: React.Dispatch<React.SetStateAction<number[]>>;
+  bookmarks: Set<string>;
+  toggleBookmark: (q: DbQuestion) => void;
   onSubmit: () => void;
 }) {
   const submittedRef = useRef(false);
+  const lastIdxRef = useRef(currentIdx);
 
   useEffect(() => {
-    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    const t = setInterval(() => {
+      setElapsed((s) => s + 1);
+      setPerQTime((prev) => { const n = [...prev]; n[lastIdxRef.current] = (n[lastIdxRef.current] ?? 0) + 1; return n; });
+    }, 1000);
     return () => clearInterval(t);
-  }, [setElapsed]);
+  }, [setElapsed, setPerQTime]);
+
+  useEffect(() => { lastIdxRef.current = currentIdx; }, [currentIdx]);
 
   const totalSeconds = config.minutes > 0 ? config.minutes * 60 : 0;
   const remaining = totalSeconds > 0 ? Math.max(0, totalSeconds - elapsed) : null;
 
   useEffect(() => {
-    if (remaining === 0 && !submittedRef.current) {
-      submittedRef.current = true;
-      onSubmit();
-    }
+    if (remaining === 0 && !submittedRef.current) { submittedRef.current = true; onSubmit(); }
   }, [remaining, onSubmit]);
 
-  // mark current as skipped when visiting unseen
   useEffect(() => {
     setStatuses((prev) => {
-      if (prev[currentIdx] === "unseen") {
-        const next = [...prev]; next[currentIdx] = "skipped"; return next;
-      }
+      if (prev[currentIdx] === "unseen") { const n = [...prev]; n[currentIdx] = "skipped"; return n; }
       return prev;
     });
   }, [currentIdx, setStatuses]);
 
   const q = questions[currentIdx];
-  const Icon = ICONS[q.subject];
+  const Icon = SUBJECT_ICONS[q.subject] ?? Database;
 
   function pick(i: number) {
     setAnswers((prev) => { const n = [...prev]; n[currentIdx] = i; return n; });
-    setStatuses((prev) => {
-      const n = [...prev];
-      if (n[currentIdx] !== "review") n[currentIdx] = "answered";
-      return n;
-    });
+    setStatuses((prev) => { const n = [...prev]; if (n[currentIdx] !== "review") n[currentIdx] = "answered"; return n; });
   }
   function clearAnswer() {
     setAnswers((prev) => { const n = [...prev]; n[currentIdx] = null; return n; });
@@ -440,11 +484,10 @@ function Exam({
   }
 
   const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
-  const isBookmarked = bookmarks.some((b) => b.q === q.q);
+  const isBk = bookmarks.has(q.id);
 
   return (
     <section className="mx-auto grid max-w-7xl gap-4 px-4 py-8 lg:grid-cols-[1fr_280px] lg:px-8">
-      {/* Question pane */}
       <div className="glass rounded-2xl p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
@@ -453,12 +496,13 @@ function Exam({
               <Icon className="h-3 w-3" /> {q.subject}
             </span>
             <span className="rounded-full border border-border bg-secondary/60 px-2 py-0.5">{q.chapter}</span>
-            <span className={`rounded-full px-2 py-0.5 ${q.level === "Hard" ? "border border-destructive/40 text-destructive" : q.level === "Medium" ? "border border-accent/40 text-accent" : "border border-border text-muted-foreground"}`}>{q.level}</span>
+            <span className={`rounded-full px-2 py-0.5 ${q.difficulty === "Hard" ? "border border-destructive/40 text-destructive" : q.difficulty === "Medium" ? "border border-accent/40 text-accent" : "border border-border text-muted-foreground"}`}>{q.difficulty}</span>
+            {q.is_pyq && q.year && <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent">PYQ {q.year}</span>}
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => toggleBookmark(q)} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 hover:border-accent/40">
-              {isBookmarked ? <BookmarkCheck className="h-3.5 w-3.5 text-accent" /> : <Bookmark className="h-3.5 w-3.5" />}
-              {isBookmarked ? "Saved" : "Save"}
+              {isBk ? <BookmarkCheck className="h-3.5 w-3.5 text-accent" /> : <Bookmark className="h-3.5 w-3.5" />}
+              {isBk ? "Saved" : "Save"}
             </button>
             <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 ${remaining !== null && remaining < 60 ? "border-destructive/40 text-destructive" : "border-border"}`}>
               <Timer className="h-3.5 w-3.5" />
@@ -467,10 +511,10 @@ function Exam({
           </div>
         </div>
 
-        <h3 className="text-base font-medium leading-relaxed sm:text-lg">{q.q}</h3>
+        <h3 className="text-base font-medium leading-relaxed sm:text-lg">{q.question_text}</h3>
 
         <div className="mt-5 grid gap-2">
-          {q.options.map((opt, i) => {
+          {(q.options ?? []).map((opt, i) => {
             const isPicked = answers[currentIdx] === i;
             return (
               <button key={i} onClick={() => pick(i)}
@@ -488,9 +532,7 @@ function Exam({
               <ChevronLeft className="h-4 w-4" /> Previous
             </Button>
             <Button variant="outline" size="sm" onClick={clearAnswer} disabled={answers[currentIdx] === null}>Clear</Button>
-            <Button variant="outline" size="sm" onClick={markReview}>
-              <Flag className="h-4 w-4" /> Mark for review
-            </Button>
+            <Button variant="outline" size="sm" onClick={markReview}><Flag className="h-4 w-4" /> Mark for review</Button>
           </div>
           <div className="flex gap-2">
             {currentIdx < questions.length - 1 ? (
@@ -498,15 +540,12 @@ function Exam({
                 Save & Next <ChevronRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button size="sm" onClick={onSubmit} className="bg-gradient-primary text-primary-foreground">
-                Submit test
-              </Button>
+              <Button size="sm" onClick={onSubmit} className="bg-gradient-primary text-primary-foreground">Submit test</Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Palette */}
       <aside className="glass h-fit rounded-2xl p-4 lg:sticky lg:top-20">
         <div className="mb-3 text-xs font-semibold">Question Palette</div>
         <div className="grid grid-cols-6 gap-1.5 lg:grid-cols-5">
@@ -541,37 +580,33 @@ function Legend({ dot, label }: { dot: string; label: string }) {
   return <div className="flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${dot}`} /> {label}</div>;
 }
 
-/* ------------------------------- RESULT ------------------------------- */
-
-type Reco = {
-  summary?: string;
-  revisionPlan?: { day: number; focus: string; tasks: string[] }[];
-  chaptersToRevise?: string[];
-  practiceTips?: string[];
-};
+/* ============================== RESULT ============================== */
 
 function Result({
-  config, questions, answers, elapsed, bookmarks, toggleBookmark, onReset,
+  config, questions, answers, perQTime, elapsed, bookmarks, toggleBookmark, onReset,
 }: {
   config: Config;
-  questions: Question[];
+  questions: DbQuestion[];
   answers: (number | null)[];
+  perQTime: number[];
   elapsed: number;
-  bookmarks: Question[];
-  toggleBookmark: (q: Question) => void;
+  bookmarks: Set<string>;
+  toggleBookmark: (q: DbQuestion) => void;
   onReset: () => void;
 }) {
   const stats = useMemo(() => {
-    let correct = 0, wrong = 0, attempted = 0;
-    const byChapter = new Map<string, { subject: Subject; chapter: string; total: number; correct: number }>();
+    let correct = 0, wrong = 0, attempted = 0, score = 0, maxScore = 0;
+    const byChapter = new Map<string, { subject: string; chapter: string; total: number; correct: number }>();
     questions.forEach((q, i) => {
+      maxScore += Number(q.marks);
       const key = `${q.subject}::${q.chapter}`;
       const row = byChapter.get(key) ?? { subject: q.subject, chapter: q.chapter, total: 0, correct: 0 };
       row.total += 1;
-      if (answers[i] !== null) {
+      const pick = answers[i];
+      if (pick !== null) {
         attempted += 1;
-        if (answers[i] === q.correct) { correct += 1; row.correct += 1; }
-        else wrong += 1;
+        if (isCorrect(q, pick)) { correct += 1; row.correct += 1; score += Number(q.marks); }
+        else { wrong += 1; score -= Number(q.negative_marks); }
       }
       byChapter.set(key, row);
     });
@@ -580,10 +615,11 @@ function Result({
     const weak = chapters.filter((c) => c.accuracy < 0.6).slice(0, 5);
     const strong = [...chapters].reverse().filter((c) => c.accuracy >= 0.8).slice(0, 5);
     const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
-    return { correct, wrong, attempted, total: questions.length, accuracy, weak, strong, chapters };
-  }, [questions, answers]);
+    const avgTime = attempted ? Math.round(elapsed / attempted) : 0;
+    return { correct, wrong, attempted, total: questions.length, accuracy, weak, strong, chapters, score, maxScore, avgTime };
+  }, [questions, answers, elapsed]);
 
-  const [reco, setReco] = useState<Reco | null>(null);
+  const [reco, setReco] = useState<{ summary?: string; revisionPlan?: { day: number; focus: string; tasks: string[] }[]; practiceTips?: string[] } | null>(null);
   const [recoLoading, setRecoLoading] = useState(false);
   const [recoErr, setRecoErr] = useState<string | null>(null);
 
@@ -594,8 +630,7 @@ function Result({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          exam: EXAM_LABELS[config.exam],
-          weak: stats.weak, strong: stats.strong,
+          exam: config.exam, weak: stats.weak, strong: stats.strong,
           score: stats.correct, total: stats.total,
         }),
       });
@@ -611,10 +646,10 @@ function Result({
   return (
     <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 lg:px-8">
       <div className="grid gap-3 sm:grid-cols-4">
-        <Card label="Score" value={`${stats.correct}/${stats.total}`} />
+        <Card label="Score" value={`${stats.score.toFixed(1)} / ${stats.maxScore}`} />
         <Card label="Accuracy" value={`${stats.accuracy}%`} />
-        <Card label="Attempted" value={`${stats.attempted}`} />
-        <Card label="Time" value={fmtTime(elapsed)} />
+        <Card label="Attempted" value={`${stats.attempted}/${stats.total}`} />
+        <Card label="Avg / Q" value={`${stats.avgTime}s`} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -622,21 +657,17 @@ function Result({
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
             <TrendingDown className="h-4 w-4 text-destructive" /> Weak chapters
           </h3>
-          {stats.weak.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No clear weak chapters. Great job!</p>
-          ) : stats.weak.map((c) => (
-            <Row key={c.chapter} label={`${c.subject} · ${c.chapter}`} pct={Math.round(c.accuracy * 100)} tone="weak" />
-          ))}
+          {stats.weak.length === 0
+            ? <p className="text-xs text-muted-foreground">No clear weak chapters. Great job!</p>
+            : stats.weak.map((c) => <Row key={c.chapter} label={`${c.subject} · ${c.chapter}`} pct={Math.round(c.accuracy * 100)} tone="weak" />)}
         </div>
         <div className="glass rounded-2xl p-5">
           <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
             <TrendingUp className="h-4 w-4 text-emerald-500" /> Strong chapters
           </h3>
-          {stats.strong.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Keep practising to build strengths.</p>
-          ) : stats.strong.map((c) => (
-            <Row key={c.chapter} label={`${c.subject} · ${c.chapter}`} pct={Math.round(c.accuracy * 100)} tone="strong" />
-          ))}
+          {stats.strong.length === 0
+            ? <p className="text-xs text-muted-foreground">Keep practising to build strengths.</p>
+            : stats.strong.map((c) => <Row key={c.chapter} label={`${c.subject} · ${c.chapter}`} pct={Math.round(c.accuracy * 100)} tone="strong" />)}
         </div>
       </div>
 
@@ -664,54 +695,84 @@ function Result({
             ))}
           </div>
         )}
-        {reco?.practiceTips && (
-          <ul className="mt-4 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-            {reco.practiceTips.map((t, i) => <li key={i}>{t}</li>)}
-          </ul>
-        )}
       </div>
 
       <div className="glass rounded-2xl p-5">
         <h3 className="mb-3 text-sm font-semibold">Review answers</h3>
         <div className="space-y-3">
-          {questions.map((q, i) => {
-            const picked = answers[i];
-            const correct = picked === q.correct;
-            const isBk = bookmarks.some((b) => b.q === q.q);
-            return (
-              <details key={i} className="rounded-xl border border-border bg-background/30 p-3 text-sm">
-                <summary className="flex cursor-pointer items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    {picked === null ? <span className="text-muted-foreground">·</span>
-                      : correct ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                      : <XCircle className="h-4 w-4 text-destructive" />}
-                    <span className="font-medium">Q{i + 1}.</span>
-                    <span className="line-clamp-1 text-muted-foreground">{q.q}</span>
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">{q.subject} · {q.chapter}</span>
-                </summary>
-                <div className="mt-3 space-y-1.5">
-                  {q.options.map((o, idx) => (
-                    <div key={idx} className={`rounded-md border px-3 py-1.5 text-xs ${idx === q.correct ? "border-emerald-500/40 bg-emerald-500/10" : idx === picked ? "border-destructive/40 bg-destructive/10" : "border-border"}`}>
-                      <span className="font-mono mr-2">{String.fromCharCode(65 + idx)}.</span>{o}
-                    </div>
-                  ))}
-                  <p className="pt-2 text-xs text-muted-foreground"><strong className="text-accent">Why:</strong> {q.explanation}</p>
-                  <button onClick={() => toggleBookmark(q)} className="mt-1 inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[11px] hover:border-accent/40">
-                    {isBk ? <BookmarkCheck className="h-3 w-3 text-accent" /> : <Bookmark className="h-3 w-3" />}
-                    {isBk ? "Bookmarked" : "Bookmark"}
-                  </button>
-                </div>
-              </details>
-            );
-          })}
+          {questions.map((q, i) => <ReviewRow key={q.id} q={q} pick={answers[i]} timeSpent={perQTime[i] ?? 0} isBk={bookmarks.has(q.id)} toggleBookmark={toggleBookmark} />)}
         </div>
       </div>
 
       <div className="flex justify-end gap-2">
+        <Link to="/practice-history"><Button variant="outline">View history</Button></Link>
         <Button variant="outline" onClick={onReset}><RotateCcw className="h-4 w-4" /> New custom test</Button>
       </div>
     </section>
+  );
+}
+
+function ReviewRow({ q, pick, timeSpent, isBk, toggleBookmark }:
+  { q: DbQuestion; pick: number | null; timeSpent: number; isBk: boolean; toggleBookmark: (q: DbQuestion) => void }) {
+  const correctIdx = q.correct_answer.type === "single" ? q.correct_answer.value : -1;
+  const correct = pick !== null && isCorrect(q, pick);
+  const [aiText, setAiText] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  async function askAI(mode: "explain" | "hint" | "alt-method" | "mistake") {
+    setAiLoading(true);
+    try {
+      const res = await authedFetch("/api/explain-question", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: q.question_text, options: q.options ?? [],
+          correctAnswer: correctIdx >= 0 && q.options ? q.options[correctIdx] : "",
+          subject: q.subject, chapter: q.chapter,
+          userAnswer: pick !== null && q.options ? q.options[pick] : "",
+          mode,
+        }),
+      });
+      const data = await res.json();
+      setAiText(res.ok ? data.text : `Error: ${data.error}`);
+    } catch { setAiText("Network error"); }
+    finally { setAiLoading(false); }
+  }
+
+  return (
+    <details className="rounded-xl border border-border bg-background/30 p-3 text-sm">
+      <summary className="flex cursor-pointer items-center justify-between gap-2">
+        <span className="flex items-center gap-2">
+          {pick === null ? <span className="text-muted-foreground">·</span>
+            : correct ? <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            : <XCircle className="h-4 w-4 text-destructive" />}
+          <span className="font-medium">Q.</span>
+          <span className="line-clamp-1 text-muted-foreground">{q.question_text}</span>
+        </span>
+        <span className="text-[10px] text-muted-foreground">{q.subject} · {q.chapter} · {timeSpent}s</span>
+      </summary>
+      <div className="mt-3 space-y-1.5">
+        {(q.options ?? []).map((o, idx) => (
+          <div key={idx} className={`rounded-md border px-3 py-1.5 text-xs ${idx === correctIdx ? "border-emerald-500/40 bg-emerald-500/10" : idx === pick ? "border-destructive/40 bg-destructive/10" : "border-border"}`}>
+            <span className="font-mono mr-2">{String.fromCharCode(65 + idx)}.</span>{o}
+          </div>
+        ))}
+        {q.solution && <p className="pt-2 text-xs"><strong className="text-accent">Solution:</strong> <span className="text-muted-foreground">{q.solution}</span></p>}
+        {q.explanation && <p className="text-xs"><strong className="text-accent">Concept:</strong> <span className="text-muted-foreground">{q.explanation}</span></p>}
+
+        <div className="flex flex-wrap gap-1.5 pt-2">
+          <button onClick={() => askAI("explain")} disabled={aiLoading} className="rounded border border-border px-2 py-0.5 text-[11px] hover:border-accent/40">
+            {aiLoading ? "…" : "AI step-by-step"}
+          </button>
+          <button onClick={() => askAI("alt-method")} disabled={aiLoading} className="rounded border border-border px-2 py-0.5 text-[11px] hover:border-accent/40">Alt method</button>
+          <button onClick={() => askAI("mistake")} disabled={aiLoading} className="rounded border border-border px-2 py-0.5 text-[11px] hover:border-accent/40">Common mistakes</button>
+          <button onClick={() => toggleBookmark(q)} className="ml-auto inline-flex items-center gap-1 rounded border border-border px-2 py-0.5 text-[11px] hover:border-accent/40">
+            {isBk ? <BookmarkCheck className="h-3 w-3 text-accent" /> : <Bookmark className="h-3 w-3" />}
+            {isBk ? "Bookmarked" : "Bookmark"}
+          </button>
+        </div>
+        {aiText && <div className="mt-2 rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs whitespace-pre-wrap">{aiText}</div>}
+      </div>
+    </details>
   );
 }
 
