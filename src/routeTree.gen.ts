@@ -53,9 +53,7 @@ import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
 import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
 import { Route as ApiGenerateThemeRouteImport } from './routes/api/generate-theme'
-import { Route as ApiGenerateQuestionsRouteImport } from './routes/api/generate-questions'
 import { Route as ApiGeneratePresentationRouteImport } from './routes/api/generate-presentation'
-import { Route as ApiGenerateCustomPracticeRouteImport } from './routes/api/generate-custom-practice'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
 import { Route as AdminBlogRouteImport } from './routes/admin.blog'
@@ -282,22 +280,11 @@ const ApiGenerateThemeRoute = ApiGenerateThemeRouteImport.update({
   path: '/api/generate-theme',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGenerateQuestionsRoute = ApiGenerateQuestionsRouteImport.update({
-  id: '/api/generate-questions',
-  path: '/api/generate-questions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiGeneratePresentationRoute = ApiGeneratePresentationRouteImport.update({
   id: '/api/generate-presentation',
   path: '/api/generate-presentation',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGenerateCustomPracticeRoute =
-  ApiGenerateCustomPracticeRouteImport.update({
-    id: '/api/generate-custom-practice',
-    path: '/api/generate-custom-practice',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -367,9 +354,7 @@ export interface FileRoutesByFullPath {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
-  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
-  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -421,9 +406,7 @@ export interface FileRoutesByTo {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
-  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
-  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -476,9 +459,7 @@ export interface FileRoutesById {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
-  '/api/generate-custom-practice': typeof ApiGenerateCustomPracticeRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
-  '/api/generate-questions': typeof ApiGenerateQuestionsRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
@@ -532,9 +513,7 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
-    | '/api/generate-custom-practice'
     | '/api/generate-presentation'
-    | '/api/generate-questions'
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -586,9 +565,7 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
-    | '/api/generate-custom-practice'
     | '/api/generate-presentation'
-    | '/api/generate-questions'
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -640,9 +617,7 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
-    | '/api/generate-custom-practice'
     | '/api/generate-presentation'
-    | '/api/generate-questions'
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
@@ -695,9 +670,7 @@ export interface RootRouteChildren {
   AdminBlogRoute: typeof AdminBlogRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
-  ApiGenerateCustomPracticeRoute: typeof ApiGenerateCustomPracticeRoute
   ApiGeneratePresentationRoute: typeof ApiGeneratePresentationRoute
-  ApiGenerateQuestionsRoute: typeof ApiGenerateQuestionsRoute
   ApiGenerateThemeRoute: typeof ApiGenerateThemeRoute
   ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
   ApiStudyRecommendationsRoute: typeof ApiStudyRecommendationsRoute
@@ -1016,25 +989,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerateThemeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/generate-questions': {
-      id: '/api/generate-questions'
-      path: '/api/generate-questions'
-      fullPath: '/api/generate-questions'
-      preLoaderRoute: typeof ApiGenerateQuestionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/generate-presentation': {
       id: '/api/generate-presentation'
       path: '/api/generate-presentation'
       fullPath: '/api/generate-presentation'
       preLoaderRoute: typeof ApiGeneratePresentationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/generate-custom-practice': {
-      id: '/api/generate-custom-practice'
-      path: '/api/generate-custom-practice'
-      fullPath: '/api/generate-custom-practice'
-      preLoaderRoute: typeof ApiGenerateCustomPracticeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -1129,9 +1088,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminBlogRoute: AdminBlogRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
-  ApiGenerateCustomPracticeRoute: ApiGenerateCustomPracticeRoute,
   ApiGeneratePresentationRoute: ApiGeneratePresentationRoute,
-  ApiGenerateQuestionsRoute: ApiGenerateQuestionsRoute,
   ApiGenerateThemeRoute: ApiGenerateThemeRoute,
   ApiRecordAttemptRoute: ApiRecordAttemptRoute,
   ApiStudyRecommendationsRoute: ApiStudyRecommendationsRoute,
