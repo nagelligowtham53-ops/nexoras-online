@@ -23,6 +23,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PresentationsRouteImport } from './routes/presentations'
 import { Route as PresentationSettingsRouteImport } from './routes/presentation-settings'
+import { Route as PracticeHistoryRouteImport } from './routes/practice-history'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as PptMakerRouteImport } from './routes/ppt-maker'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
@@ -130,6 +131,11 @@ const PresentationsRoute = PresentationsRouteImport.update({
 const PresentationSettingsRoute = PresentationSettingsRouteImport.update({
   id: '/presentation-settings',
   path: '/presentation-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeHistoryRoute = PracticeHistoryRouteImport.update({
+  id: '/practice-history',
+  path: '/practice-history',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -349,6 +355,7 @@ export interface FileRoutesByFullPath {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/practice-history': typeof PracticeHistoryRoute
   '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -403,6 +410,7 @@ export interface FileRoutesByTo {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/practice-history': typeof PracticeHistoryRoute
   '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -458,6 +466,7 @@ export interface FileRoutesById {
   '/payment-success': typeof PaymentSuccessRoute
   '/ppt-maker': typeof PptMakerRoute
   '/practice': typeof PracticeRoute
+  '/practice-history': typeof PracticeHistoryRoute
   '/presentation-settings': typeof PresentationSettingsRoute
   '/presentations': typeof PresentationsRoute
   '/pricing': typeof PricingRoute
@@ -514,6 +523,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/practice-history'
     | '/presentation-settings'
     | '/presentations'
     | '/pricing'
@@ -568,6 +578,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/practice-history'
     | '/presentation-settings'
     | '/presentations'
     | '/pricing'
@@ -622,6 +633,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/ppt-maker'
     | '/practice'
+    | '/practice-history'
     | '/presentation-settings'
     | '/presentations'
     | '/pricing'
@@ -677,6 +689,7 @@ export interface RootRouteChildren {
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   PptMakerRoute: typeof PptMakerRoute
   PracticeRoute: typeof PracticeRoute
+  PracticeHistoryRoute: typeof PracticeHistoryRoute
   PresentationSettingsRoute: typeof PresentationSettingsRoute
   PresentationsRoute: typeof PresentationsRoute
   PricingRoute: typeof PricingRoute
@@ -803,6 +816,13 @@ declare module '@tanstack/react-router' {
       path: '/presentation-settings'
       fullPath: '/presentation-settings'
       preLoaderRoute: typeof PresentationSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/practice-history': {
+      id: '/practice-history'
+      path: '/practice-history'
+      fullPath: '/practice-history'
+      preLoaderRoute: typeof PracticeHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -1111,6 +1131,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentSuccessRoute: PaymentSuccessRoute,
   PptMakerRoute: PptMakerRoute,
   PracticeRoute: PracticeRoute,
+  PracticeHistoryRoute: PracticeHistoryRoute,
   PresentationSettingsRoute: PresentationSettingsRoute,
   PresentationsRoute: PresentationsRoute,
   PricingRoute: PricingRoute,
