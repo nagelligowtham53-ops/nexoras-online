@@ -57,6 +57,7 @@ import { Route as ApiGeneratePresentationRouteImport } from './routes/api/genera
 import { Route as ApiExplainQuestionRouteImport } from './routes/api/explain-question'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
+import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminBlogRouteImport } from './routes/admin.blog'
 import { Route as BlogCategoryCatRouteImport } from './routes/blog.category.$cat'
 import { Route as ApiPublicHooksPublishScheduledRouteImport } from './routes/api/public/hooks/publish-scheduled'
@@ -301,6 +302,11 @@ const ApiBlogAdminRoute = ApiBlogAdminRouteImport.update({
   path: '/api/blog-admin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
+  id: '/admin/questions',
+  path: '/admin/questions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminBlogRoute = AdminBlogRouteImport.update({
   id: '/admin/blog',
   path: '/admin/blog',
@@ -358,6 +364,7 @@ export interface FileRoutesByFullPath {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/explain-question': typeof ApiExplainQuestionRoute
@@ -411,6 +418,7 @@ export interface FileRoutesByTo {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/explain-question': typeof ApiExplainQuestionRoute
@@ -465,6 +473,7 @@ export interface FileRoutesById {
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
   '/api/explain-question': typeof ApiExplainQuestionRoute
@@ -520,6 +529,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tools'
     | '/admin/blog'
+    | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/explain-question'
@@ -573,6 +583,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tools'
     | '/admin/blog'
+    | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/explain-question'
@@ -626,6 +637,7 @@ export interface FileRouteTypes {
     | '/terms-of-service'
     | '/tools'
     | '/admin/blog'
+    | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
     | '/api/explain-question'
@@ -680,6 +692,7 @@ export interface RootRouteChildren {
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ToolsRoute: typeof ToolsRoute
   AdminBlogRoute: typeof AdminBlogRoute
+  AdminQuestionsRoute: typeof AdminQuestionsRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiExplainQuestionRoute: typeof ApiExplainQuestionRoute
@@ -1030,6 +1043,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBlogAdminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/questions': {
+      id: '/admin/questions'
+      path: '/admin/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/blog': {
       id: '/admin/blog'
       path: '/admin/blog'
@@ -1106,6 +1126,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfServiceRoute: TermsOfServiceRoute,
   ToolsRoute: ToolsRoute,
   AdminBlogRoute: AdminBlogRoute,
+  AdminQuestionsRoute: AdminQuestionsRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
   ApiExplainQuestionRoute: ApiExplainQuestionRoute,
