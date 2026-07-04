@@ -54,6 +54,7 @@ import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-
 import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
 import { Route as ApiGenerateThemeRouteImport } from './routes/api/generate-theme'
 import { Route as ApiGeneratePresentationRouteImport } from './routes/api/generate-presentation'
+import { Route as ApiExplainQuestionRouteImport } from './routes/api/explain-question'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
 import { Route as AdminBlogRouteImport } from './routes/admin.blog'
@@ -285,6 +286,11 @@ const ApiGeneratePresentationRoute = ApiGeneratePresentationRouteImport.update({
   path: '/api/generate-presentation',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiExplainQuestionRoute = ApiExplainQuestionRouteImport.update({
+  id: '/api/explain-question',
+  path: '/api/explain-question',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -354,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/explain-question': typeof ApiExplainQuestionRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
@@ -406,6 +413,7 @@ export interface FileRoutesByTo {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/explain-question': typeof ApiExplainQuestionRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
@@ -459,6 +467,7 @@ export interface FileRoutesById {
   '/admin/blog': typeof AdminBlogRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/explain-question': typeof ApiExplainQuestionRoute
   '/api/generate-presentation': typeof ApiGeneratePresentationRoute
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
@@ -513,6 +522,7 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
+    | '/api/explain-question'
     | '/api/generate-presentation'
     | '/api/generate-theme'
     | '/api/record-attempt'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
+    | '/api/explain-question'
     | '/api/generate-presentation'
     | '/api/generate-theme'
     | '/api/record-attempt'
@@ -617,6 +628,7 @@ export interface FileRouteTypes {
     | '/admin/blog'
     | '/api/blog-admin'
     | '/api/chat'
+    | '/api/explain-question'
     | '/api/generate-presentation'
     | '/api/generate-theme'
     | '/api/record-attempt'
@@ -670,6 +682,7 @@ export interface RootRouteChildren {
   AdminBlogRoute: typeof AdminBlogRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiExplainQuestionRoute: typeof ApiExplainQuestionRoute
   ApiGeneratePresentationRoute: typeof ApiGeneratePresentationRoute
   ApiGenerateThemeRoute: typeof ApiGenerateThemeRoute
   ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
@@ -996,6 +1009,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGeneratePresentationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/explain-question': {
+      id: '/api/explain-question'
+      path: '/api/explain-question'
+      fullPath: '/api/explain-question'
+      preLoaderRoute: typeof ApiExplainQuestionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -1088,6 +1108,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminBlogRoute: AdminBlogRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiExplainQuestionRoute: ApiExplainQuestionRoute,
   ApiGeneratePresentationRoute: ApiGeneratePresentationRoute,
   ApiGenerateThemeRoute: ApiGenerateThemeRoute,
   ApiRecordAttemptRoute: ApiRecordAttemptRoute,
