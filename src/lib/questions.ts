@@ -76,7 +76,7 @@ export async function fetchQuestions(f: QuestionFilters): Promise<DbQuestion[]> 
   const cap = Math.max(f.count * 5, 100);
   const { data, error } = await q.limit(cap);
   if (error) throw error;
-  const rows = (data ?? []) as DbQuestion[];
+  const rows = (data ?? []) as unknown as DbQuestion[];
   for (let i = rows.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [rows[i], rows[j]] = [rows[j], rows[i]];
