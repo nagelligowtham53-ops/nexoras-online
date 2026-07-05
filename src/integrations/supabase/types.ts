@@ -101,6 +101,45 @@ export type Database = {
         }
         Relationships: []
       }
+      import_history: {
+        Row: {
+          created_at: string
+          errors: Json
+          failed: number
+          filename: string | null
+          id: string
+          inserted: number
+          source_type: string
+          total_rows: number
+          updated: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          errors?: Json
+          failed?: number
+          filename?: string | null
+          id?: string
+          inserted?: number
+          source_type: string
+          total_rows?: number
+          updated?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          errors?: Json
+          failed?: number
+          filename?: string | null
+          id?: string
+          inserted?: number
+          source_type?: string
+          total_rows?: number
+          updated?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       practice_answers: {
         Row: {
           awarded_marks: number
@@ -280,6 +319,7 @@ export type Database = {
           explanation: string | null
           external_id: string | null
           id: string
+          image_url: string | null
           is_ncert: boolean
           is_pyq: boolean
           marks: number
@@ -309,6 +349,7 @@ export type Database = {
           explanation?: string | null
           external_id?: string | null
           id?: string
+          image_url?: string | null
           is_ncert?: boolean
           is_pyq?: boolean
           marks?: number
@@ -338,6 +379,7 @@ export type Database = {
           explanation?: string | null
           external_id?: string | null
           id?: string
+          image_url?: string | null
           is_ncert?: boolean
           is_pyq?: boolean
           marks?: number
@@ -504,6 +546,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
