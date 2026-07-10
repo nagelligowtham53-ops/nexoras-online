@@ -600,6 +600,8 @@ function MockTestsPage() {
           agreed={agreed}
           setAgreed={setAgreed}
           error={error}
+          availableCount={availableCount}
+          checkingAvailability={checkingAvailability}
           onBack={() => setPhase("select")}
           onBegin={beginExam}
         />
@@ -610,9 +612,10 @@ function MockTestsPage() {
           <Loader2 className="h-10 w-10 animate-spin text-accent" />
           <h2 className="mt-6 font-display text-xl font-semibold">{exam.name}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{loadProgress}</p>
-          <p className="mt-1 text-xs text-muted-foreground">AI is generating exam-quality questions. This may take 20–60s.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Fetching curated questions from the Nexoras question bank…</p>
         </section>
       )}
+
 
       {phase === "result" && stats && (
         <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} onReset={reset} />
