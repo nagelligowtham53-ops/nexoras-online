@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { authedFetch } from "@/lib/authed-fetch";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
+import { fetchQuestions, type DbQuestion, type Difficulty as DbDifficulty } from "@/lib/questions";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles,
   BookmarkCheck, Maximize2, Minimize2, ChevronLeft, ChevronRight, ListChecks, AlertTriangle,
   Brain, User as UserIcon, ShieldCheck, Menu,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/mock-tests")({
   head: () => ({
