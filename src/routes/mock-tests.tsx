@@ -680,7 +680,8 @@ function InstructionsView(props: {
   const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
   const minutes = testType === "chapter" ? 30 : exam.duration_min;
   const noQuestions = availableCount === 0;
-  const canBegin = agreed && !checkingAvailability && (availableCount ?? 0) > 0;
+  const canBegin = agreed && !checkingAvailability;
+
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-10 lg:px-8">
