@@ -777,10 +777,11 @@ function InstructionsView(props: {
               </div>
             )}
             {!checkingAvailability && noQuestions && (
-              <div className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-                No questions are available for the selected exam and filters yet. Please try a different exam, adjust the difficulty, or check back soon as our question bank keeps growing.
+              <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
+                Our question bank for this exam is still being populated — your test will use a practice demo set so you can explore the full CBT interface.
               </div>
             )}
+
             {!checkingAvailability && availableCount !== null && availableCount > 0 && availableCount < total && (
               <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
                 {availableCount} questions available for these filters. Your test will use as many as possible.
