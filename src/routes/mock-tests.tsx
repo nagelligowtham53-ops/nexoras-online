@@ -242,9 +242,39 @@ function MockTestsPage() {
     return null;
   }
 
+  function buildDemoQuestions(spec: ExamSpec): Question[] {
+    const list = testType === "chapter"
+      ? [{ name: chapterSubject, count: 10 }]
+      : spec.subjects.map((s) => ({ name: s.name, count: Math.max(3, Math.min(5, s.count)) }));
+    const out: Question[] = [];
+    let n = 1;
+    for (const s of list) {
+      for (let i = 0; i < s.count; i++) {
+        const a = Math.floor(Math.random() * 20) + 1;
+        const b = Math.floor(Math.random() * 20) + 1;
+        const correct = a + b;
+        const opts = [correct, correct + 1, correct - 1, correct + 2].map(String);
+        // shuffle
+        for (let k = opts.length - 1; k > 0; k--) {
+          const j = Math.floor(Math.random() * (k + 1));
+          [opts[k], opts[j]] = [opts[j], opts[k]];
+        }
+        out.push({
+          subject: s.name,
+          type: "mcq",
+          q: `Demo Q${n++} (${s.name}): What is ${a} + ${b}?`,
+          options: opts,
+          correct: opts.indexOf(String(correct)),
+          explanation: `${a} + ${b} = ${correct}. This is a demo question shown while the ${s.name} question bank is being populated.`,
+        });
+      }
+    }
+    return out;
+  }
+
   async function loadQuestions(spec: ExamSpec): Promise<Question[]> {
     const dbExam = EXAM_DB_MAP[spec.name];
-    if (!dbExam) return [];
+    if (!dbExam) return buildDemoQuestions(spec);
     const effective: { name: string; count: number }[] =
       testType === "chapter"
         ? [{ name: chapterSubject, count: 25 }]
@@ -252,21 +282,27 @@ function MockTestsPage() {
     const total = effective.reduce((a, s) => a + s.count, 0);
     const diffs = difficultyFilter();
     const all: Question[] = [];
-    for (const s of effective) {
-      setLoadProgress(`Loading ${s.name} questions… (${all.length}/${total})`);
-      const rows = await fetchQuestions({
-        exams: [dbExam],
-        subjects: [dbSubjectFor(spec.key, s.name)],
-        difficulties: diffs,
-        count: s.count,
-      });
-      for (const r of rows) {
-        const mapped = mapDbToQuestion(r, s.name);
-        if (mapped) all.push(mapped);
+    try {
+      for (const s of effective) {
+        setLoadProgress(`Loading ${s.name} questions… (${all.length}/${total})`);
+        const rows = await fetchQuestions({
+          exams: [dbExam],
+          subjects: [dbSubjectFor(spec.key, s.name)],
+          difficulties: diffs,
+          count: s.count,
+        });
+        for (const r of rows) {
+          const mapped = mapDbToQuestion(r, s.name);
+          if (mapped) all.push(mapped);
+        }
       }
+    } catch (e) {
+      console.warn("[mock-tests] DB fetch failed, using demo set", e);
     }
+    if (all.length === 0) return buildDemoQuestions(spec);
     return all;
   }
+
 
   // ---- Availability probe (so we can disable the Begin button ahead of time)
   const [availableCount, setAvailableCount] = useState<number | null>(null);
@@ -313,19 +349,12 @@ function MockTestsPage() {
   }
 
   async function beginExam() {
-    if (!availableCount || availableCount === 0) {
-      setError("No questions are available for the selected exam and filters yet. Please try a different exam or check back soon.");
-      return;
-    }
+    setError(null);
     setPhase("loading");
     setLoadProgress("Preparing your exam…");
     try {
-      const qs = await loadQuestions(exam);
-      if (qs.length === 0) {
-        setError("No questions are available for the selected exam and filters yet. Please try a different exam or check back soon.");
-        setPhase("instructions");
-        return;
-      }
+      let qs = await loadQuestions(exam);
+      if (qs.length === 0) qs = buildDemoQuestions(exam);
       setQuestions(qs);
       setAnswers(Array(qs.length).fill(null));
       setMarked(Array(qs.length).fill(false));
@@ -340,11 +369,24 @@ function MockTestsPage() {
       setPhase("running");
       setTimeout(() => enterFullscreen(), 200);
     } catch (e) {
-      console.error("[mock-tests] loadQuestions failed", e);
-      setError("We couldn't load your test right now. Please try again in a moment.");
-      setPhase("instructions");
+      console.error("[mock-tests] beginExam failed, falling back to demo set", e);
+      const qs = buildDemoQuestions(exam);
+      setQuestions(qs);
+      setAnswers(Array(qs.length).fill(null));
+      setMarked(Array(qs.length).fill(false));
+      setVisited(Array(qs.length).fill(false).map((_, i) => i === 0));
+      setTimePerQ(Array(qs.length).fill(0));
+      setCurrent(0);
+      setActiveSection(qs[0].subject);
+      const minutes = testType === "chapter" ? 30 : exam.duration_min;
+      setSecondsLeft(minutes * 60);
+      startedAtRef.current = Date.now();
+      lastTickRef.current = Date.now();
+      setPhase("running");
+      setTimeout(() => enterFullscreen(), 200);
     }
   }
+
 
 
   function pick(value: string) {
@@ -638,7 +680,8 @@ function InstructionsView(props: {
   const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
   const minutes = testType === "chapter" ? 30 : exam.duration_min;
   const noQuestions = availableCount === 0;
-  const canBegin = agreed && !checkingAvailability && (availableCount ?? 0) > 0;
+  const canBegin = agreed && !checkingAvailability;
+
 
   return (
     <section className="mx-auto max-w-4xl px-4 py-10 lg:px-8">
@@ -734,10 +777,11 @@ function InstructionsView(props: {
               </div>
             )}
             {!checkingAvailability && noQuestions && (
-              <div className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-                No questions are available for the selected exam and filters yet. Please try a different exam, adjust the difficulty, or check back soon as our question bank keeps growing.
+              <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
+                Our question bank for this exam is still being populated — your test will use a practice demo set so you can explore the full CBT interface.
               </div>
             )}
+
             {!checkingAvailability && availableCount !== null && availableCount > 0 && availableCount < total && (
               <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
                 {availableCount} questions available for these filters. Your test will use as many as possible.
