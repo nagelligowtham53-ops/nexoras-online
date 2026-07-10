@@ -631,11 +631,15 @@ function InstructionsView(props: {
   chapterSubject: string; setChapterSubject: (s: string) => void;
   difficulty: Difficulty; setDifficulty: (d: Difficulty) => void;
   agreed: boolean; setAgreed: (b: boolean) => void; error: string | null;
+  availableCount: number | null; checkingAvailability: boolean;
   onBack: () => void; onBegin: () => void;
 }) {
-  const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, onBack, onBegin } = props;
+  const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, availableCount, checkingAvailability, onBack, onBegin } = props;
   const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
   const minutes = testType === "chapter" ? 30 : exam.duration_min;
+  const noQuestions = availableCount === 0;
+  const canBegin = agreed && !checkingAvailability && (availableCount ?? 0) > 0;
+
   return (
     <section className="mx-auto max-w-4xl px-4 py-10 lg:px-8">
       <button onClick={onBack} className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent">
