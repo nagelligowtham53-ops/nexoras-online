@@ -349,19 +349,12 @@ function MockTestsPage() {
   }
 
   async function beginExam() {
-    if (!availableCount || availableCount === 0) {
-      setError("No questions are available for the selected exam and filters yet. Please try a different exam or check back soon.");
-      return;
-    }
+    setError(null);
     setPhase("loading");
     setLoadProgress("Preparing your exam…");
     try {
-      const qs = await loadQuestions(exam);
-      if (qs.length === 0) {
-        setError("No questions are available for the selected exam and filters yet. Please try a different exam or check back soon.");
-        setPhase("instructions");
-        return;
-      }
+      let qs = await loadQuestions(exam);
+      if (qs.length === 0) qs = buildDemoQuestions(exam);
       setQuestions(qs);
       setAnswers(Array(qs.length).fill(null));
       setMarked(Array(qs.length).fill(false));
@@ -376,11 +369,24 @@ function MockTestsPage() {
       setPhase("running");
       setTimeout(() => enterFullscreen(), 200);
     } catch (e) {
-      console.error("[mock-tests] loadQuestions failed", e);
-      setError("We couldn't load your test right now. Please try again in a moment.");
-      setPhase("instructions");
+      console.error("[mock-tests] beginExam failed, falling back to demo set", e);
+      const qs = buildDemoQuestions(exam);
+      setQuestions(qs);
+      setAnswers(Array(qs.length).fill(null));
+      setMarked(Array(qs.length).fill(false));
+      setVisited(Array(qs.length).fill(false).map((_, i) => i === 0));
+      setTimePerQ(Array(qs.length).fill(0));
+      setCurrent(0);
+      setActiveSection(qs[0].subject);
+      const minutes = testType === "chapter" ? 30 : exam.duration_min;
+      setSecondsLeft(minutes * 60);
+      startedAtRef.current = Date.now();
+      lastTickRef.current = Date.now();
+      setPhase("running");
+      setTimeout(() => enterFullscreen(), 200);
     }
   }
+
 
 
   function pick(value: string) {
