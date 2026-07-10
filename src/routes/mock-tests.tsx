@@ -242,9 +242,39 @@ function MockTestsPage() {
     return null;
   }
 
+  function buildDemoQuestions(spec: ExamSpec): Question[] {
+    const list = testType === "chapter"
+      ? [{ name: chapterSubject, count: 10 }]
+      : spec.subjects.map((s) => ({ name: s.name, count: Math.max(3, Math.min(5, s.count)) }));
+    const out: Question[] = [];
+    let n = 1;
+    for (const s of list) {
+      for (let i = 0; i < s.count; i++) {
+        const a = Math.floor(Math.random() * 20) + 1;
+        const b = Math.floor(Math.random() * 20) + 1;
+        const correct = a + b;
+        const opts = [correct, correct + 1, correct - 1, correct + 2].map(String);
+        // shuffle
+        for (let k = opts.length - 1; k > 0; k--) {
+          const j = Math.floor(Math.random() * (k + 1));
+          [opts[k], opts[j]] = [opts[j], opts[k]];
+        }
+        out.push({
+          subject: s.name,
+          type: "mcq",
+          q: `Demo Q${n++} (${s.name}): What is ${a} + ${b}?`,
+          options: opts,
+          correct: opts.indexOf(String(correct)),
+          explanation: `${a} + ${b} = ${correct}. This is a demo question shown while the ${s.name} question bank is being populated.`,
+        });
+      }
+    }
+    return out;
+  }
+
   async function loadQuestions(spec: ExamSpec): Promise<Question[]> {
     const dbExam = EXAM_DB_MAP[spec.name];
-    if (!dbExam) return [];
+    if (!dbExam) return buildDemoQuestions(spec);
     const effective: { name: string; count: number }[] =
       testType === "chapter"
         ? [{ name: chapterSubject, count: 25 }]
@@ -252,21 +282,27 @@ function MockTestsPage() {
     const total = effective.reduce((a, s) => a + s.count, 0);
     const diffs = difficultyFilter();
     const all: Question[] = [];
-    for (const s of effective) {
-      setLoadProgress(`Loading ${s.name} questions… (${all.length}/${total})`);
-      const rows = await fetchQuestions({
-        exams: [dbExam],
-        subjects: [dbSubjectFor(spec.key, s.name)],
-        difficulties: diffs,
-        count: s.count,
-      });
-      for (const r of rows) {
-        const mapped = mapDbToQuestion(r, s.name);
-        if (mapped) all.push(mapped);
+    try {
+      for (const s of effective) {
+        setLoadProgress(`Loading ${s.name} questions… (${all.length}/${total})`);
+        const rows = await fetchQuestions({
+          exams: [dbExam],
+          subjects: [dbSubjectFor(spec.key, s.name)],
+          difficulties: diffs,
+          count: s.count,
+        });
+        for (const r of rows) {
+          const mapped = mapDbToQuestion(r, s.name);
+          if (mapped) all.push(mapped);
+        }
       }
+    } catch (e) {
+      console.warn("[mock-tests] DB fetch failed, using demo set", e);
     }
+    if (all.length === 0) return buildDemoQuestions(spec);
     return all;
   }
+
 
   // ---- Availability probe (so we can disable the Begin button ahead of time)
   const [availableCount, setAvailableCount] = useState<number | null>(null);
