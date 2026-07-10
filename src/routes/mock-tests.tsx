@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { authedFetch } from "@/lib/authed-fetch";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
+import { fetchQuestions, type DbQuestion, type Difficulty as DbDifficulty } from "@/lib/questions";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles,
   BookmarkCheck, Maximize2, Minimize2, ChevronLeft, ChevronRight, ListChecks, AlertTriangle,
   Brain, User as UserIcon, ShieldCheck, Menu,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/mock-tests")({
   head: () => ({
@@ -206,46 +208,98 @@ function MockTestsPage() {
     }
   }
 
-  // ---- AI question generation (chunked)
-  async function generateQuestions(spec: ExamSpec): Promise<Question[]> {
+  // ---- DB-backed question loading (real question bank)
+  const EXAM_DB_MAP: Record<string, string | null> = {
+    "JEE Main": "JEE Main",
+    "JEE Advanced": "JEE Advanced",
+    "NEET UG": "NEET",
+  };
+  function dbSubjectFor(examKey: string, subjectName: string): string {
+    if (examKey === "neet" && (subjectName === "Botany" || subjectName === "Zoology")) return "Biology";
+    return subjectName;
+  }
+  function difficultyFilter(): DbDifficulty[] | undefined {
+    if (difficulty === "mixed") return undefined;
+    if (difficulty === "easy") return ["Easy"];
+    if (difficulty === "medium") return ["Medium"];
+    return ["Hard"];
+  }
+  function mapDbToQuestion(r: DbQuestion, displaySubject: string): Question | null {
+    if (r.question_type === "single_correct" && r.options && r.correct_answer.type === "single") {
+      return {
+        subject: displaySubject, type: "mcq", q: r.question_text,
+        options: r.options, correct: r.correct_answer.value,
+        explanation: r.solution ?? r.explanation ?? undefined,
+      };
+    }
+    if ((r.question_type === "integer" || r.question_type === "numerical") && r.correct_answer.type === "numeric") {
+      return {
+        subject: displaySubject, type: "numerical", q: r.question_text,
+        correct: r.correct_answer.value,
+        explanation: r.solution ?? r.explanation ?? undefined,
+      };
+    }
+    return null;
+  }
+
+  async function loadQuestions(spec: ExamSpec): Promise<Question[]> {
+    const dbExam = EXAM_DB_MAP[spec.name];
+    if (!dbExam) return [];
     const effective: { name: string; count: number }[] =
       testType === "chapter"
         ? [{ name: chapterSubject, count: 25 }]
         : spec.subjects.map((s) => ({ ...s }));
     const total = effective.reduce((a, s) => a + s.count, 0);
-    const CHUNK = 25;
-    const batches: { name: string; count: number }[][] = [];
-    const remaining = effective.map((s) => ({ ...s }));
-    while (remaining.some((s) => s.count > 0)) {
-      const batch: { name: string; count: number }[] = [];
-      let left = CHUNK;
-      for (const s of remaining) {
-        if (left <= 0 || s.count <= 0) continue;
-        const totalLeft = remaining.reduce((a, x) => a + x.count, 0);
-        const take = Math.min(s.count, Math.ceil((s.count / totalLeft) * CHUNK));
-        const real = Math.min(take, left, s.count);
-        if (real > 0) { batch.push({ name: s.name, count: real }); s.count -= real; left -= real; }
-      }
-      batches.push(batch);
-    }
-    const diffNote = difficulty === "mixed" ? spec.difficulty : `${spec.name} level — focus on ${difficulty} difficulty`;
+    const diffs = difficultyFilter();
     const all: Question[] = [];
-    for (let i = 0; i < batches.length; i++) {
-      setLoadProgress(`Generating questions… (${all.length}/${total})`);
-      const res = await authedFetch("/api/generate-questions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ exam: spec.name, subjects: batches[i], difficulty: diffNote }),
+    for (const s of effective) {
+      setLoadProgress(`Loading ${s.name} questions… (${all.length}/${total})`);
+      const rows = await fetchQuestions({
+        exams: [dbExam],
+        subjects: [dbSubjectFor(spec.key, s.name)],
+        difficulties: diffs,
+        count: s.count,
       });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error((j as { error?: string }).error ?? `Failed (${res.status})`);
+      for (const r of rows) {
+        const mapped = mapDbToQuestion(r, s.name);
+        if (mapped) all.push(mapped);
       }
-      const data = (await res.json()) as { questions: Question[] };
-      all.push(...data.questions);
     }
-    return all.slice(0, total);
+    return all;
   }
+
+  // ---- Availability probe (so we can disable the Begin button ahead of time)
+  const [availableCount, setAvailableCount] = useState<number | null>(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+  async function probeAvailability(spec: ExamSpec) {
+    const dbExam = EXAM_DB_MAP[spec.name];
+    if (!dbExam) { setAvailableCount(0); return; }
+    setCheckingAvailability(true);
+    try {
+      const subjects = testType === "chapter"
+        ? [dbSubjectFor(spec.key, chapterSubject)]
+        : spec.subjects.map((s) => dbSubjectFor(spec.key, s.name));
+      let q = supabase
+        .from("questions")
+        .select("id", { count: "exact", head: true })
+        .overlaps("exams", [dbExam])
+        .in("subject", subjects);
+      const diffs = difficultyFilter();
+      if (diffs) q = q.in("difficulty", diffs);
+      const { count, error } = await q;
+      if (error) throw error;
+      setAvailableCount(count ?? 0);
+    } catch {
+      setAvailableCount(0);
+    } finally {
+      setCheckingAvailability(false);
+    }
+  }
+  useEffect(() => {
+    if (phase !== "instructions") return;
+    void probeAvailability(exam);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, exam.key, testType, chapterSubject, difficulty]);
 
   function openInstructions(spec: ExamSpec) {
     setExam(spec);
@@ -254,15 +308,24 @@ function MockTestsPage() {
     setChapterSubject(spec.subjects[0].name);
     setAgreed(false);
     setError(null);
+    setAvailableCount(null);
     setPhase("instructions");
   }
 
   async function beginExam() {
+    if (!availableCount || availableCount === 0) {
+      setError("No questions are available for the selected exam and filters yet. Please try a different exam or check back soon.");
+      return;
+    }
     setPhase("loading");
     setLoadProgress("Preparing your exam…");
     try {
-      const qs = await generateQuestions(exam);
-      if (qs.length === 0) throw new Error("No questions returned");
+      const qs = await loadQuestions(exam);
+      if (qs.length === 0) {
+        setError("No questions are available for the selected exam and filters yet. Please try a different exam or check back soon.");
+        setPhase("instructions");
+        return;
+      }
       setQuestions(qs);
       setAnswers(Array(qs.length).fill(null));
       setMarked(Array(qs.length).fill(false));
@@ -275,14 +338,14 @@ function MockTestsPage() {
       startedAtRef.current = Date.now();
       lastTickRef.current = Date.now();
       setPhase("running");
-      // try fullscreen
       setTimeout(() => enterFullscreen(), 200);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Failed to load test";
-      setError(msg);
+      console.error("[mock-tests] loadQuestions failed", e);
+      setError("We couldn't load your test right now. Please try again in a moment.");
       setPhase("instructions");
     }
   }
+
 
   function pick(value: string) {
     setAnswers((a) => a.map((v, i) => (i === current ? value : v)));
@@ -537,6 +600,8 @@ function MockTestsPage() {
           agreed={agreed}
           setAgreed={setAgreed}
           error={error}
+          availableCount={availableCount}
+          checkingAvailability={checkingAvailability}
           onBack={() => setPhase("select")}
           onBegin={beginExam}
         />
@@ -547,9 +612,10 @@ function MockTestsPage() {
           <Loader2 className="h-10 w-10 animate-spin text-accent" />
           <h2 className="mt-6 font-display text-xl font-semibold">{exam.name}</h2>
           <p className="mt-2 text-sm text-muted-foreground">{loadProgress}</p>
-          <p className="mt-1 text-xs text-muted-foreground">AI is generating exam-quality questions. This may take 20–60s.</p>
+          <p className="mt-1 text-xs text-muted-foreground">Fetching curated questions from the Nexoras question bank…</p>
         </section>
       )}
+
 
       {phase === "result" && stats && (
         <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} onReset={reset} />
@@ -565,11 +631,15 @@ function InstructionsView(props: {
   chapterSubject: string; setChapterSubject: (s: string) => void;
   difficulty: Difficulty; setDifficulty: (d: Difficulty) => void;
   agreed: boolean; setAgreed: (b: boolean) => void; error: string | null;
+  availableCount: number | null; checkingAvailability: boolean;
   onBack: () => void; onBegin: () => void;
 }) {
-  const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, onBack, onBegin } = props;
+  const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, availableCount, checkingAvailability, onBack, onBegin } = props;
   const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
   const minutes = testType === "chapter" ? 30 : exam.duration_min;
+  const noQuestions = availableCount === 0;
+  const canBegin = agreed && !checkingAvailability && (availableCount ?? 0) > 0;
+
   return (
     <section className="mx-auto max-w-4xl px-4 py-10 lg:px-8">
       <button onClick={onBack} className="mb-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent">
@@ -658,16 +728,33 @@ function InstructionsView(props: {
               </span>
             </label>
 
+            {checkingAvailability && (
+              <div className="rounded-lg border border-border bg-background/40 px-3 py-2 text-xs text-muted-foreground">
+                Checking the question bank for available questions…
+              </div>
+            )}
+            {!checkingAvailability && noQuestions && (
+              <div className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
+                No questions are available for the selected exam and filters yet. Please try a different exam, adjust the difficulty, or check back soon as our question bank keeps growing.
+              </div>
+            )}
+            {!checkingAvailability && availableCount !== null && availableCount > 0 && availableCount < total && (
+              <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
+                {availableCount} questions available for these filters. Your test will use as many as possible.
+              </div>
+            )}
+
             {error && (
               <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</div>
             )}
 
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={onBack}>Cancel</Button>
-              <Button disabled={!agreed} onClick={onBegin} className="bg-gradient-primary text-primary-foreground shadow-glow disabled:opacity-50">
+              <Button disabled={!canBegin} onClick={onBegin} className="bg-gradient-primary text-primary-foreground shadow-glow disabled:opacity-50">
                 <ShieldCheck className="h-4 w-4" /> I'm ready — Begin Test
               </Button>
             </div>
+
           </div>
 
           <aside className="space-y-3">
