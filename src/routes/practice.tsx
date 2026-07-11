@@ -4,7 +4,7 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchQuestions, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
 import { Atom, FlaskConical, Sigma, Dna, CheckCircle2, XCircle, Timer, ArrowRight, Sparkles, Bookmark, BookmarkCheck, Loader2, Database } from "lucide-react";
 
 export const Route = createFileRoute("/practice")({
@@ -53,15 +53,26 @@ function PracticePage() {
   async function load() {
     setLoading(true); setError(null);
     try {
-      const qs = await fetchQuestions({
+      const result = await fetchQuestionsWithRelaxation({
         subjects: subject === "All" ? undefined : [subject],
         difficulties: level === "All" ? undefined : [level as Difficulty],
         questionTypes: ["single_correct"],
         count: 20,
       });
+      const qs = result.questions;
+      console.info("[practice] Question fetch summary", {
+        totalQuestionsInDatabase: result.totalQuestions,
+        questionsFoundAfterFiltering: qs.length,
+        appliedFilters: { subject, level },
+        attempts: result.attempts,
+      });
       setPool(qs); setIdx(0); setPicked(null);
-      if (qs.length === 0) setError("No questions match — ask an admin to import questions or change filters.");
-    } catch (e) { setError((e as Error).message); }
+      if (result.totalQuestions === 0) setError("Question bank contains 0 questions. Please import a question bank.");
+      else if (qs.length === 0) setError("No practice questions are available for this selection right now.");
+    } catch (e) {
+      console.error("[practice] Failed to load questions", e);
+      setError("We could not load practice questions right now. Please try again in a moment.");
+    }
     finally { setLoading(false); }
   }
 
@@ -146,7 +157,12 @@ function PracticePage() {
         </div>
 
         {loading && <div className="glass rounded-2xl p-10 text-center text-sm"><Loader2 className="mx-auto h-5 w-5 animate-spin text-accent" /></div>}
-        {error && !loading && <div className="glass rounded-2xl p-6 text-sm text-destructive">{error}</div>}
+        {error && !loading && (
+          <div className="glass rounded-2xl p-6 text-sm text-destructive">
+            <p>{error}</p>
+            {error.includes("0 questions") && <Link to="/admin/questions" className="mt-2 inline-flex text-accent underline">Import Questions</Link>}
+          </div>
+        )}
 
         {q && !loading && (
           <div className="glass rounded-2xl p-6">
