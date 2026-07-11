@@ -253,6 +253,7 @@ export async function fetchQuestionsWithRelaxation(f: QuestionFilters): Promise<
     { stage: "relaxed question type", filters: { ...f, difficulties: undefined, questionTypes: undefined } },
     { stage: "relaxed chapter", filters: { ...f, difficulties: undefined, questionTypes: undefined, chapters: undefined } },
     { stage: "relaxed subject", filters: { ...f, difficulties: undefined, questionTypes: undefined, chapters: undefined, subjects: undefined } },
+    { stage: "relaxed PYQ/NCERT filters", filters: { ...f, difficulties: undefined, questionTypes: undefined, chapters: undefined, subjects: undefined, pyqOnly: false, ncertOnly: false } },
   ];
   const attempts: QuestionFetchAttempt[] = [];
 
