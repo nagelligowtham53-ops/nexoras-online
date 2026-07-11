@@ -5,7 +5,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
 import { supabase } from "@/integrations/supabase/client";
-import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty, type QuestionFilters } from "@/lib/questions";
 import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
@@ -277,7 +277,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
     setLoading(true);
     try {
       const allChapters = Object.values(subjects).flat();
-      const filters = {
+      const filters: QuestionFilters = {
         exams: [exam],
         classLevels: classSel === "both" ? undefined : [classSel],
         subjects: selectedSubjects.length ? selectedSubjects : undefined,
@@ -286,7 +286,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         pyqOnly, ncertOnly,
         questionTypes: ["single_correct"], // v1 runner supports single-correct
         count: finalCount,
-      } as const;
+      };
       console.info("[custom-practice] Start Practice clicked", { appliedFilters: filters, selectedChapters: allChapters, requestedCount: finalCount });
       const result = await fetchQuestionsWithRelaxation(filters);
       console.info("[custom-practice] Question fetch summary", {
