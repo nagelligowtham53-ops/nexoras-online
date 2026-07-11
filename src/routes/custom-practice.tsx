@@ -5,7 +5,8 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchQuestions, fetchChapters, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { fetchQuestions, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
   Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Flag, Loader2,
@@ -212,14 +213,36 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { setSubjects({}); setChaptersMap({}); }, [exam, classSel]);
+  const [countsMap, setCountsMap] = useState<Record<string, Record<string, number>>>({});
 
-  async function loadChapters(subject: string) {
-    if (chaptersMap[subject]) return;
-    const levels = classSel === "both" ? undefined : [classSel];
-    const chs = await fetchChapters(subject, levels);
-    setChaptersMap((m) => ({ ...m, [subject]: chs }));
-  }
+  // Load syllabus chapters immediately + fetch DB counts per chapter
+  useEffect(() => {
+    setSubjects({});
+    const map: Record<string, string[]> = {};
+    for (const s of availSubjects) {
+      map[s] = chaptersFor(s as SyllabusSubject, classSel === "both" ? "all" : (String(classSel) as "11" | "12"));
+    }
+    setChaptersMap(map);
+
+    // Fetch counts from DB (best-effort; failures leave counts at 0)
+    (async () => {
+      const levels = classSel === "both" ? undefined : [classSel as 11 | 12];
+      const next: Record<string, Record<string, number>> = {};
+      for (const s of availSubjects) {
+        let q = supabase.from("questions").select("chapter").eq("subject", s).overlaps("exams", [exam]);
+        if (levels) q = q.in("class_level", levels);
+        const { data } = await q.limit(10000);
+        const counts: Record<string, number> = {};
+        (data ?? []).forEach((r) => {
+          const ch = r.chapter as string;
+          counts[ch] = (counts[ch] ?? 0) + 1;
+        });
+        next[s] = counts;
+      }
+      setCountsMap(next);
+    })();
+  }, [exam, classSel, availSubjects]);
+
 
   function toggleChapter(subject: string, chapter: string) {
     setSubjects((prev) => {
@@ -304,48 +327,43 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         <div className="grid gap-4 lg:grid-cols-2">
           {availSubjects.map((s) => {
             const Icon = SUBJECT_ICONS[s] ?? Database;
-            const chapters = chaptersMap[s];
+            const chapters = chaptersMap[s] ?? [];
+            const counts = countsMap[s] ?? {};
             const selected = subjects[s] ?? [];
+            const totalQs = Object.values(counts).reduce((a, b) => a + b, 0);
             return (
               <div key={s} className="rounded-xl border border-border bg-background/40 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2 font-medium">
                     <Icon className="h-4 w-4 text-accent" /> {s}
-                    {chapters && <span className="text-xs text-muted-foreground">({selected.length}/{chapters.length})</span>}
+                    <span className="text-xs text-muted-foreground">
+                      ({selected.length}/{chapters.length}) · {totalQs} Qs
+                    </span>
                   </div>
                   <div className="flex gap-1.5 text-[11px]">
-                    {!chapters ? (
-                      <button onClick={() => loadChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Load</button>
-                    ) : (
-                      <>
-                        <button onClick={() => selectAllChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All</button>
-                        <button onClick={() => clearSubject(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Clear</button>
-                      </>
-                    )}
+                    <button onClick={() => selectAllChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All</button>
+                    <button onClick={() => clearSubject(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Clear</button>
                   </div>
                 </div>
-                {chapters ? (
-                  chapters.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No {s} questions yet in the bank.</p>
-                  ) : (
-                    <div className="flex max-h-48 flex-wrap gap-1.5 overflow-y-auto pr-1">
-                      {chapters.map((c) => {
-                        const on = selected.includes(c);
-                        return (
-                          <button key={c} onClick={() => toggleChapter(s, c)}
-                            className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
-                            {c}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )
-                ) : (
-                  <p className="text-xs text-muted-foreground">Click <em>Load</em> to see available chapters. Leave empty to include the whole subject.</p>
-                )}
+                <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                  {chapters.map((c) => {
+                    const on = selected.includes(c);
+                    const n = counts[c] ?? 0;
+                    return (
+                      <button key={c} onClick={() => toggleChapter(s, c)}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
+                        <span>{c}</span>
+                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${on ? "bg-black/20" : n > 0 ? "bg-accent/15 text-accent" : "bg-muted/50 text-muted-foreground"}`}>
+                          {n} {n === 1 ? "Q" : "Qs"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
+
         </div>
         <p className="text-xs text-muted-foreground">
           {selectedSubjects.length === 0
