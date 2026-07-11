@@ -5,7 +5,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchQuestions, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
 import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
@@ -211,7 +211,9 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
   const [timeMode, setTimeMode] = useState<TimeMode>("timed");
   const [minutes, setMinutes] = useState(30);
   const [loading, setLoading] = useState(false);
+  const [loadingCounts, setLoadingCounts] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [bankTotal, setBankTotal] = useState<number | null>(null);
 
   const [countsMap, setCountsMap] = useState<Record<string, Record<string, number>>>({});
 
@@ -226,20 +228,25 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
 
     // Fetch counts from DB (best-effort; failures leave counts at 0)
     (async () => {
+      setLoadingCounts(true);
       const levels = classSel === "both" ? undefined : [classSel as 11 | 12];
-      const next: Record<string, Record<string, number>> = {};
-      for (const s of availSubjects) {
-        let q = supabase.from("questions").select("chapter").eq("subject", s).overlaps("exams", [exam]);
-        if (levels) q = q.in("class_level", levels);
-        const { data } = await q.limit(10000);
-        const counts: Record<string, number> = {};
-        (data ?? []).forEach((r) => {
-          const ch = r.chapter as string;
-          counts[ch] = (counts[ch] ?? 0) + 1;
-        });
-        next[s] = counts;
+      try {
+        const [total, rawCounts] = await Promise.all([
+          countQuestionBank(),
+          fetchChapterCounts({ exams: [exam], classLevels: levels }),
+        ]);
+        const next: Record<string, Record<string, number>> = {};
+        for (const s of availSubjects) next[s] = rawCounts[s] ?? {};
+        setBankTotal(total);
+        setCountsMap(next);
+      } catch (err) {
+        console.error("[custom-practice] Failed to fetch chapter counts", { exam, classSel, error: err });
+        const next: Record<string, Record<string, number>> = {};
+        for (const s of availSubjects) next[s] = {};
+        setCountsMap(next);
+      } finally {
+        setLoadingCounts(false);
       }
-      setCountsMap(next);
     })();
   }, [exam, classSel, availSubjects]);
 
@@ -270,7 +277,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
     setLoading(true);
     try {
       const allChapters = Object.values(subjects).flat();
-      const qs = await fetchQuestions({
+      const filters = {
         exams: [exam],
         classLevels: classSel === "both" ? undefined : [classSel],
         subjects: selectedSubjects.length ? selectedSubjects : undefined,
@@ -279,11 +286,26 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         pyqOnly, ncertOnly,
         questionTypes: ["single_correct"], // v1 runner supports single-correct
         count: finalCount,
+      } as const;
+      console.info("[custom-practice] Start Practice clicked", { appliedFilters: filters, selectedChapters: allChapters, requestedCount: finalCount });
+      const result = await fetchQuestionsWithRelaxation(filters);
+      console.info("[custom-practice] Question fetch summary", {
+        totalQuestionsInDatabase: result.totalQuestions,
+        questionsFoundAfterFiltering: result.questions.length,
+        relaxedStage: result.relaxedStage,
+        attempts: result.attempts,
       });
-      if (qs.length === 0) {
-        setError("No questions match these filters yet. Ask an admin to import more or loosen the filters.");
-        setLoading(false); return;
+      if (result.totalQuestions === 0) {
+        setError("Question bank contains 0 questions. Please import a question bank.");
+        setLoading(false);
+        return;
       }
+      if (result.questions.length === 0) {
+        setError("No matching questions were found after checking all safe filter combinations. Try a different exam or class.");
+        setLoading(false);
+        return;
+      }
+      const qs = result.questions;
       const realMin = exam === "NEET" ? Math.round(qs.length * 1.08) : Math.round(qs.length * 1.2);
       const finalMinutes = timeMode === "real" ? realMin : timeMode === "timed" ? minutes : 0;
       onStart(
@@ -291,7 +313,8 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         qs,
       );
     } catch (e) {
-      setError((e as Error).message || "Failed to load questions");
+      console.error("[custom-practice] Failed to start practice", e);
+      setError("We could not start practice right now. Please try again in a moment.");
     } finally { setLoading(false); }
   }
 
@@ -303,6 +326,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
           Questions are served from Nexoras' curated question bank — no AI generation during practice.
         </div>
         <div className="flex gap-3 text-xs">
+          <span>{bankTotal === null ? "Checking bank…" : `${bankTotal} questions available`}</span>
           {bookmarksCount > 0 && <span>{bookmarksCount} bookmarked</span>}
           <Link to="/practice-history" className="text-accent underline">History & analytics</Link>
         </div>
@@ -354,7 +378,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
                         className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
                         <span>{c}</span>
                         <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${on ? "bg-black/20" : n > 0 ? "bg-accent/15 text-accent" : "bg-muted/50 text-muted-foreground"}`}>
-                          {n} {n === 1 ? "Q" : "Qs"}
+                          {loadingCounts ? "…" : `${n} ${n === 1 ? "Q" : "Qs"}`}
                         </span>
                       </button>
                     );
@@ -415,7 +439,16 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         )}
       </div>
 
-      {error && <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">{error}</div>}
+      {error && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          <p>{error}</p>
+          {error.includes("0 questions") && (
+            <Link to="/admin/questions" className="mt-2 inline-flex text-accent underline">
+              Import Questions
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-end">
         <Button onClick={start} disabled={loading} className="bg-gradient-primary text-primary-foreground shadow-glow">
