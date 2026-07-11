@@ -5,7 +5,8 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchQuestions, fetchChapters, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { fetchQuestions, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
   Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Flag, Loader2,
