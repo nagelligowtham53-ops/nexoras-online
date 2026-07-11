@@ -327,48 +327,43 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         <div className="grid gap-4 lg:grid-cols-2">
           {availSubjects.map((s) => {
             const Icon = SUBJECT_ICONS[s] ?? Database;
-            const chapters = chaptersMap[s];
+            const chapters = chaptersMap[s] ?? [];
+            const counts = countsMap[s] ?? {};
             const selected = subjects[s] ?? [];
+            const totalQs = Object.values(counts).reduce((a, b) => a + b, 0);
             return (
               <div key={s} className="rounded-xl border border-border bg-background/40 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2 font-medium">
                     <Icon className="h-4 w-4 text-accent" /> {s}
-                    {chapters && <span className="text-xs text-muted-foreground">({selected.length}/{chapters.length})</span>}
+                    <span className="text-xs text-muted-foreground">
+                      ({selected.length}/{chapters.length}) · {totalQs} Qs
+                    </span>
                   </div>
                   <div className="flex gap-1.5 text-[11px]">
-                    {!chapters ? (
-                      <button onClick={() => loadChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Load</button>
-                    ) : (
-                      <>
-                        <button onClick={() => selectAllChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All</button>
-                        <button onClick={() => clearSubject(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Clear</button>
-                      </>
-                    )}
+                    <button onClick={() => selectAllChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All</button>
+                    <button onClick={() => clearSubject(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Clear</button>
                   </div>
                 </div>
-                {chapters ? (
-                  chapters.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No {s} questions yet in the bank.</p>
-                  ) : (
-                    <div className="flex max-h-48 flex-wrap gap-1.5 overflow-y-auto pr-1">
-                      {chapters.map((c) => {
-                        const on = selected.includes(c);
-                        return (
-                          <button key={c} onClick={() => toggleChapter(s, c)}
-                            className={`rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
-                            {c}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )
-                ) : (
-                  <p className="text-xs text-muted-foreground">Click <em>Load</em> to see available chapters. Leave empty to include the whole subject.</p>
-                )}
+                <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                  {chapters.map((c) => {
+                    const on = selected.includes(c);
+                    const n = counts[c] ?? 0;
+                    return (
+                      <button key={c} onClick={() => toggleChapter(s, c)}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
+                        <span>{c}</span>
+                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${on ? "bg-black/20" : n > 0 ? "bg-accent/15 text-accent" : "bg-muted/50 text-muted-foreground"}`}>
+                          {n} {n === 1 ? "Q" : "Qs"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
+
         </div>
         <p className="text-xs text-muted-foreground">
           {selectedSubjects.length === 0
