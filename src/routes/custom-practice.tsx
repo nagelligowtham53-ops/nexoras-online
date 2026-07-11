@@ -213,14 +213,36 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { setSubjects({}); setChaptersMap({}); }, [exam, classSel]);
+  const [countsMap, setCountsMap] = useState<Record<string, Record<string, number>>>({});
 
-  async function loadChapters(subject: string) {
-    if (chaptersMap[subject]) return;
-    const levels = classSel === "both" ? undefined : [classSel];
-    const chs = await fetchChapters(subject, levels);
-    setChaptersMap((m) => ({ ...m, [subject]: chs }));
-  }
+  // Load syllabus chapters immediately + fetch DB counts per chapter
+  useEffect(() => {
+    setSubjects({});
+    const map: Record<string, string[]> = {};
+    for (const s of availSubjects) {
+      map[s] = chaptersFor(s as SyllabusSubject, classSel === "both" ? "all" : (String(classSel) as "11" | "12"));
+    }
+    setChaptersMap(map);
+
+    // Fetch counts from DB (best-effort; failures leave counts at 0)
+    (async () => {
+      const levels = classSel === "both" ? undefined : [classSel as 11 | 12];
+      const next: Record<string, Record<string, number>> = {};
+      for (const s of availSubjects) {
+        let q = supabase.from("questions").select("chapter").eq("subject", s).overlaps("exams", [exam]);
+        if (levels) q = q.in("class_level", levels);
+        const { data } = await q.limit(10000);
+        const counts: Record<string, number> = {};
+        (data ?? []).forEach((r) => {
+          const ch = r.chapter as string;
+          counts[ch] = (counts[ch] ?? 0) + 1;
+        });
+        next[s] = counts;
+      }
+      setCountsMap(next);
+    })();
+  }, [exam, classSel, availSubjects]);
+
 
   function toggleChapter(subject: string, chapter: string) {
     setSubjects((prev) => {
