@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { RequireAuth } from "@/components/RequireAuth";
@@ -198,6 +198,7 @@ function CustomPracticePage() {
 /* ============================== SETUP ============================== */
 
 function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (cfg: Config, qs: DbQuestion[]) => void }) {
+  const navigate = useNavigate();
   const [exam, setExam] = useState<ExamCode>("JEE Main");
   const [classSel, setClassSel] = useState<ClassSel>("both");
   const availSubjects = EXAM_SUBJECTS[exam];
@@ -298,6 +299,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
       if (result.totalQuestions === 0) {
         setError("Question bank contains 0 questions. Please import a question bank.");
         setLoading(false);
+        setTimeout(() => navigate({ to: "/admin/questions" }), 600);
         return;
       }
       if (result.questions.length === 0) {
