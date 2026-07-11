@@ -280,6 +280,27 @@ export async function fetchQuestionsWithRelaxation(f: QuestionFilters): Promise<
   return { questions: [], totalQuestions, attempts, relaxedStage: null };
 }
 
+export async function fetchChapterCounts(f: Pick<QuestionFilters, "exams" | "classLevels">): Promise<Record<string, Record<string, number>>> {
+  return runWithRetry("chapter-counts", async () => {
+    const query = applyQuestionFilters(supabase.from("questions").select("subject, chapter"), { ...f, count: 10000 }).limit(10000);
+    const { data, error } = await query;
+    if (error) throw error;
+    const next: Record<string, Record<string, number>> = {};
+    (data ?? []).forEach((row: { subject: string | null; chapter: string | null }) => {
+      const subject = row.subject ?? "General";
+      const chapter = row.chapter ?? "General";
+      next[subject] ??= {};
+      next[subject][chapter] = (next[subject][chapter] ?? 0) + 1;
+    });
+    console.info(`${QUESTION_BANK_LOG} chapter count query result`, {
+      appliedFilters: f,
+      subjectCount: Object.keys(next).length,
+      totalQuestions: Object.values(next).reduce((sum, chapters) => sum + Object.values(chapters).reduce((a, b) => a + b, 0), 0),
+    });
+    return next;
+  });
+}
+
 /** Distinct chapter list for a subject (from the DB, so admin-added chapters flow through). */
 export async function fetchChapters(subject: string, classLevels?: (11 | 12)[]): Promise<string[]> {
   let q = supabase.from("questions").select("chapter").eq("subject", subject);
