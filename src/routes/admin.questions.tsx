@@ -157,6 +157,13 @@ function AdminQuestionsPage() {
           ))}
         </div>
 
+        {totalCount === 0 && (
+          <div className="glass rounded-2xl border border-accent/30 p-5 text-sm">
+            <p className="font-semibold text-accent">No question bank has been imported yet.</p>
+            <p className="mt-1 text-muted-foreground">Import a licensed CSV, Excel, or JSON question bank to enable practice tests.</p>
+          </div>
+        )}
+
         <Tabs defaultValue="import" className="w-full">
           <TabsList className="glass">
             <TabsTrigger value="import"><Upload className="mr-1 h-4 w-4" />Import</TabsTrigger>
