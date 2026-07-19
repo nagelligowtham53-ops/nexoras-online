@@ -1070,9 +1070,9 @@ function ResultView(props: {
   exam: ExamSpec;
   stats: ResultStats;
   reward: { earnedXp: number; newBadges: { name: string; description: string }[] } | null;
-  questions: Question[]; answers: (string | null)[]; onReset: () => void;
+  questions: Question[]; answers: (string | null)[]; gradedMap: Record<string, GradeResult>; onReset: () => void;
 }) {
-  const { exam, stats, reward, questions, answers, onReset } = props;
+  const { exam, stats, reward, questions, answers, gradedMap, onReset } = props;
   return (
     <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 lg:px-8">
       <div className="glass relative overflow-hidden rounded-2xl p-6 text-center">
