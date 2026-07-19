@@ -826,8 +826,8 @@ function ReviewRow({ q, pick, timeSpent, isBk, toggleBookmark, graded }:
             <span className="font-mono mr-2">{String.fromCharCode(65 + idx)}.</span>{o}
           </div>
         ))}
-        {q.solution && <p className="pt-2 text-xs"><strong className="text-accent">Solution:</strong> <span className="text-muted-foreground">{q.solution}</span></p>}
-        {q.explanation && <p className="text-xs"><strong className="text-accent">Concept:</strong> <span className="text-muted-foreground">{q.explanation}</span></p>}
+        {solution && <p className="pt-2 text-xs"><strong className="text-accent">Solution:</strong> <span className="text-muted-foreground">{solution}</span></p>}
+        {explanation && <p className="text-xs"><strong className="text-accent">Concept:</strong> <span className="text-muted-foreground">{explanation}</span></p>}
 
         <div className="flex flex-wrap gap-1.5 pt-2">
           <button onClick={() => askAI("explain")} disabled={aiLoading} className="rounded border border-border px-2 py-0.5 text-[11px] hover:border-accent/40">
