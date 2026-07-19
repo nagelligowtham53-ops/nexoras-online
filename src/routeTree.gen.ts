@@ -29,6 +29,7 @@ import { Route as PptMakerRouteImport } from './routes/ppt-maker'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as MockTestsRouteImport } from './routes/mock-tests'
 import { Route as MockInterviewRouteImport } from './routes/mock-interview'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FutureCareersRouteImport } from './routes/future-careers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -65,7 +66,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
 import { Route as AdminBlogRouteImport } from './routes/admin.blog'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as BlogCategoryCatRouteImport } from './routes/blog.category.$cat'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHooksPublishScheduledRouteImport } from './routes/api/public/hooks/publish-scheduled'
 
 const ToolsRoute = ToolsRouteImport.update({
@@ -166,6 +171,11 @@ const MockTestsRoute = MockTestsRouteImport.update({
 const MockInterviewRoute = MockInterviewRouteImport.update({
   id: '/mock-interview',
   path: '/mock-interview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -348,10 +358,33 @@ const AdminBlogRoute = AdminBlogRouteImport.update({
   path: '/admin/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const BlogCategoryCatRoute = BlogCategoryCatRouteImport.update({
   id: '/category/$cat',
   path: '/category/$cat',
   getParentRoute: () => BlogRoute,
+} as any)
+const Char91DotmcpChar93InvokeToolToolRoute =
+  Char91DotmcpChar93InvokeToolToolRouteImport.update({
+    id: '/.mcp/invoke-tool/$tool',
+    path: '/.mcp/invoke-tool/$tool',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksPublishScheduledRoute =
   ApiPublicHooksPublishScheduledRouteImport.update({
@@ -385,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
@@ -405,6 +439,8 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/blog': typeof AdminBlogRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
@@ -417,6 +453,8 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/blog/category/$cat': typeof BlogCategoryCatRoute
   '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
@@ -445,6 +483,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
@@ -465,6 +504,8 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/blog': typeof AdminBlogRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
@@ -477,6 +518,8 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/blog/category/$cat': typeof BlogCategoryCatRoute
   '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
@@ -506,6 +549,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
+  '/mcp': typeof McpRoute
   '/mock-interview': typeof MockInterviewRoute
   '/mock-tests': typeof MockTestsRoute
   '/payment-success': typeof PaymentSuccessRoute
@@ -526,6 +570,8 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/terms-of-service': typeof TermsOfServiceRoute
   '/tools': typeof ToolsRoute
+  '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/blog': typeof AdminBlogRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
@@ -538,6 +584,8 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
+  '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/blog/category/$cat': typeof BlogCategoryCatRoute
   '/api/public/hooks/publish-scheduled': typeof ApiPublicHooksPublishScheduledRoute
 }
@@ -568,6 +616,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/future-careers'
     | '/login'
+    | '/mcp'
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
@@ -588,6 +637,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/blog'
     | '/admin/questions'
     | '/api/blog-admin'
@@ -600,6 +651,8 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/blog/category/$cat'
     | '/api/public/hooks/publish-scheduled'
   fileRoutesByTo: FileRoutesByTo
@@ -628,6 +681,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/future-careers'
     | '/login'
+    | '/mcp'
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
@@ -648,6 +702,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/blog'
     | '/admin/questions'
     | '/api/blog-admin'
@@ -660,6 +716,8 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/blog/category/$cat'
     | '/api/public/hooks/publish-scheduled'
   id:
@@ -688,6 +746,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/future-careers'
     | '/login'
+    | '/mcp'
     | '/mock-interview'
     | '/mock-tests'
     | '/payment-success'
@@ -708,6 +767,8 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-service'
     | '/tools'
+    | '/.mcp/list-tools'
+    | '/.well-known/oauth-protected-resource'
     | '/admin/blog'
     | '/admin/questions'
     | '/api/blog-admin'
@@ -720,6 +781,8 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
+    | '/.lovable/oauth/consent'
+    | '/.mcp/invoke-tool/$tool'
     | '/blog/category/$cat'
     | '/api/public/hooks/publish-scheduled'
   fileRoutesById: FileRoutesById
@@ -749,6 +812,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   FutureCareersRoute: typeof FutureCareersRoute
   LoginRoute: typeof LoginRoute
+  McpRoute: typeof McpRoute
   MockInterviewRoute: typeof MockInterviewRoute
   MockTestsRoute: typeof MockTestsRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
@@ -769,6 +833,8 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TermsOfServiceRoute: typeof TermsOfServiceRoute
   ToolsRoute: typeof ToolsRoute
+  Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminBlogRoute: typeof AdminBlogRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
@@ -780,6 +846,8 @@ export interface RootRouteChildren {
   ApiStudyRecommendationsRoute: typeof ApiStudyRecommendationsRoute
   CheckoutPlanRoute: typeof CheckoutPlanRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
+  Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicHooksPublishScheduledRoute: typeof ApiPublicHooksPublishScheduledRoute
 }
 
@@ -923,6 +991,13 @@ declare module '@tanstack/react-router' {
       path: '/mock-interview'
       fullPath: '/mock-interview'
       preLoaderRoute: typeof MockInterviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -1177,12 +1252,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminBlogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/category/$cat': {
       id: '/blog/category/$cat'
       path: '/category/$cat'
       fullPath: '/blog/category/$cat'
       preLoaderRoute: typeof BlogCategoryCatRouteImport
       parentRoute: typeof BlogRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/publish-scheduled': {
       id: '/api/public/hooks/publish-scheduled'
@@ -1231,6 +1334,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   FutureCareersRoute: FutureCareersRoute,
   LoginRoute: LoginRoute,
+  McpRoute: McpRoute,
   MockInterviewRoute: MockInterviewRoute,
   MockTestsRoute: MockTestsRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
@@ -1251,6 +1355,9 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TermsOfServiceRoute: TermsOfServiceRoute,
   ToolsRoute: ToolsRoute,
+  Char91DotmcpChar93ListToolsRoute: Char91DotmcpChar93ListToolsRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminBlogRoute: AdminBlogRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
@@ -1262,6 +1369,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiStudyRecommendationsRoute: ApiStudyRecommendationsRoute,
   CheckoutPlanRoute: CheckoutPlanRoute,
   InvoiceIdRoute: InvoiceIdRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
+  Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicHooksPublishScheduledRoute: ApiPublicHooksPublishScheduledRoute,
 }
 export const routeTree = rootRouteImport
