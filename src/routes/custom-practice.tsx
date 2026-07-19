@@ -101,6 +101,20 @@ function CustomPracticePage() {
   }
 
   async function submitExam() {
+    // Server-side grading before we render results. Correct keys never live on the client
+    // until this returns.
+    let fresh: Record<string, GradeResult> = {};
+    try {
+      const pairs = questions
+        .map((q, i) => ({ question: q, userAnswer: answers[i] }))
+        .filter((p) => p.userAnswer !== null);
+      if (pairs.length > 0) fresh = await gradeAnswers(pairs);
+    } catch (e) {
+      console.error("[custom-practice] gradeAnswers failed", e);
+    }
+    setGradedMap(fresh);
+    const isOk = (q: DbQuestion, pick: number | null) => pick !== null && (fresh[q.id]?.is_correct ?? false);
+
     setPhase("result");
     // Persist answers + wrong_questions
     if (!sessionId) return;
@@ -111,7 +125,7 @@ function CustomPracticePage() {
     const rows = questions.map((q, i) => {
       const pick = answers[i];
       const isSkip = pick === null;
-      const ok = !isSkip && isCorrect(q, pick);
+      const ok = isOk(q, pick);
       if (isSkip) skipped++;
       else if (ok) { correct++; score += Number(q.marks); }
       else { wrong++; score -= Number(q.negative_marks); }
@@ -134,7 +148,7 @@ function CustomPracticePage() {
       score, time_taken_seconds: elapsed, completed_at: new Date().toISOString(),
     }).eq("id", sessionId);
     // Wrong questions upsert
-    const wrongIds = questions.filter((q, i) => answers[i] !== null && !isCorrect(q, answers[i])).map((q) => q.id);
+    const wrongIds = questions.filter((q, i) => answers[i] !== null && !isOk(q, answers[i])).map((q) => q.id);
     if (wrongIds.length) {
       // upsert with increment: use RPC or read-then-write; simple approach: fetch existing, upsert new
       const { data: existing } = await supabase.from("wrong_questions").select("question_id, wrong_count").eq("user_id", uid).in("question_id", wrongIds);
