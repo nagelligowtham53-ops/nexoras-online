@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
-import { fetchQuestions, type DbQuestion, type Difficulty as DbDifficulty } from "@/lib/questions";
+import { fetchQuestions, gradeAnswers, type DbQuestion, type Difficulty as DbDifficulty, type GradeResult } from "@/lib/questions";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles,
@@ -35,7 +35,10 @@ type Question = {
   type: "mcq" | "numerical";
   q: string;
   options?: string[];
-  correct: number;
+  /** DB question id — when present, scoring goes through gradeAnswers server RPC. */
+  dbId?: string;
+  /** Only set for the offline demo fallback; DB-sourced questions never carry the key. */
+  correct?: number;
   explanation?: string;
 };
 
@@ -167,6 +170,21 @@ function MockTestsPage() {
   const [reward, setReward] = useState<{ earnedXp: number; newBadges: { name: string; description: string }[] } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [gradedMap, setGradedMap] = useState<Record<string, GradeResult>>({});
+
+  // Score one question against either the server-graded map (DB questions) or the
+  // demo answer key baked into offline fallback questions. Never trusts the browser
+  // with correct keys for DB-backed content.
+  function scoreQuestion(q: Question, ans: string | null): boolean {
+    if (ans === null || ans === "") return false;
+    if (q.dbId) {
+      const g = gradedMap[q.dbId];
+      return g ? g.is_correct : false;
+    }
+    if (q.correct === undefined) return false;
+    if (q.type === "mcq") return Number(ans) === q.correct;
+    return Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+  }
 
   const startedAtRef = useRef<number>(0);
   const lastTickRef = useRef<number>(0);
@@ -245,18 +263,15 @@ function MockTestsPage() {
     return ["Hard"];
   }
   function mapDbToQuestion(r: DbQuestion, displaySubject: string): Question | null {
-    if (r.question_type === "single_correct" && r.options && r.correct_answer.type === "single") {
+    if (r.question_type === "single_correct" && r.options) {
       return {
         subject: displaySubject, type: "mcq", q: r.question_text,
-        options: r.options, correct: r.correct_answer.value,
-        explanation: r.solution ?? r.explanation ?? undefined,
+        options: r.options, dbId: r.id,
       };
     }
-    if ((r.question_type === "integer" || r.question_type === "numerical") && r.correct_answer.type === "numeric") {
+    if (r.question_type === "integer" || r.question_type === "numerical") {
       return {
-        subject: displaySubject, type: "numerical", q: r.question_text,
-        correct: r.correct_answer.value,
-        explanation: r.solution ?? r.explanation ?? undefined,
+        subject: displaySubject, type: "numerical", q: r.question_text, dbId: r.id,
       };
     }
     return null;
@@ -404,6 +419,22 @@ function MockTestsPage() {
     if (phase !== "running" && phase !== "summary") return;
     exitFullscreen();
     const duration = Math.round((Date.now() - startedAtRef.current) / 1000);
+
+    // Server-side grading for every DB-backed answered question. The client never
+    // sees the correct key until after submission.
+    const toGrade: { question: DbQuestion; userAnswer: unknown }[] = [];
+    questions.forEach((q, i) => {
+      const ans = answers[i];
+      if (!q.dbId || ans === null || ans === "") return;
+      const stub = { id: q.dbId, question_type: q.type === "mcq" ? "single_correct" : "numerical" } as unknown as DbQuestion;
+      toGrade.push({ question: stub, userAnswer: q.type === "mcq" ? Number(ans) : parseFloat(ans) });
+    });
+    let freshGraded: Record<string, GradeResult> = {};
+    try {
+      if (toGrade.length > 0) freshGraded = await gradeAnswers(toGrade);
+    } catch (e) { console.error("[mock-tests] gradeAnswers failed", e); }
+    setGradedMap(freshGraded);
+
     let correct = 0, wrong = 0, attempted = 0;
     const subMap = new Map<string, { correct: number; total: number }>();
     questions.forEach((q, i) => {
@@ -412,9 +443,13 @@ function MockTestsPage() {
       const ans = answers[i];
       if (ans !== null && ans !== "") {
         attempted += 1;
-        const isCorrect = q.type === "mcq"
-          ? Number(ans) === q.correct
-          : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+        let isCorrect = false;
+        if (q.dbId) isCorrect = freshGraded[q.dbId]?.is_correct ?? false;
+        else if (q.correct !== undefined) {
+          isCorrect = q.type === "mcq"
+            ? Number(ans) === q.correct
+            : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+        }
         if (isCorrect) { correct += 1; sub.correct += 1; } else wrong += 1;
       }
       subMap.set(q.subject, sub);
@@ -443,7 +478,7 @@ function MockTestsPage() {
   function reset() {
     setPhase("select");
     setQuestions([]); setAnswers([]); setMarked([]); setVisited([]); setTimePerQ([]);
-    setCurrent(0); setError(null); setReward(null);
+    setCurrent(0); setError(null); setReward(null); setGradedMap({});
   }
 
   // ---- Status counts
@@ -480,9 +515,7 @@ function MockTestsPage() {
       const ans = answers[i];
       if (ans !== null && ans !== "") {
         attempted += 1;
-        const isCorrect = q.type === "mcq"
-          ? Number(ans) === q.correct
-          : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+        const isCorrect = scoreQuestion(q, ans);
         if (isCorrect) { correct += 1; cur.correct += 1; } else wrong += 1;
       }
       subMap.set(q.subject, cur);
@@ -640,7 +673,7 @@ function MockTestsPage() {
 
 
       {phase === "result" && stats && (
-        <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} onReset={reset} />
+        <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} gradedMap={gradedMap} onReset={reset} />
       )}
     </PageShell>
   );
@@ -1037,9 +1070,9 @@ function ResultView(props: {
   exam: ExamSpec;
   stats: ResultStats;
   reward: { earnedXp: number; newBadges: { name: string; description: string }[] } | null;
-  questions: Question[]; answers: (string | null)[]; onReset: () => void;
+  questions: Question[]; answers: (string | null)[]; gradedMap: Record<string, GradeResult>; onReset: () => void;
 }) {
-  const { exam, stats, reward, questions, answers, onReset } = props;
+  const { exam, stats, reward, questions, answers, gradedMap, onReset } = props;
   return (
     <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 lg:px-8">
       <div className="glass relative overflow-hidden rounded-2xl p-6 text-center">
@@ -1144,9 +1177,27 @@ function ResultView(props: {
         <div className="mt-4 space-y-3">
           {questions.map((q, i) => {
             const ans = answers[i];
-            const isCorrect = ans !== null && ans !== "" && (q.type === "mcq"
-              ? Number(ans) === q.correct
-              : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01);
+            const graded = q.dbId ? gradedMap[q.dbId] : null;
+            let isCorrect = false;
+            if (ans !== null && ans !== "") {
+              if (graded) isCorrect = graded.is_correct;
+              else if (q.correct !== undefined) {
+                isCorrect = q.type === "mcq"
+                  ? Number(ans) === q.correct
+                  : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+              }
+            }
+            let correctLabel: string | null = null;
+            if (graded) {
+              const ca = graded.correct_answer;
+              if (ca.type === "single") correctLabel = q.options ? q.options[ca.value] : String(ca.value);
+              else if (ca.type === "numeric") correctLabel = String(ca.value);
+              else if (ca.type === "multiple") correctLabel = ca.values.join(", ");
+              else if (ca.type === "text") correctLabel = ca.value;
+            } else if (q.correct !== undefined) {
+              correctLabel = q.type === "mcq" && q.options ? q.options[q.correct] : String(q.correct);
+            }
+            const explanation = graded?.explanation ?? graded?.solution ?? q.explanation;
             return (
               <div key={i} className="rounded-lg border border-border bg-background/40 p-3 text-sm">
                 <div className="flex items-start gap-2">
@@ -1156,10 +1207,12 @@ function ResultView(props: {
                     {isCorrect ? "✓" : ans ? "✗" : "—"}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Correct: {q.type === "mcq" && q.options ? q.options[q.correct as number] : String(q.correct)}
-                  {q.explanation && <> · {q.explanation}</>}
-                </p>
+                {(correctLabel || explanation) && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {correctLabel && <>Correct: {correctLabel}</>}
+                    {explanation && <> · {explanation}</>}
+                  </p>
+                )}
               </div>
             );
           })}

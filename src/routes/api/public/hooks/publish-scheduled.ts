@@ -124,10 +124,31 @@ Rules: 900-1300 words, only block types p/h2/h3/ul/quote, ul blocks use items[],
   return { drafted: data };
 }
 
+function authorize(request: Request): Response | null {
+  const secret = process.env.CRON_SECRET;
+  if (!secret) {
+    // Fail closed: if the secret isn't configured, refuse to run the hook so an
+    // unauthenticated caller can't kick off AI generation or bulk publishes.
+    return new Response("Cron secret not configured", { status: 503 });
+  }
+  const provided =
+    request.headers.get("x-cron-secret") ??
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
+    new URL(request.url).searchParams.get("secret");
+  if (!provided || provided.length !== secret.length) return new Response("Unauthorized", { status: 401 });
+  // Constant-time compare
+  let mismatch = 0;
+  for (let i = 0; i < provided.length; i++) mismatch |= provided.charCodeAt(i) ^ secret.charCodeAt(i);
+  if (mismatch !== 0) return new Response("Unauthorized", { status: 401 });
+  return null;
+}
+
 export const Route = createFileRoute("/api/public/hooks/publish-scheduled")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const denied = authorize(request);
+        if (denied) return denied;
         try {
           const published = await publishDue();
           const drafted = await generateWeeklyDraft();
@@ -139,7 +160,9 @@ export const Route = createFileRoute("/api/public/hooks/publish-scheduled")({
           );
         }
       },
-      GET: async () => {
+      GET: async ({ request }) => {
+        const denied = authorize(request);
+        if (denied) return denied;
         try {
           const published = await publishDue();
           return Response.json({ ok: true, published });

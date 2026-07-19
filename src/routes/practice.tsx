@@ -6,7 +6,7 @@ import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
-import { fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
+import { fetchQuestionsWithRelaxation, gradeAnswers, type DbQuestion, type Difficulty, type GradeResult } from "@/lib/questions";
 import { Atom, FlaskConical, Sigma, Dna, CheckCircle2, XCircle, Timer, ArrowRight, Sparkles, Bookmark, BookmarkCheck, Loader2, Database } from "lucide-react";
 
 export const Route = createFileRoute("/practice")({
@@ -39,6 +39,8 @@ function PracticePage() {
   const [error, setError] = useState<string | null>(null);
   const [idx, setIdx] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
+  const [grading, setGrading] = useState(false);
+  const [graded, setGraded] = useState<GradeResult | null>(null);
   const [score, setScore] = useState({ correct: 0, total: 0 });
   const [seconds, setSeconds] = useState(0);
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
@@ -70,7 +72,7 @@ function PracticePage() {
         appliedFilters: { subject, level },
         attempts: result.attempts,
       });
-      setPool(qs); setIdx(0); setPicked(null);
+      setPool(qs); setIdx(0); setPicked(null); setGraded(null);
       if (result.totalQuestions === 0 || qs.length === 0) setError("We could not prepare practice questions right now. Please try again in a moment.");
     } catch (e) {
       console.error("[practice] Failed to load questions", e);
@@ -81,14 +83,26 @@ function PracticePage() {
 
   const q = pool[idx % (pool.length || 1)];
 
-  function pick(i: number) {
-    if (picked !== null || !q) return;
+  async function pick(i: number) {
+    if (picked !== null || !q || grading) return;
     setPicked(i);
-    setScore((s) => ({ correct: s.correct + (isCorrect(q, i) ? 1 : 0), total: s.total + 1 }));
+    setGrading(true);
+    try {
+      const map = await gradeAnswers([{ question: q, userAnswer: i }]);
+      const g = map[q.id] ?? null;
+      setGraded(g);
+      setScore((s) => ({ correct: s.correct + (g?.is_correct ? 1 : 0), total: s.total + 1 }));
+    } catch (err) {
+      console.error("[practice] grade failed", err);
+      setGraded(null);
+      setScore((s) => ({ correct: s.correct, total: s.total + 1 }));
+    } finally {
+      setGrading(false);
+    }
   }
   function next() {
     if (pool.length === 0) return;
-    setPicked(null);
+    setPicked(null); setGraded(null);
     setIdx((i) => (i + 1) % pool.length);
   }
 
@@ -110,7 +124,7 @@ function PracticePage() {
   const sec = (seconds % 60).toString().padStart(2, "0");
   const accuracy = score.total ? Math.round((score.correct / score.total) * 100) : 0;
   const Icon = q ? (SUBJECT_ICONS[q.subject] ?? Database) : Database;
-  const correctIdx = q && q.correct_answer.type === "single" ? q.correct_answer.value : -1;
+  const correctIdx = graded && graded.correct_answer.type === "single" ? graded.correct_answer.value : -1;
 
   return (
     <PageShell>
@@ -208,11 +222,11 @@ function PracticePage() {
               })}
             </div>
 
-            {picked !== null && (q.explanation || q.solution) && (
+            {picked !== null && graded && (graded.explanation || graded.solution) && (
               <div className="mt-4 rounded-xl border border-border bg-background/40 p-4 text-sm">
                 <p className="font-semibold text-accent">Explanation</p>
-                {q.solution && <p className="mt-1 text-muted-foreground whitespace-pre-wrap">{q.solution}</p>}
-                {q.explanation && <p className="mt-1 text-xs text-muted-foreground">{q.explanation}</p>}
+                {graded.solution && <p className="mt-1 text-muted-foreground whitespace-pre-wrap">{graded.solution}</p>}
+                {graded.explanation && <p className="mt-1 text-xs text-muted-foreground">{graded.explanation}</p>}
               </div>
             )}
 

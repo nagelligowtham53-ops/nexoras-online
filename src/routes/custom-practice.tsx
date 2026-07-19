@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
-import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty, type QuestionFilters } from "@/lib/questions";
+import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, gradeAnswers, type DbQuestion, type Difficulty, type GradeResult, type QuestionFilters } from "@/lib/questions";
 import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
@@ -68,6 +68,7 @@ function CustomPracticePage() {
   const [perQTime, setPerQTime] = useState<number[]>([]);
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [gradedMap, setGradedMap] = useState<Record<string, GradeResult>>({});
 
   useEffect(() => {
     (async () => {
@@ -100,6 +101,20 @@ function CustomPracticePage() {
   }
 
   async function submitExam() {
+    // Server-side grading before we render results. Correct keys never live on the client
+    // until this returns.
+    let fresh: Record<string, GradeResult> = {};
+    try {
+      const pairs = questions
+        .map((q, i) => ({ question: q, userAnswer: answers[i] }))
+        .filter((p) => p.userAnswer !== null);
+      if (pairs.length > 0) fresh = await gradeAnswers(pairs);
+    } catch (e) {
+      console.error("[custom-practice] gradeAnswers failed", e);
+    }
+    setGradedMap(fresh);
+    const isOk = (q: DbQuestion, pick: number | null) => pick !== null && (fresh[q.id]?.is_correct ?? false);
+
     setPhase("result");
     // Persist answers + wrong_questions
     if (!sessionId) return;
@@ -110,7 +125,7 @@ function CustomPracticePage() {
     const rows = questions.map((q, i) => {
       const pick = answers[i];
       const isSkip = pick === null;
-      const ok = !isSkip && isCorrect(q, pick);
+      const ok = isOk(q, pick);
       if (isSkip) skipped++;
       else if (ok) { correct++; score += Number(q.marks); }
       else { wrong++; score -= Number(q.negative_marks); }
@@ -133,7 +148,7 @@ function CustomPracticePage() {
       score, time_taken_seconds: elapsed, completed_at: new Date().toISOString(),
     }).eq("id", sessionId);
     // Wrong questions upsert
-    const wrongIds = questions.filter((q, i) => answers[i] !== null && !isCorrect(q, answers[i])).map((q) => q.id);
+    const wrongIds = questions.filter((q, i) => answers[i] !== null && !isOk(q, answers[i])).map((q) => q.id);
     if (wrongIds.length) {
       // upsert with increment: use RPC or read-then-write; simple approach: fetch existing, upsert new
       const { data: existing } = await supabase.from("wrong_questions").select("question_id, wrong_count").eq("user_id", uid).in("question_id", wrongIds);
@@ -190,7 +205,7 @@ function CustomPracticePage() {
           config={config} questions={questions} answers={answers}
           perQTime={perQTime} elapsed={elapsed}
           bookmarks={bookmarks} toggleBookmark={toggleBookmark}
-          onReset={reset}
+          gradedMap={gradedMap} onReset={reset}
         />
       )}
     </PageShell>
@@ -635,7 +650,7 @@ function Legend({ dot, label }: { dot: string; label: string }) {
 /* ============================== RESULT ============================== */
 
 function Result({
-  config, questions, answers, perQTime, elapsed, bookmarks, toggleBookmark, onReset,
+  config, questions, answers, perQTime, elapsed, bookmarks, toggleBookmark, gradedMap, onReset,
 }: {
   config: Config;
   questions: DbQuestion[];
@@ -644,6 +659,7 @@ function Result({
   elapsed: number;
   bookmarks: Set<string>;
   toggleBookmark: (q: DbQuestion) => void;
+  gradedMap: Record<string, GradeResult>;
   onReset: () => void;
 }) {
   const stats = useMemo(() => {
@@ -657,7 +673,7 @@ function Result({
       const pick = answers[i];
       if (pick !== null) {
         attempted += 1;
-        if (isCorrect(q, pick)) { correct += 1; row.correct += 1; score += Number(q.marks); }
+        if (gradedMap[q.id]?.is_correct) { correct += 1; row.correct += 1; score += Number(q.marks); }
         else { wrong += 1; score -= Number(q.negative_marks); }
       }
       byChapter.set(key, row);
@@ -669,7 +685,7 @@ function Result({
     const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
     const avgTime = attempted ? Math.round(elapsed / attempted) : 0;
     return { correct, wrong, attempted, total: questions.length, accuracy, weak, strong, chapters, score, maxScore, avgTime };
-  }, [questions, answers, elapsed]);
+  }, [questions, answers, elapsed, gradedMap]);
 
   const [reco, setReco] = useState<{ summary?: string; revisionPlan?: { day: number; focus: string; tasks: string[] }[]; practiceTips?: string[] } | null>(null);
   const [recoLoading, setRecoLoading] = useState(false);
@@ -752,7 +768,7 @@ function Result({
       <div className="glass rounded-2xl p-5">
         <h3 className="mb-3 text-sm font-semibold">Review answers</h3>
         <div className="space-y-3">
-          {questions.map((q, i) => <ReviewRow key={q.id} q={q} pick={answers[i]} timeSpent={perQTime[i] ?? 0} isBk={bookmarks.has(q.id)} toggleBookmark={toggleBookmark} />)}
+          {questions.map((q, i) => <ReviewRow key={q.id} q={q} pick={answers[i]} timeSpent={perQTime[i] ?? 0} isBk={bookmarks.has(q.id)} toggleBookmark={toggleBookmark} graded={gradedMap[q.id] ?? null} />)}
         </div>
       </div>
 
@@ -764,10 +780,12 @@ function Result({
   );
 }
 
-function ReviewRow({ q, pick, timeSpent, isBk, toggleBookmark }:
-  { q: DbQuestion; pick: number | null; timeSpent: number; isBk: boolean; toggleBookmark: (q: DbQuestion) => void }) {
-  const correctIdx = q.correct_answer.type === "single" ? q.correct_answer.value : -1;
-  const correct = pick !== null && isCorrect(q, pick);
+function ReviewRow({ q, pick, timeSpent, isBk, toggleBookmark, graded }:
+  { q: DbQuestion; pick: number | null; timeSpent: number; isBk: boolean; toggleBookmark: (q: DbQuestion) => void; graded: GradeResult | null }) {
+  const correctIdx = graded && graded.correct_answer.type === "single" ? graded.correct_answer.value : -1;
+  const correct = pick !== null && !!graded?.is_correct;
+  const solution = graded?.solution ?? null;
+  const explanation = graded?.explanation ?? null;
   const [aiText, setAiText] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
 
@@ -808,8 +826,8 @@ function ReviewRow({ q, pick, timeSpent, isBk, toggleBookmark }:
             <span className="font-mono mr-2">{String.fromCharCode(65 + idx)}.</span>{o}
           </div>
         ))}
-        {q.solution && <p className="pt-2 text-xs"><strong className="text-accent">Solution:</strong> <span className="text-muted-foreground">{q.solution}</span></p>}
-        {q.explanation && <p className="text-xs"><strong className="text-accent">Concept:</strong> <span className="text-muted-foreground">{q.explanation}</span></p>}
+        {solution && <p className="pt-2 text-xs"><strong className="text-accent">Solution:</strong> <span className="text-muted-foreground">{solution}</span></p>}
+        {explanation && <p className="text-xs"><strong className="text-accent">Concept:</strong> <span className="text-muted-foreground">{explanation}</span></p>}
 
         <div className="flex flex-wrap gap-1.5 pt-2">
           <button onClick={() => askAI("explain")} disabled={aiLoading} className="rounded border border-border px-2 py-0.5 text-[11px] hover:border-accent/40">

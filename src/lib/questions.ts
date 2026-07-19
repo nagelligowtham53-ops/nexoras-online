@@ -34,9 +34,10 @@ export type DbQuestion = {
   time_estimate_seconds: number;
   question_text: string;
   options: string[] | null;
-  correct_answer: CorrectAnswer;
-  solution: string | null;
-  explanation: string | null;
+  /** Server-graded fields — undefined on client fetch, populated only via gradeAnswers(). */
+  correct_answer?: CorrectAnswer;
+  solution?: string | null;
+  explanation?: string | null;
   concepts: string[];
   tags: string[];
   external_id: string | null;
@@ -220,9 +221,14 @@ async function runWithRetry<T>(label: string, action: () => Promise<T>, retries 
   throw lastError;
 }
 
+// The client reads from a sanitized VIEW that omits correct_answer, solution,
+// and explanation. Answers only come back from the grade_answers RPC after
+// the user has committed an answer.
+const QUESTIONS_VIEW = "questions_public" as never;
+
 export async function countQuestionBank(): Promise<number> {
   return runWithRetry("total-count", async () => {
-    const { count, error } = await supabase.from("questions").select("id", { count: "exact", head: true });
+    const { count, error } = await supabase.from(QUESTIONS_VIEW).select("id", { count: "exact", head: true });
     if (error) throw error;
     return count ?? 0;
   });
@@ -233,7 +239,7 @@ export async function fetchQuestions(f: QuestionFilters): Promise<DbQuestion[]> 
   // Fetch up to 5x requested for randomness, then shuffle & slice.
   const cap = Math.max(f.count * 5, 100);
   const rows = await runWithRetry("filtered-fetch", async () => {
-    const query = applyQuestionFilters(supabase.from("questions").select("*"), f).limit(cap);
+    const query = applyQuestionFilters(supabase.from(QUESTIONS_VIEW).select("*"), f).limit(cap);
     const { data, error } = await query;
     if (error) throw error;
     return ((data ?? []) as Record<string, unknown>[]).map(normalizeQuestionRow);
@@ -283,7 +289,7 @@ export async function fetchQuestionsWithRelaxation(f: QuestionFilters): Promise<
 
 export async function fetchChapterCounts(f: Pick<QuestionFilters, "exams" | "classLevels">): Promise<Record<string, Record<string, number>>> {
   return runWithRetry("chapter-counts", async () => {
-    const query = applyQuestionFilters(supabase.from("questions").select("subject, chapter"), { ...f, count: 10000 }).limit(10000);
+    const query = applyQuestionFilters(supabase.from(QUESTIONS_VIEW).select("subject, chapter"), { ...f, count: 10000 }).limit(10000);
     const { data, error } = await query;
     if (error) throw error;
     const next: Record<string, Record<string, number>> = {};
@@ -304,20 +310,66 @@ export async function fetchChapterCounts(f: Pick<QuestionFilters, "exams" | "cla
 
 /** Distinct chapter list for a subject (from the DB, so admin-added chapters flow through). */
 export async function fetchChapters(subject: string, classLevels?: (11 | 12)[]): Promise<string[]> {
-  let q = supabase.from("questions").select("chapter").eq("subject", subject);
+  let q = supabase.from(QUESTIONS_VIEW).select("chapter").eq("subject", subject);
   if (classLevels?.length) q = q.in("class_level", classLevels);
   const { data, error } = await q.limit(2000);
   if (error) throw error;
-  return [...new Set((data ?? []).map((r) => r.chapter as string))].sort();
+  return [...new Set((data ?? []).map((r: { chapter: string | null }) => r.chapter as string))].sort();
 }
 
 export async function fetchSubjectStats(): Promise<{ subject: string; count: number }[]> {
   // Approximation: pull subjects then group
-  const { data, error } = await supabase.from("questions").select("subject").limit(10000);
+  const { data, error } = await supabase.from(QUESTIONS_VIEW).select("subject").limit(10000);
   if (error) throw error;
   const map = new Map<string, number>();
-  (data ?? []).forEach((r) => map.set(r.subject as string, (map.get(r.subject as string) ?? 0) + 1));
+  (data ?? []).forEach((r: { subject: string | null }) => map.set(r.subject as string, (map.get(r.subject as string) ?? 0) + 1));
   return [...map.entries()].map(([subject, count]) => ({ subject, count })).sort((a, b) => b.count - a.count);
+}
+
+/**
+ * Grade a batch of answers server-side. Returns per-question grading including
+ * correct_answer, solution, and explanation — these are only exposed after
+ * the user has submitted their answer.
+ */
+export type GradeResult = {
+  question_id: string;
+  is_correct: boolean;
+  correct_answer: CorrectAnswer;
+  solution: string | null;
+  explanation: string | null;
+};
+
+function normalizeUserAnswer(q: DbQuestion, userAnswer: unknown): unknown {
+  if (userAnswer === null || userAnswer === undefined) return null;
+  if (q.question_type === "multiple_correct") {
+    const values = Array.isArray(userAnswer) ? (userAnswer as unknown[]).map(String) : [];
+    return { values };
+  }
+  if (q.question_type === "numerical" || q.question_type === "integer") {
+    const n = Number(userAnswer);
+    if (Number.isNaN(n)) return null;
+    return { value: n };
+  }
+  // single_correct / text-like
+  if (typeof userAnswer === "number") return { value: String(userAnswer) };
+  return { value: String(userAnswer) };
+}
+
+export async function gradeAnswers(
+  pairs: { question: DbQuestion; userAnswer: unknown }[],
+): Promise<Record<string, GradeResult>> {
+  if (pairs.length === 0) return {};
+  const q_ids = pairs.map((p) => p.question.id);
+  const user_answers = pairs.map((p) => normalizeUserAnswer(p.question, p.userAnswer));
+  const { data, error } = await supabase.rpc("grade_answers" as never, {
+    q_ids,
+    user_answers,
+  } as never);
+  if (error) throw error;
+  const rows = (data ?? []) as GradeResult[];
+  const map: Record<string, GradeResult> = {};
+  for (const row of rows) map[row.question_id] = row;
+  return map;
 }
 
 export function isCorrect(q: DbQuestion, userAnswer: unknown): boolean {
