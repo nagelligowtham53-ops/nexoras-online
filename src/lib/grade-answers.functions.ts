@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export type GradeResultRow = {
   question_id: string;
   is_correct: boolean;
-  correct_answer: unknown;
+  correct_answer: Record<string, unknown> | null;
   solution: string | null;
   explanation: string | null;
 };
