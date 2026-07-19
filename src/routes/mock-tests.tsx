@@ -659,7 +659,6 @@ function InstructionsView(props: {
   const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, availableCount, checkingAvailability, onBack, onBegin } = props;
   const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
   const minutes = testType === "chapter" ? 30 : exam.duration_min;
-  const noQuestions = availableCount === 0;
   const canBegin = agreed && !checkingAvailability;
 
 
