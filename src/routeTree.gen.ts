@@ -32,6 +32,7 @@ import { Route as MockInterviewRouteImport } from './routes/mock-interview'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FutureCareersRouteImport } from './routes/future-careers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -178,6 +179,11 @@ const FutureCareersRoute = FutureCareersRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
@@ -361,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
@@ -476,6 +484,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/disclaimer'
     | '/engineering-roadmaps'
+    | '/faq'
     | '/forgot-password'
     | '/future-careers'
     | '/login'
@@ -592,6 +602,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/disclaimer'
     | '/engineering-roadmaps'
+    | '/faq'
     | '/forgot-password'
     | '/future-careers'
     | '/login'
@@ -649,6 +660,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/disclaimer'
     | '/engineering-roadmaps'
+    | '/faq'
     | '/forgot-password'
     | '/future-careers'
     | '/login'
@@ -707,6 +719,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DisclaimerRoute: typeof DisclaimerRoute
   EngineeringRoadmapsRoute: typeof EngineeringRoadmapsRoute
+  FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   FutureCareersRoute: typeof FutureCareersRoute
   LoginRoute: typeof LoginRoute
@@ -905,6 +918,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/engineering-roadmaps': {
@@ -1165,6 +1185,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DisclaimerRoute: DisclaimerRoute,
   EngineeringRoadmapsRoute: EngineeringRoadmapsRoute,
+  FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   FutureCareersRoute: FutureCareersRoute,
   LoginRoute: LoginRoute,
