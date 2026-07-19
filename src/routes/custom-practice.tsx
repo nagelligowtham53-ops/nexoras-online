@@ -780,10 +780,12 @@ function Result({
   );
 }
 
-function ReviewRow({ q, pick, timeSpent, isBk, toggleBookmark }:
-  { q: DbQuestion; pick: number | null; timeSpent: number; isBk: boolean; toggleBookmark: (q: DbQuestion) => void }) {
-  const correctIdx = q.correct_answer.type === "single" ? q.correct_answer.value : -1;
-  const correct = pick !== null && isCorrect(q, pick);
+function ReviewRow({ q, pick, timeSpent, isBk, toggleBookmark, graded }:
+  { q: DbQuestion; pick: number | null; timeSpent: number; isBk: boolean; toggleBookmark: (q: DbQuestion) => void; graded: GradeResult | null }) {
+  const correctIdx = graded && graded.correct_answer.type === "single" ? graded.correct_answer.value : -1;
+  const correct = pick !== null && !!graded?.is_correct;
+  const solution = graded?.solution ?? null;
+  const explanation = graded?.explanation ?? null;
   const [aiText, setAiText] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
 
