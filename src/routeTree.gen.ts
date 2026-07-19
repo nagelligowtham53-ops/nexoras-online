@@ -37,6 +37,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomPracticeRouteImport } from './routes/custom-practice'
 import { Route as CrackJeeRouteImport } from './routes/crack-jee'
 import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompetitiveExamsRouteImport } from './routes/competitive-exams'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -203,6 +204,11 @@ const CoursesRoute = CoursesRouteImport.update({
   path: '/courses',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CookiePolicyRoute = CookiePolicyRouteImport.update({
+  id: '/cookie-policy',
+  path: '/cookie-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -342,6 +348,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
@@ -397,6 +404,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
@@ -453,6 +461,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
@@ -510,6 +519,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/competitive-exams'
     | '/contact'
+    | '/cookie-policy'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
@@ -565,6 +575,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/competitive-exams'
     | '/contact'
+    | '/cookie-policy'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
@@ -620,6 +631,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/competitive-exams'
     | '/contact'
+    | '/cookie-policy'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
@@ -676,6 +688,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   CompetitiveExamsRoute: typeof CompetitiveExamsRoute
   ContactRoute: typeof ContactRoute
+  CookiePolicyRoute: typeof CookiePolicyRoute
   CoursesRoute: typeof CoursesRoute
   CrackJeeRoute: typeof CrackJeeRoute
   CustomPracticeRoute: typeof CustomPracticeRoute
@@ -916,6 +929,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cookie-policy': {
+      id: '/cookie-policy'
+      path: '/cookie-policy'
+      fullPath: '/cookie-policy'
+      preLoaderRoute: typeof CookiePolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -1118,6 +1138,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   CompetitiveExamsRoute: CompetitiveExamsRoute,
   ContactRoute: ContactRoute,
+  CookiePolicyRoute: CookiePolicyRoute,
   CoursesRoute: CoursesRoute,
   CrackJeeRoute: CrackJeeRoute,
   CustomPracticeRoute: CustomPracticeRoute,
