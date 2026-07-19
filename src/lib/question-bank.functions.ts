@@ -1,22 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const OWNER_ADMIN_EMAILS = new Set(["nagelligowtham53@gmail.com"]);
-
-export const ensureOwnerAdmin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const email = String((context.claims as { email?: string | null }).email ?? "").toLowerCase();
-    if (!OWNER_ADMIN_EMAILS.has(email)) return { granted: false };
-
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
-      .from("user_roles")
-      .upsert({ user_id: context.userId, role: "admin" }, { onConflict: "user_id,role" });
-    if (error) throw new Error(error.message);
-    return { granted: true };
-  });
-
 export const ensureQuestionBankSeeded = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {

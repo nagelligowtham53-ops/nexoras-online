@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -8,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { ensureOwnerAdmin, ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
+import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { isAdmin, fetchSubjectStats } from "@/lib/questions";
 import {
   AlertCircle, CheckCircle2, Upload, Database, Loader2, FileJson,
@@ -95,8 +94,6 @@ function normKey(k: string): string {
 
 /* ------------- Component ------------- */
 function AdminQuestionsPage() {
-  const ensureAdmin = useServerFn(ensureOwnerAdmin);
-  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const [checking, setChecking] = useState(true);
   const [admin, setAdmin] = useState(false);
   const [stats, setStats] = useState<{ subject: string; count: number }[]>([]);
@@ -104,16 +101,15 @@ function AdminQuestionsPage() {
 
   useEffect(() => {
     (async () => {
-      await ensureAdmin().catch((error) => console.error("[admin/questions] Admin bootstrap failed", error));
       const ok = await isAdmin();
       setAdmin(ok);
       setChecking(false);
       if (ok) refreshStats();
     })();
-  }, [ensureAdmin]);
+  }, []);
 
   async function refreshStats() {
-    await ensureSeed().catch((error) => console.error("[admin/questions] Question bank seed check failed", error));
+    await ensureQuestionBankSeeded().catch((error) => console.error("[admin/questions] Question bank seed check failed", error));
     const s = await fetchSubjectStats();
     setStats(s);
     const { count } = await supabase.from("questions").select("*", { count: "exact", head: true });
