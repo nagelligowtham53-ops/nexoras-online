@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureOwnerAdmin, ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { isAdmin, fetchSubjectStats } from "@/lib/questions";
 import {
   AlertCircle, CheckCircle2, Upload, Database, Loader2, FileJson,
@@ -93,6 +95,8 @@ function normKey(k: string): string {
 
 /* ------------- Component ------------- */
 function AdminQuestionsPage() {
+  const ensureAdmin = useServerFn(ensureOwnerAdmin);
+  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const [checking, setChecking] = useState(true);
   const [admin, setAdmin] = useState(false);
   const [stats, setStats] = useState<{ subject: string; count: number }[]>([]);
@@ -100,27 +104,20 @@ function AdminQuestionsPage() {
 
   useEffect(() => {
     (async () => {
+      await ensureAdmin().catch((error) => console.error("[admin/questions] Admin bootstrap failed", error));
       const ok = await isAdmin();
       setAdmin(ok);
       setChecking(false);
       if (ok) refreshStats();
     })();
-  }, []);
+  }, [ensureAdmin]);
 
   async function refreshStats() {
+    await ensureSeed().catch((error) => console.error("[admin/questions] Question bank seed check failed", error));
     const s = await fetchSubjectStats();
     setStats(s);
     const { count } = await supabase.from("questions").select("*", { count: "exact", head: true });
     setTotalCount(count ?? 0);
-  }
-
-  async function grantSelfAdmin() {
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-    if (!uid) return toast.error("Sign in first");
-    const { error } = await supabase.from("user_roles").insert({ user_id: uid, role: "admin" });
-    if (error) return toast.error("Only an existing admin can grant admin.");
-    setAdmin(true); toast.success("Admin granted"); refreshStats();
   }
 
   if (checking) return <PageShell><PageHeader title="Loading…" /></PageShell>;
@@ -128,14 +125,10 @@ function AdminQuestionsPage() {
   if (!admin) {
     return (
       <PageShell>
-        <PageHeader eyebrow="Admin" title="Access restricted" description="You need the admin role to manage the question bank." />
+        <PageHeader eyebrow="Admin" title="Access restricted" description="This account is not authorized to manage the question bank." />
         <section className="mx-auto max-w-2xl px-4 py-6 lg:px-8">
           <div className="glass rounded-2xl p-6 text-sm">
-            <p className="mb-3">Bootstrap the first admin by running this in the database SQL editor while signed in:</p>
-            <pre className="overflow-x-auto rounded-lg border border-border bg-background/60 p-3 text-xs">
-{`INSERT INTO public.user_roles (user_id, role) VALUES (auth.uid(), 'admin');`}
-            </pre>
-            <Button className="mt-4" onClick={grantSelfAdmin}>Try grant self admin</Button>
+            <p className="text-muted-foreground">If this is the owner account, refresh this page after signing in. Admin access is assigned securely on the backend.</p>
           </div>
         </section>
       </PageShell>

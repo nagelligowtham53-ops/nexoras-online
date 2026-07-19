@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty, type QuestionFilters } from "@/lib/questions";
 import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
@@ -198,6 +200,7 @@ function CustomPracticePage() {
 /* ============================== SETUP ============================== */
 
 function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (cfg: Config, qs: DbQuestion[]) => void }) {
+  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const navigate = useNavigate();
   const [exam, setExam] = useState<ExamCode>("JEE Main");
   const [classSel, setClassSel] = useState<ClassSel>("both");
@@ -232,6 +235,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
       setLoadingCounts(true);
       const levels = classSel === "both" ? undefined : [classSel as 11 | 12];
       try {
+        await ensureSeed();
         const [total, rawCounts] = await Promise.all([
           countQuestionBank(),
           fetchChapterCounts({ exams: [exam], classLevels: levels }),
@@ -249,7 +253,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         setLoadingCounts(false);
       }
     })();
-  }, [exam, classSel, availSubjects]);
+  }, [exam, classSel, availSubjects, ensureSeed]);
 
 
   function toggleChapter(subject: string, chapter: string) {
@@ -278,6 +282,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
     setLoading(true);
     try {
       const allChapters = Object.values(subjects).flat();
+      await ensureSeed();
       const filters: QuestionFilters = {
         exams: [exam],
         classLevels: classSel === "both" ? undefined : [classSel],
@@ -296,12 +301,7 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         relaxedStage: result.relaxedStage,
         attempts: result.attempts,
       });
-      if (result.totalQuestions === 0) {
-        setError("Question bank contains 0 questions. Please import a question bank.");
-        setLoading(false);
-        setTimeout(() => navigate({ to: "/admin/questions" }), 600);
-        return;
-      }
+      if (result.totalQuestions === 0) throw new Error("Question bank seed did not complete.");
       if (result.questions.length === 0) {
         setError("No matching questions were found after checking all safe filter combinations. Try a different exam or class.");
         setLoading(false);

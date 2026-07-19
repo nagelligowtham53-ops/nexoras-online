@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
+import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { fetchQuestions, type DbQuestion, type Difficulty as DbDifficulty } from "@/lib/questions";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -137,6 +139,7 @@ type Difficulty = "mixed" | "easy" | "medium" | "hard";
 type Phase = "select" | "instructions" | "loading" | "running" | "summary" | "result";
 
 function MockTestsPage() {
+  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>("select");
   const [exam, setExam] = useState<ExamSpec>(EXAMS[0]);
@@ -273,6 +276,7 @@ function MockTestsPage() {
   }
 
   async function loadQuestions(spec: ExamSpec): Promise<Question[]> {
+    await ensureSeed();
     const dbExam = EXAM_DB_MAP[spec.name];
     if (!dbExam) return buildDemoQuestions(spec);
     const effective: { name: string; count: number }[] =
@@ -299,7 +303,7 @@ function MockTestsPage() {
     } catch (e) {
       console.warn("[mock-tests] DB fetch failed, using demo set", e);
     }
-    if (all.length === 0) return buildDemoQuestions(spec);
+    if (all.length === 0) throw new Error("No real questions matched this mock test after seeding.");
     return all;
   }
 
@@ -312,6 +316,7 @@ function MockTestsPage() {
     if (!dbExam) { setAvailableCount(0); return; }
     setCheckingAvailability(true);
     try {
+      await ensureSeed();
       const subjects = testType === "chapter"
         ? [dbSubjectFor(spec.key, chapterSubject)]
         : spec.subjects.map((s) => dbSubjectFor(spec.key, s.name));
@@ -325,7 +330,8 @@ function MockTestsPage() {
       const { count, error } = await q;
       if (error) throw error;
       setAvailableCount(count ?? 0);
-    } catch {
+    } catch (error) {
+      console.error("[mock-tests] Availability check failed", error);
       setAvailableCount(0);
     } finally {
       setCheckingAvailability(false);
