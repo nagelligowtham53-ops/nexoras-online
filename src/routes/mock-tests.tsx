@@ -515,9 +515,7 @@ function MockTestsPage() {
       const ans = answers[i];
       if (ans !== null && ans !== "") {
         attempted += 1;
-        const isCorrect = q.type === "mcq"
-          ? Number(ans) === q.correct
-          : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+        const isCorrect = scoreQuestion(q, ans);
         if (isCorrect) { correct += 1; cur.correct += 1; } else wrong += 1;
       }
       subMap.set(q.subject, cur);
