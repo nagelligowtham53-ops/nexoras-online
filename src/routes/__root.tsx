@@ -7,6 +7,9 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
+
+
 
 
 import appCss from "../styles.css?url";
@@ -97,11 +100,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       {
-        async: true,
-        crossOrigin: "anonymous",
-        src: "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8536996374508227",
-      },
-      {
         type: "application/ld+json",
         children: JSON.stringify({
           "@context": "https://schema.org",
@@ -144,6 +142,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AdSenseLoader() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (document.querySelector('script[data-adsbygoogle-loader]')) return;
+    const s = document.createElement("script");
+    s.async = true;
+    s.crossOrigin = "anonymous";
+    s.setAttribute("data-adsbygoogle-loader", "true");
+    s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8536996374508227";
+    document.head.appendChild(s);
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -153,6 +165,7 @@ function RootComponent() {
         <Outlet />
         <Toaster theme="dark" />
         <CookieConsent />
+        <AdSenseLoader />
       </AuthProvider>
     </QueryClientProvider>
   );
