@@ -660,6 +660,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      recompute_practice_session: {
+        Args: { session_uuid: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
