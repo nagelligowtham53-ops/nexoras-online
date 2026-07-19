@@ -205,7 +205,7 @@ function CustomPracticePage() {
           config={config} questions={questions} answers={answers}
           perQTime={perQTime} elapsed={elapsed}
           bookmarks={bookmarks} toggleBookmark={toggleBookmark}
-          gradedMap={gradedMap}
+          gradedMap={gradedMap} onReset={reset}
         />
       )}
     </PageShell>
