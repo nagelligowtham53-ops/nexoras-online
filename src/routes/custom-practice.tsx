@@ -650,7 +650,7 @@ function Legend({ dot, label }: { dot: string; label: string }) {
 /* ============================== RESULT ============================== */
 
 function Result({
-  config, questions, answers, perQTime, elapsed, bookmarks, toggleBookmark, onReset,
+  config, questions, answers, perQTime, elapsed, bookmarks, toggleBookmark, gradedMap, onReset,
 }: {
   config: Config;
   questions: DbQuestion[];
@@ -659,6 +659,7 @@ function Result({
   elapsed: number;
   bookmarks: Set<string>;
   toggleBookmark: (q: DbQuestion) => void;
+  gradedMap: Record<string, GradeResult>;
   onReset: () => void;
 }) {
   const stats = useMemo(() => {
@@ -672,7 +673,7 @@ function Result({
       const pick = answers[i];
       if (pick !== null) {
         attempted += 1;
-        if (isCorrect(q, pick)) { correct += 1; row.correct += 1; score += Number(q.marks); }
+        if (gradedMap[q.id]?.is_correct) { correct += 1; row.correct += 1; score += Number(q.marks); }
         else { wrong += 1; score -= Number(q.negative_marks); }
       }
       byChapter.set(key, row);
@@ -684,7 +685,7 @@ function Result({
     const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
     const avgTime = attempted ? Math.round(elapsed / attempted) : 0;
     return { correct, wrong, attempted, total: questions.length, accuracy, weak, strong, chapters, score, maxScore, avgTime };
-  }, [questions, answers, elapsed]);
+  }, [questions, answers, elapsed, gradedMap]);
 
   const [reco, setReco] = useState<{ summary?: string; revisionPlan?: { day: number; focus: string; tasks: string[] }[]; practiceTips?: string[] } | null>(null);
   const [recoLoading, setRecoLoading] = useState(false);
