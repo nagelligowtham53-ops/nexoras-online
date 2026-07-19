@@ -361,12 +361,8 @@ export async function gradeAnswers(
   if (pairs.length === 0) return {};
   const q_ids = pairs.map((p) => p.question.id);
   const user_answers = pairs.map((p) => normalizeUserAnswer(p.question, p.userAnswer));
-  const { data, error } = await supabase.rpc("grade_answers" as never, {
-    q_ids,
-    user_answers,
-  } as never);
-  if (error) throw error;
-  const rows = (data ?? []) as GradeResult[];
+  const { gradeAnswersServer } = await import("./grade-answers.functions");
+  const rows = (await gradeAnswersServer({ data: { q_ids, user_answers } })) as GradeResult[];
   const map: Record<string, GradeResult> = {};
   for (const row of rows) map[row.question_id] = row;
   return map;
