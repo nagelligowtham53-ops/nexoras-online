@@ -1177,9 +1177,27 @@ function ResultView(props: {
         <div className="mt-4 space-y-3">
           {questions.map((q, i) => {
             const ans = answers[i];
-            const isCorrect = ans !== null && ans !== "" && (q.type === "mcq"
-              ? Number(ans) === q.correct
-              : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01);
+            const graded = q.dbId ? gradedMap[q.dbId] : null;
+            let isCorrect = false;
+            if (ans !== null && ans !== "") {
+              if (graded) isCorrect = graded.is_correct;
+              else if (q.correct !== undefined) {
+                isCorrect = q.type === "mcq"
+                  ? Number(ans) === q.correct
+                  : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+              }
+            }
+            let correctLabel: string | null = null;
+            if (graded) {
+              const ca = graded.correct_answer;
+              if (ca.type === "single") correctLabel = q.options ? q.options[ca.value] : String(ca.value);
+              else if (ca.type === "numeric") correctLabel = String(ca.value);
+              else if (ca.type === "multiple") correctLabel = ca.values.join(", ");
+              else if (ca.type === "text") correctLabel = ca.value;
+            } else if (q.correct !== undefined) {
+              correctLabel = q.type === "mcq" && q.options ? q.options[q.correct] : String(q.correct);
+            }
+            const explanation = graded?.explanation ?? graded?.solution ?? q.explanation;
             return (
               <div key={i} className="rounded-lg border border-border bg-background/40 p-3 text-sm">
                 <div className="flex items-start gap-2">
@@ -1189,10 +1207,12 @@ function ResultView(props: {
                     {isCorrect ? "✓" : ans ? "✗" : "—"}
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Correct: {q.type === "mcq" && q.options ? q.options[q.correct as number] : String(q.correct)}
-                  {q.explanation && <> · {q.explanation}</>}
-                </p>
+                {(correctLabel || explanation) && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {correctLabel && <>Correct: {correctLabel}</>}
+                    {explanation && <> · {explanation}</>}
+                  </p>
+                )}
               </div>
             );
           })}
