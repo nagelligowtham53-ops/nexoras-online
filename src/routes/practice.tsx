@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { RequireAuth } from "@/components/RequireAuth";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty } from "@/lib/questions";
 import { Atom, FlaskConical, Sigma, Dna, CheckCircle2, XCircle, Timer, ArrowRight, Sparkles, Bookmark, BookmarkCheck, Loader2, Database } from "lucide-react";
 
@@ -29,6 +31,7 @@ const SUBJECTS = ["All", "Physics", "Chemistry", "Mathematics", "Biology"] as co
 const LEVELS = ["All", "Easy", "Medium", "Hard"] as const;
 
 function PracticePage() {
+  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const [subject, setSubject] = useState<(typeof SUBJECTS)[number]>("All");
   const [level, setLevel] = useState<(typeof LEVELS)[number]>("All");
   const [pool, setPool] = useState<DbQuestion[]>([]);
@@ -53,6 +56,7 @@ function PracticePage() {
   async function load() {
     setLoading(true); setError(null);
     try {
+      await ensureSeed();
       const result = await fetchQuestionsWithRelaxation({
         subjects: subject === "All" ? undefined : [subject],
         difficulties: level === "All" ? undefined : [level as Difficulty],
@@ -67,8 +71,7 @@ function PracticePage() {
         attempts: result.attempts,
       });
       setPool(qs); setIdx(0); setPicked(null);
-      if (result.totalQuestions === 0) setError("Question bank contains 0 questions. Please import a question bank.");
-      else if (qs.length === 0) setError("No practice questions are available for this selection right now.");
+      if (result.totalQuestions === 0 || qs.length === 0) setError("We could not prepare practice questions right now. Please try again in a moment.");
     } catch (e) {
       console.error("[practice] Failed to load questions", e);
       setError("We could not load practice questions right now. Please try again in a moment.");

@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
+import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { fetchQuestions, type DbQuestion, type Difficulty as DbDifficulty } from "@/lib/questions";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -137,6 +139,7 @@ type Difficulty = "mixed" | "easy" | "medium" | "hard";
 type Phase = "select" | "instructions" | "loading" | "running" | "summary" | "result";
 
 function MockTestsPage() {
+  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>("select");
   const [exam, setExam] = useState<ExamSpec>(EXAMS[0]);
@@ -213,6 +216,23 @@ function MockTestsPage() {
     "JEE Main": "JEE Main",
     "JEE Advanced": "JEE Advanced",
     "NEET UG": "NEET",
+    "BITSAT": "BITSAT",
+    "MHT CET": "MHT CET",
+    "COMEDK UGET": "COMEDK UGET",
+    "EAMCET (AP/TS)": "EAMCET (AP/TS)",
+    "UPSC CSE Prelims": "UPSC CSE Prelims",
+    "CAT (IIM)": "CAT (IIM)",
+    "GATE (CSE)": "GATE (CSE)",
+    "CA Foundation": "CA Foundation",
+    "CFA Level I": "CFA Level I",
+    "USMLE Step 1": "USMLE Step 1",
+    "SAT": "SAT",
+    "GRE General": "GRE General",
+    "IELTS Academic": "IELTS Academic",
+    "TOEFL iBT": "TOEFL iBT",
+    "IMO / Math Olympiad": "IMO / Math Olympiad",
+    "Coding Contest": "Coding Contest",
+    "ICPC Prep": "ICPC Prep",
   };
   function dbSubjectFor(examKey: string, subjectName: string): string {
     if (examKey === "neet" && (subjectName === "Botany" || subjectName === "Zoology")) return "Biology";
@@ -242,39 +262,10 @@ function MockTestsPage() {
     return null;
   }
 
-  function buildDemoQuestions(spec: ExamSpec): Question[] {
-    const list = testType === "chapter"
-      ? [{ name: chapterSubject, count: 10 }]
-      : spec.subjects.map((s) => ({ name: s.name, count: Math.max(3, Math.min(5, s.count)) }));
-    const out: Question[] = [];
-    let n = 1;
-    for (const s of list) {
-      for (let i = 0; i < s.count; i++) {
-        const a = Math.floor(Math.random() * 20) + 1;
-        const b = Math.floor(Math.random() * 20) + 1;
-        const correct = a + b;
-        const opts = [correct, correct + 1, correct - 1, correct + 2].map(String);
-        // shuffle
-        for (let k = opts.length - 1; k > 0; k--) {
-          const j = Math.floor(Math.random() * (k + 1));
-          [opts[k], opts[j]] = [opts[j], opts[k]];
-        }
-        out.push({
-          subject: s.name,
-          type: "mcq",
-          q: `Demo Q${n++} (${s.name}): What is ${a} + ${b}?`,
-          options: opts,
-          correct: opts.indexOf(String(correct)),
-          explanation: `${a} + ${b} = ${correct}. This is a demo question shown while the ${s.name} question bank is being populated.`,
-        });
-      }
-    }
-    return out;
-  }
-
   async function loadQuestions(spec: ExamSpec): Promise<Question[]> {
+    await ensureSeed();
     const dbExam = EXAM_DB_MAP[spec.name];
-    if (!dbExam) return buildDemoQuestions(spec);
+    if (!dbExam) throw new Error("This exam is not linked to the question bank yet.");
     const effective: { name: string; count: number }[] =
       testType === "chapter"
         ? [{ name: chapterSubject, count: 25 }]
@@ -297,9 +288,9 @@ function MockTestsPage() {
         }
       }
     } catch (e) {
-      console.warn("[mock-tests] DB fetch failed, using demo set", e);
+      console.error("[mock-tests] DB fetch failed", e);
     }
-    if (all.length === 0) return buildDemoQuestions(spec);
+    if (all.length === 0) throw new Error("No real questions matched this mock test after seeding.");
     return all;
   }
 
@@ -312,6 +303,7 @@ function MockTestsPage() {
     if (!dbExam) { setAvailableCount(0); return; }
     setCheckingAvailability(true);
     try {
+      await ensureSeed();
       const subjects = testType === "chapter"
         ? [dbSubjectFor(spec.key, chapterSubject)]
         : spec.subjects.map((s) => dbSubjectFor(spec.key, s.name));
@@ -325,7 +317,8 @@ function MockTestsPage() {
       const { count, error } = await q;
       if (error) throw error;
       setAvailableCount(count ?? 0);
-    } catch {
+    } catch (error) {
+      console.error("[mock-tests] Availability check failed", error);
       setAvailableCount(0);
     } finally {
       setCheckingAvailability(false);
@@ -354,7 +347,6 @@ function MockTestsPage() {
     setLoadProgress("Preparing your exam…");
     try {
       let qs = await loadQuestions(exam);
-      if (qs.length === 0) qs = buildDemoQuestions(exam);
       setQuestions(qs);
       setAnswers(Array(qs.length).fill(null));
       setMarked(Array(qs.length).fill(false));
@@ -369,21 +361,9 @@ function MockTestsPage() {
       setPhase("running");
       setTimeout(() => enterFullscreen(), 200);
     } catch (e) {
-      console.error("[mock-tests] beginExam failed, falling back to demo set", e);
-      const qs = buildDemoQuestions(exam);
-      setQuestions(qs);
-      setAnswers(Array(qs.length).fill(null));
-      setMarked(Array(qs.length).fill(false));
-      setVisited(Array(qs.length).fill(false).map((_, i) => i === 0));
-      setTimePerQ(Array(qs.length).fill(0));
-      setCurrent(0);
-      setActiveSection(qs[0].subject);
-      const minutes = testType === "chapter" ? 30 : exam.duration_min;
-      setSecondsLeft(minutes * 60);
-      startedAtRef.current = Date.now();
-      lastTickRef.current = Date.now();
-      setPhase("running");
-      setTimeout(() => enterFullscreen(), 200);
+      console.error("[mock-tests] beginExam failed", e);
+      setError("We could not prepare this test right now. Please try again in a moment.");
+      setPhase("instructions");
     }
   }
 
@@ -679,7 +659,6 @@ function InstructionsView(props: {
   const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, availableCount, checkingAvailability, onBack, onBegin } = props;
   const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
   const minutes = testType === "chapter" ? 30 : exam.duration_min;
-  const noQuestions = availableCount === 0;
   const canBegin = agreed && !checkingAvailability;
 
 
@@ -776,12 +755,6 @@ function InstructionsView(props: {
                 Checking the question bank for available questions…
               </div>
             )}
-            {!checkingAvailability && noQuestions && (
-              <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
-                Our question bank for this exam is still being populated — your test will use a practice demo set so you can explore the full CBT interface.
-              </div>
-            )}
-
             {!checkingAvailability && availableCount !== null && availableCount > 0 && availableCount < total && (
               <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
                 {availableCount} questions available for these filters. Your test will use as many as possible.
