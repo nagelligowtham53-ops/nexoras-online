@@ -17,7 +17,7 @@ const cols = [
       { to: "/about", label: "About" },
       { to: "/blog", label: "Blog" },
       { to: "/contact", label: "Contact" },
-      { to: "/pricing", label: "Pricing" },
+      { to: "/faq", label: "FAQ" },
     ],
   },
   {
@@ -25,8 +25,8 @@ const cols = [
     links: [
       { to: "/privacy", label: "Privacy Policy" },
       { to: "/terms", label: "Terms of Service" },
-      { to: "/contact", label: "Contact" },
-      { to: "/about", label: "About" },
+      { to: "/cookie-policy", label: "Cookie Policy" },
+      { to: "/disclaimer", label: "Disclaimer" },
     ],
   },
 ] as const;

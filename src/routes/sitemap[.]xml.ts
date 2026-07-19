@@ -38,10 +38,11 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/chat", changefreq: "monthly", priority: "0.5" },
           { path: "/dashboard", changefreq: "monthly", priority: "0.5" },
           { path: "/forgot-password", changefreq: "yearly", priority: "0.3" },
-          { path: "/privacy-policy", changefreq: "yearly", priority: "0.4" },
-          { path: "/terms-of-service", changefreq: "yearly", priority: "0.4" },
           { path: "/privacy", changefreq: "yearly", priority: "0.4" },
           { path: "/terms", changefreq: "yearly", priority: "0.4" },
+          { path: "/cookie-policy", changefreq: "yearly", priority: "0.4" },
+          { path: "/disclaimer", changefreq: "yearly", priority: "0.4" },
+          { path: "/faq", changefreq: "monthly", priority: "0.6" },
           { path: "/login", changefreq: "yearly", priority: "0.3" },
           { path: "/signup", changefreq: "yearly", priority: "0.3" },
         ];

@@ -32,11 +32,14 @@ import { Route as MockInterviewRouteImport } from './routes/mock-interview'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FutureCareersRouteImport } from './routes/future-careers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomPracticeRouteImport } from './routes/custom-practice'
 import { Route as CrackJeeRouteImport } from './routes/crack-jee'
 import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompetitiveExamsRouteImport } from './routes/competitive-exams'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -178,9 +181,19 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
   id: '/engineering-roadmaps',
   path: '/engineering-roadmaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -201,6 +214,11 @@ const CrackJeeRoute = CrackJeeRouteImport.update({
 const CoursesRoute = CoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiePolicyRoute = CookiePolicyRouteImport.update({
+  id: '/cookie-policy',
+  path: '/cookie-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -342,11 +360,14 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
@@ -397,11 +418,14 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
@@ -453,11 +477,14 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
+  '/cookie-policy': typeof CookiePolicyRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
+  '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
   '/login': typeof LoginRoute
@@ -510,11 +537,14 @@ export interface FileRouteTypes {
     | '/chat'
     | '/competitive-exams'
     | '/contact'
+    | '/cookie-policy'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
+    | '/disclaimer'
     | '/engineering-roadmaps'
+    | '/faq'
     | '/forgot-password'
     | '/future-careers'
     | '/login'
@@ -565,11 +595,14 @@ export interface FileRouteTypes {
     | '/chat'
     | '/competitive-exams'
     | '/contact'
+    | '/cookie-policy'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
+    | '/disclaimer'
     | '/engineering-roadmaps'
+    | '/faq'
     | '/forgot-password'
     | '/future-careers'
     | '/login'
@@ -620,11 +653,14 @@ export interface FileRouteTypes {
     | '/chat'
     | '/competitive-exams'
     | '/contact'
+    | '/cookie-policy'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
+    | '/disclaimer'
     | '/engineering-roadmaps'
+    | '/faq'
     | '/forgot-password'
     | '/future-careers'
     | '/login'
@@ -676,11 +712,14 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   CompetitiveExamsRoute: typeof CompetitiveExamsRoute
   ContactRoute: typeof ContactRoute
+  CookiePolicyRoute: typeof CookiePolicyRoute
   CoursesRoute: typeof CoursesRoute
   CrackJeeRoute: typeof CrackJeeRoute
   CustomPracticeRoute: typeof CustomPracticeRoute
   DashboardRoute: typeof DashboardRoute
+  DisclaimerRoute: typeof DisclaimerRoute
   EngineeringRoadmapsRoute: typeof EngineeringRoadmapsRoute
+  FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   FutureCareersRoute: typeof FutureCareersRoute
   LoginRoute: typeof LoginRoute
@@ -881,11 +920,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/engineering-roadmaps': {
       id: '/engineering-roadmaps'
       path: '/engineering-roadmaps'
       fullPath: '/engineering-roadmaps'
       preLoaderRoute: typeof EngineeringRoadmapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -914,6 +967,13 @@ declare module '@tanstack/react-router' {
       path: '/courses'
       fullPath: '/courses'
       preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookie-policy': {
+      id: '/cookie-policy'
+      path: '/cookie-policy'
+      fullPath: '/cookie-policy'
+      preLoaderRoute: typeof CookiePolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1118,11 +1178,14 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   CompetitiveExamsRoute: CompetitiveExamsRoute,
   ContactRoute: ContactRoute,
+  CookiePolicyRoute: CookiePolicyRoute,
   CoursesRoute: CoursesRoute,
   CrackJeeRoute: CrackJeeRoute,
   CustomPracticeRoute: CustomPracticeRoute,
   DashboardRoute: DashboardRoute,
+  DisclaimerRoute: DisclaimerRoute,
   EngineeringRoadmapsRoute: EngineeringRoadmapsRoute,
+  FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   FutureCareersRoute: FutureCareersRoute,
   LoginRoute: LoginRoute,
@@ -1162,13 +1225,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

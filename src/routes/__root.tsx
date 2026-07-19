@@ -7,10 +7,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/useAuth";
+import { CookieConsent } from "@/components/CookieConsent";
 
 function NotFoundComponent() {
   return (
@@ -93,6 +95,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" },
     ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Nexoras",
+          url: "https://nexoras.online",
+          logo: "https://nexoras.online/favicon.ico",
+          sameAs: [] as string[],
+          description: "AI-powered study platform for JEE, NEET, and other competitive exams — free for students.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Nexoras",
+          url: "https://nexoras.online",
+        }),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -105,18 +130,27 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8536996374508227"
-          crossOrigin="anonymous"
-        />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Scripts />
       </body>
     </html>
   );
+}
+
+function AdSenseLoader() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (document.querySelector('script[data-adsbygoogle-loader]')) return;
+    const s = document.createElement("script");
+    s.async = true;
+    s.crossOrigin = "anonymous";
+    s.setAttribute("data-adsbygoogle-loader", "true");
+    s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8536996374508227";
+    document.head.appendChild(s);
+  }, []);
+  return null;
 }
 
 function RootComponent() {
@@ -127,6 +161,8 @@ function RootComponent() {
       <AuthProvider>
         <Outlet />
         <Toaster theme="dark" />
+        <CookieConsent />
+        <AdSenseLoader />
       </AuthProvider>
     </QueryClientProvider>
   );
