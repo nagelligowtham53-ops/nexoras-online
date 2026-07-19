@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "sdk_version": "0.23.0",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://cjuqfvqxoywbwklexmku.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "nexoras-mcp",
+      "version": "0.1.0",
+      "title": "Nexoras"
+    },
+    "tools": [
+      {
+        "name": "get_my_profile",
+        "title": "Get my Nexoras profile",
+        "description": "Fetch the signed-in user's Nexoras profile (name, avatar, exam prefs).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_practice_sessions",
+        "title": "List my recent practice sessions",
+        "description": "List the signed-in user's recent Nexoras practice sessions with scores, subjects, and timestamps.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "How many sessions to return (default 10).",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "search_questions",
+        "title": "Search the Nexoras question bank",
+        "description": "Search JEE/NEET-style practice questions by exam, subject, chapter, or difficulty. Returns question text and options — never correct answers or solutions.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "exam": {
+              "description": "Exam code, e.g. 'JEE Main', 'NEET'.",
+              "type": "string",
+              "maxLength": 60
+            },
+            "subject": {
+              "description": "Subject, e.g. 'Physics'.",
+              "type": "string",
+              "maxLength": 60
+            },
+            "chapter": {
+              "description": "Chapter name.",
+              "type": "string",
+              "maxLength": 120
+            },
+            "difficulty": {
+              "type": "string",
+              "enum": [
+                "easy",
+                "medium",
+                "hard"
+              ]
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_blog_posts",
+        "title": "List Nexoras blog posts",
+        "description": "List published Nexoras blog posts (title, slug, excerpt, category, published_at).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 30
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
