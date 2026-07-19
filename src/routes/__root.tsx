@@ -142,6 +142,20 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function AdSenseLoader() {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (document.querySelector('script[data-adsbygoogle-loader]')) return;
+    const s = document.createElement("script");
+    s.async = true;
+    s.crossOrigin = "anonymous";
+    s.setAttribute("data-adsbygoogle-loader", "true");
+    s.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8536996374508227";
+    document.head.appendChild(s);
+  }, []);
+  return null;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
@@ -151,6 +165,7 @@ function RootComponent() {
         <Outlet />
         <Toaster theme="dark" />
         <CookieConsent />
+        <AdSenseLoader />
       </AuthProvider>
     </QueryClientProvider>
   );
