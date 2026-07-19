@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -201,7 +201,6 @@ function CustomPracticePage() {
 
 function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (cfg: Config, qs: DbQuestion[]) => void }) {
   const ensureSeed = useServerFn(ensureQuestionBankSeeded);
-  const navigate = useNavigate();
   const [exam, setExam] = useState<ExamCode>("JEE Main");
   const [classSel, setClassSel] = useState<ClassSel>("both");
   const availSubjects = EXAM_SUBJECTS[exam];
