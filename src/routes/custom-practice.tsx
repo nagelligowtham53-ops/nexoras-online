@@ -68,6 +68,7 @@ function CustomPracticePage() {
   const [perQTime, setPerQTime] = useState<number[]>([]);
   const [bookmarks, setBookmarks] = useState<Set<string>>(new Set());
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [gradedMap, setGradedMap] = useState<Record<string, GradeResult>>({});
 
   useEffect(() => {
     (async () => {
