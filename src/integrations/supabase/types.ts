@@ -192,6 +192,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "practice_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "practice_answers_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
@@ -303,6 +310,13 @@ export type Database = {
             columns: ["question_id"]
             isOneToOne: false
             referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_bookmarks_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions_public"
             referencedColumns: ["id"]
           },
         ]
@@ -532,13 +546,113 @@ export type Database = {
             referencedRelation: "questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "wrong_questions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      questions_public: {
+        Row: {
+          chapter: string | null
+          class_level: number | null
+          concepts: string[] | null
+          created_at: string | null
+          difficulty: string | null
+          exams: string[] | null
+          external_id: string | null
+          id: string | null
+          image_url: string | null
+          is_ncert: boolean | null
+          is_pyq: boolean | null
+          marks: number | null
+          ncert_unit: string | null
+          negative_marks: number | null
+          options: Json | null
+          question_text: string | null
+          question_type: string | null
+          source: string | null
+          subject: string | null
+          subtopic: string | null
+          tags: string[] | null
+          time_estimate_seconds: number | null
+          topic: string | null
+          updated_at: string | null
+          year: number | null
+        }
+        Insert: {
+          chapter?: string | null
+          class_level?: number | null
+          concepts?: string[] | null
+          created_at?: string | null
+          difficulty?: string | null
+          exams?: string[] | null
+          external_id?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_ncert?: boolean | null
+          is_pyq?: boolean | null
+          marks?: number | null
+          ncert_unit?: string | null
+          negative_marks?: number | null
+          options?: Json | null
+          question_text?: string | null
+          question_type?: string | null
+          source?: string | null
+          subject?: string | null
+          subtopic?: string | null
+          tags?: string[] | null
+          time_estimate_seconds?: number | null
+          topic?: string | null
+          updated_at?: string | null
+          year?: number | null
+        }
+        Update: {
+          chapter?: string | null
+          class_level?: number | null
+          concepts?: string[] | null
+          created_at?: string | null
+          difficulty?: string | null
+          exams?: string[] | null
+          external_id?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_ncert?: boolean | null
+          is_pyq?: boolean | null
+          marks?: number | null
+          ncert_unit?: string | null
+          negative_marks?: number | null
+          options?: Json | null
+          question_text?: string | null
+          question_type?: string | null
+          source?: string | null
+          subject?: string | null
+          subtopic?: string | null
+          tags?: string[] | null
+          time_estimate_seconds?: number | null
+          topic?: string | null
+          updated_at?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      grade_answers: {
+        Args: { q_ids: string[]; user_answers: Json[] }
+        Returns: {
+          correct_answer: Json
+          explanation: string
+          is_correct: boolean
+          question_id: string
+          solution: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

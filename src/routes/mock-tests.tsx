@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
-import { fetchQuestions, type DbQuestion, type Difficulty as DbDifficulty } from "@/lib/questions";
+import { fetchQuestions, gradeAnswers, type DbQuestion, type Difficulty as DbDifficulty, type GradeResult } from "@/lib/questions";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles,
@@ -35,7 +35,10 @@ type Question = {
   type: "mcq" | "numerical";
   q: string;
   options?: string[];
-  correct: number;
+  /** DB question id — when present, scoring goes through gradeAnswers server RPC. */
+  dbId?: string;
+  /** Only set for the offline demo fallback; DB-sourced questions never carry the key. */
+  correct?: number;
   explanation?: string;
 };
 
@@ -167,6 +170,21 @@ function MockTestsPage() {
   const [reward, setReward] = useState<{ earnedXp: number; newBadges: { name: string; description: string }[] } | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [gradedMap, setGradedMap] = useState<Record<string, GradeResult>>({});
+
+  // Score one question against either the server-graded map (DB questions) or the
+  // demo answer key baked into offline fallback questions. Never trusts the browser
+  // with correct keys for DB-backed content.
+  function scoreQuestion(q: Question, ans: string | null): boolean {
+    if (ans === null || ans === "") return false;
+    if (q.dbId) {
+      const g = gradedMap[q.dbId];
+      return g ? g.is_correct : false;
+    }
+    if (q.correct === undefined) return false;
+    if (q.type === "mcq") return Number(ans) === q.correct;
+    return Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+  }
 
   const startedAtRef = useRef<number>(0);
   const lastTickRef = useRef<number>(0);
@@ -245,18 +263,15 @@ function MockTestsPage() {
     return ["Hard"];
   }
   function mapDbToQuestion(r: DbQuestion, displaySubject: string): Question | null {
-    if (r.question_type === "single_correct" && r.options && r.correct_answer.type === "single") {
+    if (r.question_type === "single_correct" && r.options) {
       return {
         subject: displaySubject, type: "mcq", q: r.question_text,
-        options: r.options, correct: r.correct_answer.value,
-        explanation: r.solution ?? r.explanation ?? undefined,
+        options: r.options, dbId: r.id,
       };
     }
-    if ((r.question_type === "integer" || r.question_type === "numerical") && r.correct_answer.type === "numeric") {
+    if (r.question_type === "integer" || r.question_type === "numerical") {
       return {
-        subject: displaySubject, type: "numerical", q: r.question_text,
-        correct: r.correct_answer.value,
-        explanation: r.solution ?? r.explanation ?? undefined,
+        subject: displaySubject, type: "numerical", q: r.question_text, dbId: r.id,
       };
     }
     return null;
