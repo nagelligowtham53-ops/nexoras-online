@@ -419,6 +419,22 @@ function MockTestsPage() {
     if (phase !== "running" && phase !== "summary") return;
     exitFullscreen();
     const duration = Math.round((Date.now() - startedAtRef.current) / 1000);
+
+    // Server-side grading for every DB-backed answered question. The client never
+    // sees the correct key until after submission.
+    const toGrade: { question: DbQuestion; userAnswer: unknown }[] = [];
+    questions.forEach((q, i) => {
+      const ans = answers[i];
+      if (!q.dbId || ans === null || ans === "") return;
+      const stub = { id: q.dbId, question_type: q.type === "mcq" ? "single_correct" : "numerical" } as unknown as DbQuestion;
+      toGrade.push({ question: stub, userAnswer: q.type === "mcq" ? Number(ans) : parseFloat(ans) });
+    });
+    let freshGraded: Record<string, GradeResult> = {};
+    try {
+      if (toGrade.length > 0) freshGraded = await gradeAnswers(toGrade);
+    } catch (e) { console.error("[mock-tests] gradeAnswers failed", e); }
+    setGradedMap(freshGraded);
+
     let correct = 0, wrong = 0, attempted = 0;
     const subMap = new Map<string, { correct: number; total: number }>();
     questions.forEach((q, i) => {
@@ -427,14 +443,37 @@ function MockTestsPage() {
       const ans = answers[i];
       if (ans !== null && ans !== "") {
         attempted += 1;
-        const isCorrect = q.type === "mcq"
-          ? Number(ans) === q.correct
-          : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+        let isCorrect = false;
+        if (q.dbId) isCorrect = freshGraded[q.dbId]?.is_correct ?? false;
+        else if (q.correct !== undefined) {
+          isCorrect = q.type === "mcq"
+            ? Number(ans) === q.correct
+            : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
+        }
         if (isCorrect) { correct += 1; sub.correct += 1; } else wrong += 1;
       }
       subMap.set(q.subject, sub);
     });
     const score = correct * exam.marking.correct - wrong * exam.marking.wrong;
+    const max_score = questions.length * exam.marking.correct;
+    const subject_breakdown: SubjectStat[] = Array.from(subMap.entries()).map(([subject, s]) => ({
+      subject, correct: s.correct, total: s.total,
+    }));
+    setPhase("result");
+    if (auto) {
+      // small UX: nothing extra; result page will indicate auto-submit via badge.
+    }
+    if (user) {
+      try {
+        const r = await recordAttemptAndAwardXP(user.id, {
+          exam_key: exam.key, exam_name: exam.name,
+          total_questions: questions.length, attempted, correct, wrong, score, max_score,
+          duration_seconds: duration, subject_breakdown,
+        });
+        setReward({ earnedXp: r.earnedXp, newBadges: r.newBadges });
+      } catch (e) { console.error("save attempt failed", e); }
+    }
+  }
     const max_score = questions.length * exam.marking.correct;
     const subject_breakdown: SubjectStat[] = Array.from(subMap.entries()).map(([subject, s]) => ({
       subject, correct: s.correct, total: s.total,
