@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { authedFetch } from "@/lib/authed-fetch";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
-import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, isCorrect, type DbQuestion, type Difficulty, type QuestionFilters } from "@/lib/questions";
+import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, gradeAnswers, type DbQuestion, type Difficulty, type GradeResult, type QuestionFilters } from "@/lib/questions";
 import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
