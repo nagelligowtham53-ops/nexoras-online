@@ -33,6 +33,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as FutureCareersRouteImport } from './routes/future-careers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomPracticeRouteImport } from './routes/custom-practice'
 import { Route as CrackJeeRouteImport } from './routes/crack-jee'
@@ -182,6 +183,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
   id: '/engineering-roadmaps',
   path: '/engineering-roadmaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -353,6 +359,7 @@ export interface FileRoutesByFullPath {
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
@@ -409,6 +416,7 @@ export interface FileRoutesByTo {
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
@@ -466,6 +474,7 @@ export interface FileRoutesById {
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
+  '/disclaimer': typeof DisclaimerRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/future-careers': typeof FutureCareersRoute
@@ -524,6 +533,7 @@ export interface FileRouteTypes {
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
+    | '/disclaimer'
     | '/engineering-roadmaps'
     | '/forgot-password'
     | '/future-careers'
@@ -580,6 +590,7 @@ export interface FileRouteTypes {
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
+    | '/disclaimer'
     | '/engineering-roadmaps'
     | '/forgot-password'
     | '/future-careers'
@@ -636,6 +647,7 @@ export interface FileRouteTypes {
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
+    | '/disclaimer'
     | '/engineering-roadmaps'
     | '/forgot-password'
     | '/future-careers'
@@ -693,6 +705,7 @@ export interface RootRouteChildren {
   CrackJeeRoute: typeof CrackJeeRoute
   CustomPracticeRoute: typeof CustomPracticeRoute
   DashboardRoute: typeof DashboardRoute
+  DisclaimerRoute: typeof DisclaimerRoute
   EngineeringRoadmapsRoute: typeof EngineeringRoadmapsRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   FutureCareersRoute: typeof FutureCareersRoute
@@ -899,6 +912,13 @@ declare module '@tanstack/react-router' {
       path: '/engineering-roadmaps'
       fullPath: '/engineering-roadmaps'
       preLoaderRoute: typeof EngineeringRoadmapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -1143,6 +1163,7 @@ const rootRouteChildren: RootRouteChildren = {
   CrackJeeRoute: CrackJeeRoute,
   CustomPracticeRoute: CustomPracticeRoute,
   DashboardRoute: DashboardRoute,
+  DisclaimerRoute: DisclaimerRoute,
   EngineeringRoadmapsRoute: EngineeringRoadmapsRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   FutureCareersRoute: FutureCareersRoute,
