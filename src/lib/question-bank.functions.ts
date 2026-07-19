@@ -81,7 +81,55 @@ export const ensureQuestionBankSeeded = createServerFn({ method: "POST" })
         }),
       ),
     );
-    const { error } = await supabaseAdmin.from("questions").upsert(rows as never, { onConflict: "external_id" });
+
+    const mockSubjects = [
+      ["BITSAT", "Physics", 20, 3, 1], ["BITSAT", "Chemistry", 20, 3, 1], ["BITSAT", "Mathematics", 20, 3, 1],
+      ["MHT CET", "Physics", 50, 1, 0], ["MHT CET", "Chemistry", 50, 1, 0], ["MHT CET", "Mathematics", 50, 1, 0],
+      ["COMEDK UGET", "Physics", 60, 1, 0], ["COMEDK UGET", "Chemistry", 60, 1, 0], ["COMEDK UGET", "Mathematics", 60, 1, 0],
+      ["EAMCET (AP/TS)", "Mathematics", 80, 1, 0], ["EAMCET (AP/TS)", "Physics", 40, 1, 0], ["EAMCET (AP/TS)", "Chemistry", 40, 1, 0],
+      ["UPSC CSE Prelims", "History & Polity", 15, 2, 1], ["UPSC CSE Prelims", "Geography & Environment", 15, 2, 1], ["UPSC CSE Prelims", "Economy & Current Affairs", 15, 2, 1], ["UPSC CSE Prelims", "Science & Tech", 15, 2, 1],
+      ["CAT (IIM)", "Verbal Ability & Reading Comprehension", 22, 3, 1], ["CAT (IIM)", "Data Interpretation & Logical Reasoning", 22, 3, 1], ["CAT (IIM)", "Quantitative Aptitude", 22, 3, 1],
+      ["GATE (CSE)", "General Aptitude", 10, 2, 1], ["GATE (CSE)", "Engineering Mathematics", 13, 2, 1], ["GATE (CSE)", "Computer Science Core", 42, 2, 1],
+      ["CA Foundation", "Accounting", 30, 1, 0], ["CA Foundation", "Business Laws", 25, 1, 0], ["CA Foundation", "Quantitative Aptitude", 25, 1, 0], ["CA Foundation", "Business Economics", 20, 1, 0],
+      ["CFA Level I", "Ethics & Quant Methods", 25, 1, 0], ["CFA Level I", "Economics & Financial Reporting", 25, 1, 0], ["CFA Level I", "Equity & Fixed Income", 25, 1, 0], ["CFA Level I", "Derivatives & Portfolio Mgmt", 15, 1, 0],
+      ["USMLE Step 1", "Anatomy & Physiology", 20, 1, 0], ["USMLE Step 1", "Pathology & Pharmacology", 25, 1, 0], ["USMLE Step 1", "Microbiology & Immunology", 20, 1, 0], ["USMLE Step 1", "Behavioral & Biochemistry", 15, 1, 0],
+      ["SAT", "Reading & Writing", 40, 1, 0], ["SAT", "Math", 40, 1, 0], ["GRE General", "Verbal Reasoning", 27, 1, 0], ["GRE General", "Quantitative Reasoning", 27, 1, 0],
+      ["IELTS Academic", "Listening", 20, 1, 0], ["IELTS Academic", "Reading", 20, 1, 0], ["IELTS Academic", "Writing & Grammar", 20, 1, 0],
+      ["TOEFL iBT", "Reading", 20, 1, 0], ["TOEFL iBT", "Listening", 20, 1, 0], ["TOEFL iBT", "Structure & Vocabulary", 20, 1, 0],
+      ["IMO / Math Olympiad", "Algebra", 8, 3, 0], ["IMO / Math Olympiad", "Number Theory", 8, 3, 0], ["IMO / Math Olympiad", "Combinatorics", 7, 3, 0], ["IMO / Math Olympiad", "Geometry", 7, 3, 0],
+      ["Coding Contest", "Data Structures", 10, 3, 1], ["Coding Contest", "Algorithms", 10, 3, 1], ["Coding Contest", "Problem Solving & Complexity", 10, 3, 1],
+      ["ICPC Prep", "Graphs & Trees", 8, 4, 0], ["ICPC Prep", "Dynamic Programming", 8, 4, 0], ["ICPC Prep", "Math & Number Theory", 5, 4, 0], ["ICPC Prep", "Greedy & Ad-hoc", 4, 4, 0],
+    ] as const;
+    const mockRows = mockSubjects.flatMap(([examName, subject, questionCount, marks, negativeMarks]) =>
+      Array.from({ length: Math.min(questionCount, 12) }, (_, index) => {
+        const n = index + 1;
+        return {
+          external_id: `nexoras-mock-seed-${slug(`${examName}-${subject}-${n}`)}`,
+          exams: [examName],
+          class_level: n % 2 === 0 ? 12 : 11,
+          subject,
+          chapter: subject,
+          topic: "Mock Test Practice",
+          difficulty: n % 3 === 1 ? "Easy" : n % 3 === 2 ? "Medium" : "Hard",
+          question_type: "single_correct",
+          source: "Original · Nexoras seeded mock question bank",
+          is_pyq: false,
+          is_ncert: false,
+          marks,
+          negative_marks: negativeMarks,
+          time_estimate_seconds: 90 + n * 5,
+          question_text: `${examName} · ${subject} · Q${n}: Which option shows the best exam-ready approach for this topic?`,
+          options: ["Read the prompt, identify the tested concept, eliminate traps, then solve methodically.", "Choose the longest option without checking the concept.", "Ignore the data and answer from memory only.", "Skip all working because speed is the only factor."],
+          correct_answer: { type: "single", value: 0 },
+          solution: "A reliable CBT approach is to identify the concept, process the given information, eliminate traps, and then solve. This keeps speed and accuracy balanced.",
+          explanation: `This is an original Nexoras sample question used to populate the real database-backed CBT flow for ${examName}. Replace or expand it with licensed or curated exam-depth content as needed.`,
+          concepts: [subject, examName, "CBT"],
+          tags: ["seeded-mock-bank", slug(examName)],
+        };
+      }),
+    );
+    const allRows = [...rows, ...mockRows];
+    const { error } = await supabaseAdmin.from("questions").upsert(allRows as never, { onConflict: "external_id" });
     if (error) throw new Error(error.message);
-    return { seeded: true, count: rows.length };
+    return { seeded: true, count: allRows.length };
   });
