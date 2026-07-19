@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import * as XLSX from "xlsx";
 import { PageShell, PageHeader } from "@/components/PageShell";
@@ -94,6 +95,7 @@ function normKey(k: string): string {
 
 /* ------------- Component ------------- */
 function AdminQuestionsPage() {
+  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const [checking, setChecking] = useState(true);
   const [admin, setAdmin] = useState(false);
   const [stats, setStats] = useState<{ subject: string; count: number }[]>([]);
@@ -109,7 +111,7 @@ function AdminQuestionsPage() {
   }, []);
 
   async function refreshStats() {
-    await ensureQuestionBankSeeded().catch((error) => console.error("[admin/questions] Question bank seed check failed", error));
+    await ensureSeed().catch((error) => console.error("[admin/questions] Question bank seed check failed", error));
     const s = await fetchSubjectStats();
     setStats(s);
     const { count } = await supabase.from("questions").select("*", { count: "exact", head: true });
