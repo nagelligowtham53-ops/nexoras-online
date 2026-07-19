@@ -474,25 +474,6 @@ function MockTestsPage() {
       } catch (e) { console.error("save attempt failed", e); }
     }
   }
-    const max_score = questions.length * exam.marking.correct;
-    const subject_breakdown: SubjectStat[] = Array.from(subMap.entries()).map(([subject, s]) => ({
-      subject, correct: s.correct, total: s.total,
-    }));
-    setPhase("result");
-    if (auto) {
-      // small UX: nothing extra; result page will indicate auto-submit via badge.
-    }
-    if (user) {
-      try {
-        const r = await recordAttemptAndAwardXP(user.id, {
-          exam_key: exam.key, exam_name: exam.name,
-          total_questions: questions.length, attempted, correct, wrong, score, max_score,
-          duration_seconds: duration, subject_breakdown,
-        });
-        setReward({ earnedXp: r.earnedXp, newBadges: r.newBadges });
-      } catch (e) { console.error("save attempt failed", e); }
-    }
-  }
 
   function reset() {
     setPhase("select");
