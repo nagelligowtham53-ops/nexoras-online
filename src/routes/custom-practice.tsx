@@ -768,7 +768,7 @@ function Result({
       <div className="glass rounded-2xl p-5">
         <h3 className="mb-3 text-sm font-semibold">Review answers</h3>
         <div className="space-y-3">
-          {questions.map((q, i) => <ReviewRow key={q.id} q={q} pick={answers[i]} timeSpent={perQTime[i] ?? 0} isBk={bookmarks.has(q.id)} toggleBookmark={toggleBookmark} />)}
+          {questions.map((q, i) => <ReviewRow key={q.id} q={q} pick={answers[i]} timeSpent={perQTime[i] ?? 0} isBk={bookmarks.has(q.id)} toggleBookmark={toggleBookmark} graded={gradedMap[q.id] ?? null} />)}
         </div>
       </div>
 
