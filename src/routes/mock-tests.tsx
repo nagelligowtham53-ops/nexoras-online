@@ -478,7 +478,7 @@ function MockTestsPage() {
   function reset() {
     setPhase("select");
     setQuestions([]); setAnswers([]); setMarked([]); setVisited([]); setTimePerQ([]);
-    setCurrent(0); setError(null); setReward(null);
+    setCurrent(0); setError(null); setReward(null); setGradedMap({});
   }
 
   // ---- Status counts
