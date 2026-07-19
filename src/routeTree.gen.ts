@@ -34,11 +34,13 @@ import { Route as FutureCareersRouteImport } from './routes/future-careers'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
+import { Route as DmcaRouteImport } from './routes/dmca'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomPracticeRouteImport } from './routes/custom-practice'
 import { Route as CrackJeeRouteImport } from './routes/crack-jee'
 import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as CopyrightRouteImport } from './routes/copyright'
 import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CompetitiveExamsRouteImport } from './routes/competitive-exams'
@@ -191,6 +193,11 @@ const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
   path: '/engineering-roadmaps',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DmcaRoute = DmcaRouteImport.update({
+  id: '/dmca',
+  path: '/dmca',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DisclaimerRoute = DisclaimerRouteImport.update({
   id: '/disclaimer',
   path: '/disclaimer',
@@ -214,6 +221,11 @@ const CrackJeeRoute = CrackJeeRouteImport.update({
 const CoursesRoute = CoursesRouteImport.update({
   id: '/courses',
   path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CopyrightRoute = CopyrightRouteImport.update({
+  id: '/copyright',
+  path: '/copyright',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CookiePolicyRoute = CookiePolicyRouteImport.update({
@@ -361,11 +373,13 @@ export interface FileRoutesByFullPath {
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/copyright': typeof CopyrightRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
   '/disclaimer': typeof DisclaimerRoute
+  '/dmca': typeof DmcaRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -419,11 +433,13 @@ export interface FileRoutesByTo {
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/copyright': typeof CopyrightRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
   '/disclaimer': typeof DisclaimerRoute
+  '/dmca': typeof DmcaRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -478,11 +494,13 @@ export interface FileRoutesById {
   '/competitive-exams': typeof CompetitiveExamsRoute
   '/contact': typeof ContactRoute
   '/cookie-policy': typeof CookiePolicyRoute
+  '/copyright': typeof CopyrightRoute
   '/courses': typeof CoursesRoute
   '/crack-jee': typeof CrackJeeRoute
   '/custom-practice': typeof CustomPracticeRoute
   '/dashboard': typeof DashboardRoute
   '/disclaimer': typeof DisclaimerRoute
+  '/dmca': typeof DmcaRoute
   '/engineering-roadmaps': typeof EngineeringRoadmapsRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -538,11 +556,13 @@ export interface FileRouteTypes {
     | '/competitive-exams'
     | '/contact'
     | '/cookie-policy'
+    | '/copyright'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
     | '/disclaimer'
+    | '/dmca'
     | '/engineering-roadmaps'
     | '/faq'
     | '/forgot-password'
@@ -596,11 +616,13 @@ export interface FileRouteTypes {
     | '/competitive-exams'
     | '/contact'
     | '/cookie-policy'
+    | '/copyright'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
     | '/disclaimer'
+    | '/dmca'
     | '/engineering-roadmaps'
     | '/faq'
     | '/forgot-password'
@@ -654,11 +676,13 @@ export interface FileRouteTypes {
     | '/competitive-exams'
     | '/contact'
     | '/cookie-policy'
+    | '/copyright'
     | '/courses'
     | '/crack-jee'
     | '/custom-practice'
     | '/dashboard'
     | '/disclaimer'
+    | '/dmca'
     | '/engineering-roadmaps'
     | '/faq'
     | '/forgot-password'
@@ -713,11 +737,13 @@ export interface RootRouteChildren {
   CompetitiveExamsRoute: typeof CompetitiveExamsRoute
   ContactRoute: typeof ContactRoute
   CookiePolicyRoute: typeof CookiePolicyRoute
+  CopyrightRoute: typeof CopyrightRoute
   CoursesRoute: typeof CoursesRoute
   CrackJeeRoute: typeof CrackJeeRoute
   CustomPracticeRoute: typeof CustomPracticeRoute
   DashboardRoute: typeof DashboardRoute
   DisclaimerRoute: typeof DisclaimerRoute
+  DmcaRoute: typeof DmcaRoute
   EngineeringRoadmapsRoute: typeof EngineeringRoadmapsRoute
   FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -934,6 +960,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EngineeringRoadmapsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dmca': {
+      id: '/dmca'
+      path: '/dmca'
+      fullPath: '/dmca'
+      preLoaderRoute: typeof DmcaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/disclaimer': {
       id: '/disclaimer'
       path: '/disclaimer'
@@ -967,6 +1000,13 @@ declare module '@tanstack/react-router' {
       path: '/courses'
       fullPath: '/courses'
       preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/copyright': {
+      id: '/copyright'
+      path: '/copyright'
+      fullPath: '/copyright'
+      preLoaderRoute: typeof CopyrightRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookie-policy': {
@@ -1179,11 +1219,13 @@ const rootRouteChildren: RootRouteChildren = {
   CompetitiveExamsRoute: CompetitiveExamsRoute,
   ContactRoute: ContactRoute,
   CookiePolicyRoute: CookiePolicyRoute,
+  CopyrightRoute: CopyrightRoute,
   CoursesRoute: CoursesRoute,
   CrackJeeRoute: CrackJeeRoute,
   CustomPracticeRoute: CustomPracticeRoute,
   DashboardRoute: DashboardRoute,
   DisclaimerRoute: DisclaimerRoute,
+  DmcaRoute: DmcaRoute,
   EngineeringRoadmapsRoute: EngineeringRoadmapsRoute,
   FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

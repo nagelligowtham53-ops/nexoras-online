@@ -27,6 +27,8 @@ const cols = [
       { to: "/terms", label: "Terms of Service" },
       { to: "/cookie-policy", label: "Cookie Policy" },
       { to: "/disclaimer", label: "Disclaimer" },
+      { to: "/copyright", label: "Copyright Policy" },
+      { to: "/dmca", label: "DMCA Policy" },
     ],
   },
 ] as const;
