@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type Json = string | number | boolean | null | { [k: string]: Json } | Json[];
+
 export type GradeResultRow = {
   question_id: string;
   is_correct: boolean;
-  correct_answer: Record<string, unknown> | null;
+  correct_answer: Json;
   solution: string | null;
   explanation: string | null;
 };
