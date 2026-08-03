@@ -98,7 +98,7 @@ function Article() {
         <p className="mt-4 text-lg text-muted-foreground">{post.description}</p>
 
         <div className="prose prose-invert mt-10 max-w-none space-y-5 text-base leading-relaxed text-foreground/90">
-          {post.content.map((block: BlogPost["content"][number], i: number) => {
+          {post.content.map((block: any, i: number) => {
             if (block.type === "h2") return <h2 key={i} className="mt-10 font-display text-2xl font-bold tracking-tight">{block.text}</h2>;
             if (block.type === "h3") return <h3 key={i} className="mt-6 font-display text-xl font-semibold">{block.text}</h3>;
             if (block.type === "ul") return (
@@ -106,10 +106,54 @@ function Article() {
                 {block.items?.map((it: string, j: number) => <li key={j}>{it}</li>)}
               </ul>
             );
+            if (block.type === "ol") return (
+              <ol key={i} className="ml-6 list-decimal space-y-2 text-muted-foreground">
+                {block.items?.map((it: string, j: number) => <li key={j}>{it}</li>)}
+              </ol>
+            );
+            if (block.type === "callout") return (
+              <div key={i} className="glass rounded-xl border-l-2 border-accent p-4 text-sm text-muted-foreground">
+                {block.text}
+              </div>
+            );
+            if (block.type === "table") return (
+              <figure key={i} className="my-6 overflow-x-auto rounded-xl border border-border">
+                <table className="w-full border-collapse text-sm">
+                  {block.caption && <caption className="px-4 py-2 text-left text-xs text-muted-foreground">{block.caption}</caption>}
+                  <thead className="bg-secondary/60">
+                    <tr>
+                      {block.headers?.map((h: string, j: number) => (
+                        <th key={j} scope="col" className="px-3 py-2 text-left font-semibold text-foreground">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {block.rows?.map((r: string[], j: number) => (
+                      <tr key={j} className="border-t border-border">
+                        {r.map((c, k) => <td key={k} className="px-3 py-2 text-muted-foreground">{c}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </figure>
+            );
+            if (block.type === "faq") return (
+              <section key={i} className="mt-10 space-y-4">
+                <h2 className="font-display text-2xl font-bold tracking-tight">Frequently Asked Questions</h2>
+                {block.faqs?.map((f: { q: string; a: string }, j: number) => (
+                  <div key={j} className="glass rounded-xl p-4">
+                    <h3 className="text-sm font-semibold text-foreground">{f.q}</h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground">{f.a}</p>
+                  </div>
+                ))}
+              </section>
+            );
             if (block.type === "quote") return <blockquote key={i} className="border-l-2 border-accent pl-4 italic text-muted-foreground">{block.text}</blockquote>;
+            if (!block.text) return null;
             return <p key={i} className="text-muted-foreground">{block.text}</p>;
           })}
         </div>
+
 
         {post.tags && post.tags.length > 0 && (
           <div className="mt-10 flex flex-wrap gap-2 border-t border-border pt-6">
