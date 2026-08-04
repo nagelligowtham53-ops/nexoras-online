@@ -185,6 +185,7 @@ function normalizeQuestionRow(row: Record<string, unknown>): DbQuestion {
     concepts: asStringArray(row.concepts),
     tags: asStringArray(row.tags),
     external_id: row.external_id ? String(row.external_id) : null,
+    source_type: row.source_type ? String(row.source_type) : "original_practice",
   };
 }
 
