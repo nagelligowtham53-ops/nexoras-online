@@ -41,6 +41,8 @@ export type DbQuestion = {
   concepts: string[];
   tags: string[];
   external_id: string | null;
+  /** previous_year | official_exam | licensed_bank | ncert_based | original_practice */
+  source_type?: string;
 };
 
 export type QuestionFilters = {
