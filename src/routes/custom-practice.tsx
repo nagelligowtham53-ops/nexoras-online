@@ -10,6 +10,10 @@ import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, gradeAnswers, type DbQuestion, type Difficulty, type GradeResult, type QuestionFilters } from "@/lib/questions";
 import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
+  fetchSyllabusChapters, practiceAvailability, fetchPracticeQuestions, groupBySubject,
+  SOURCE_LABELS, type SyllabusChapter, type PracticeSelection, type SourceType,
+} from "@/lib/syllabus";
+import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
   Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Flag, Loader2,
   Sparkles, TrendingUp, TrendingDown, ArrowRight, RotateCcw, Database,
