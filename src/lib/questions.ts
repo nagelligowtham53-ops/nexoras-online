@@ -41,6 +41,8 @@ export type DbQuestion = {
   concepts: string[];
   tags: string[];
   external_id: string | null;
+  /** previous_year | official_exam | licensed_bank | ncert_based | original_practice */
+  source_type?: string;
 };
 
 export type QuestionFilters = {
@@ -183,6 +185,7 @@ function normalizeQuestionRow(row: Record<string, unknown>): DbQuestion {
     concepts: asStringArray(row.concepts),
     tags: asStringArray(row.tags),
     external_id: row.external_id ? String(row.external_id) : null,
+    source_type: row.source_type ? String(row.source_type) : "original_practice",
   };
 }
 

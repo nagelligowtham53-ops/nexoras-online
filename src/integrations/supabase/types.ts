@@ -324,11 +324,13 @@ export type Database = {
       questions: {
         Row: {
           chapter: string
+          chapter_id: string | null
           class_level: number
           concepts: string[]
           correct_answer: Json
           created_at: string
           difficulty: string
+          exam_session: string | null
           exams: string[]
           explanation: string | null
           external_id: string | null
@@ -336,14 +338,19 @@ export type Database = {
           image_url: string | null
           is_ncert: boolean
           is_pyq: boolean
+          language: string
+          license_status: string
           marks: number
           ncert_unit: string | null
           negative_marks: number
           options: Json | null
+          paper: string | null
           question_text: string
           question_type: string
           solution: string | null
           source: string | null
+          source_reference: string | null
+          source_type: string
           subject: string
           subtopic: string | null
           tags: string[]
@@ -354,11 +361,13 @@ export type Database = {
         }
         Insert: {
           chapter: string
+          chapter_id?: string | null
           class_level: number
           concepts?: string[]
           correct_answer: Json
           created_at?: string
           difficulty: string
+          exam_session?: string | null
           exams?: string[]
           explanation?: string | null
           external_id?: string | null
@@ -366,14 +375,19 @@ export type Database = {
           image_url?: string | null
           is_ncert?: boolean
           is_pyq?: boolean
+          language?: string
+          license_status?: string
           marks?: number
           ncert_unit?: string | null
           negative_marks?: number
           options?: Json | null
+          paper?: string | null
           question_text: string
           question_type: string
           solution?: string | null
           source?: string | null
+          source_reference?: string | null
+          source_type?: string
           subject: string
           subtopic?: string | null
           tags?: string[]
@@ -384,11 +398,13 @@ export type Database = {
         }
         Update: {
           chapter?: string
+          chapter_id?: string | null
           class_level?: number
           concepts?: string[]
           correct_answer?: Json
           created_at?: string
           difficulty?: string
+          exam_session?: string | null
           exams?: string[]
           explanation?: string | null
           external_id?: string | null
@@ -396,14 +412,19 @@ export type Database = {
           image_url?: string | null
           is_ncert?: boolean
           is_pyq?: boolean
+          language?: string
+          license_status?: string
           marks?: number
           ncert_unit?: string | null
           negative_marks?: number
           options?: Json | null
+          paper?: string | null
           question_text?: string
           question_type?: string
           solution?: string | null
           source?: string | null
+          source_reference?: string | null
+          source_type?: string
           subject?: string
           subtopic?: string | null
           tags?: string[]
@@ -411,6 +432,79 @@ export type Database = {
           topic?: string | null
           updated_at?: string
           year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      syllabus_chapter_aliases: {
+        Row: {
+          alias: string
+          chapter_id: string
+          created_at: string
+        }
+        Insert: {
+          alias: string
+          chapter_id: string
+          created_at?: string
+        }
+        Update: {
+          alias?: string
+          chapter_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "syllabus_chapter_aliases_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      syllabus_chapters: {
+        Row: {
+          class_level: number
+          created_at: string
+          id: string
+          in_jee_advanced: boolean
+          in_jee_main: boolean
+          in_neet: boolean
+          name: string
+          order_index: number
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          class_level: number
+          created_at?: string
+          id: string
+          in_jee_advanced?: boolean
+          in_jee_main?: boolean
+          in_neet?: boolean
+          name: string
+          order_index?: number
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          class_level?: number
+          created_at?: string
+          id?: string
+          in_jee_advanced?: boolean
+          in_jee_main?: boolean
+          in_neet?: boolean
+          name?: string
+          order_index?: number
+          subject?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -560,23 +654,30 @@ export type Database = {
       questions_public: {
         Row: {
           chapter: string | null
+          chapter_id: string | null
           class_level: number | null
           concepts: string[] | null
           created_at: string | null
           difficulty: string | null
+          exam_session: string | null
           exams: string[] | null
           external_id: string | null
           id: string | null
           image_url: string | null
           is_ncert: boolean | null
           is_pyq: boolean | null
+          language: string | null
+          license_status: string | null
           marks: number | null
           ncert_unit: string | null
           negative_marks: number | null
           options: Json | null
+          paper: string | null
           question_text: string | null
           question_type: string | null
           source: string | null
+          source_reference: string | null
+          source_type: string | null
           subject: string | null
           subtopic: string | null
           tags: string[] | null
@@ -587,23 +688,30 @@ export type Database = {
         }
         Insert: {
           chapter?: string | null
+          chapter_id?: string | null
           class_level?: number | null
           concepts?: string[] | null
           created_at?: string | null
           difficulty?: string | null
+          exam_session?: string | null
           exams?: string[] | null
           external_id?: string | null
           id?: string | null
           image_url?: string | null
           is_ncert?: boolean | null
           is_pyq?: boolean | null
+          language?: string | null
+          license_status?: string | null
           marks?: number | null
           ncert_unit?: string | null
           negative_marks?: number | null
           options?: Json | null
+          paper?: string | null
           question_text?: string | null
           question_type?: string | null
           source?: string | null
+          source_reference?: string | null
+          source_type?: string | null
           subject?: string | null
           subtopic?: string | null
           tags?: string[] | null
@@ -614,23 +722,30 @@ export type Database = {
         }
         Update: {
           chapter?: string | null
+          chapter_id?: string | null
           class_level?: number | null
           concepts?: string[] | null
           created_at?: string | null
           difficulty?: string | null
+          exam_session?: string | null
           exams?: string[] | null
           external_id?: string | null
           id?: string | null
           image_url?: string | null
           is_ncert?: boolean | null
           is_pyq?: boolean | null
+          language?: string | null
+          license_status?: string | null
           marks?: number | null
           ncert_unit?: string | null
           negative_marks?: number | null
           options?: Json | null
+          paper?: string | null
           question_text?: string | null
           question_type?: string | null
           source?: string | null
+          source_reference?: string | null
+          source_type?: string | null
           subject?: string | null
           subtopic?: string | null
           tags?: string[] | null
@@ -639,10 +754,51 @@ export type Database = {
           updated_at?: string | null
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "questions_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
+      admin_chapter_health: {
+        Args: never
+        Returns: {
+          chapter_id: string
+          chapter_name: string
+          class_level: number
+          jee_advanced: number
+          jee_main: number
+          ncert: number
+          neet: number
+          original: number
+          pyq: number
+          subject: string
+          total: number
+        }[]
+      }
+      admin_question_bank_health: { Args: never; Returns: Json }
+      exam_chapter_counts: {
+        Args: { p_classes?: number[]; p_exam: string }
+        Returns: {
+          chapter_id: string
+          chapter_name: string
+          class_level: number
+          easy: number
+          hard: number
+          medium: number
+          ncert: number
+          original: number
+          pyq: number
+          subject: string
+          total: number
+        }[]
+      }
       grade_answers: {
         Args: { q_ids: string[]; user_answers: Json[] }
         Returns: {
@@ -659,6 +815,70 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      practice_availability: {
+        Args: {
+          p_chapter_ids?: string[]
+          p_classes?: number[]
+          p_difficulties?: string[]
+          p_exam: string
+          p_question_types?: string[]
+          p_source_types?: string[]
+          p_subjects?: string[]
+        }
+        Returns: number
+      }
+      practice_questions: {
+        Args: {
+          p_chapter_ids?: string[]
+          p_classes?: number[]
+          p_difficulties?: string[]
+          p_exam: string
+          p_limit?: number
+          p_question_types?: string[]
+          p_source_types?: string[]
+          p_subjects?: string[]
+        }
+        Returns: {
+          chapter: string | null
+          chapter_id: string | null
+          class_level: number | null
+          concepts: string[] | null
+          created_at: string | null
+          difficulty: string | null
+          exam_session: string | null
+          exams: string[] | null
+          external_id: string | null
+          id: string | null
+          image_url: string | null
+          is_ncert: boolean | null
+          is_pyq: boolean | null
+          language: string | null
+          license_status: string | null
+          marks: number | null
+          ncert_unit: string | null
+          negative_marks: number | null
+          options: Json | null
+          paper: string | null
+          question_text: string | null
+          question_type: string | null
+          source: string | null
+          source_reference: string | null
+          source_type: string | null
+          subject: string | null
+          subtopic: string | null
+          tags: string[] | null
+          time_estimate_seconds: number | null
+          topic: string | null
+          updated_at: string | null
+          year: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "questions_public"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       recompute_practice_session: {
         Args: { session_uuid: string }

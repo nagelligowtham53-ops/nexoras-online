@@ -10,6 +10,10 @@ import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { countQuestionBank, fetchChapterCounts, fetchQuestionsWithRelaxation, gradeAnswers, type DbQuestion, type Difficulty, type GradeResult, type QuestionFilters } from "@/lib/questions";
 import { chaptersFor, type Subject as SyllabusSubject } from "@/lib/jee-neet-chapters";
 import {
+  fetchSyllabusChapters, practiceAvailability, fetchPracticeQuestions, groupBySubject,
+  SOURCE_LABELS, type SyllabusChapter, type PracticeSelection, type SourceType,
+} from "@/lib/syllabus";
+import {
   Atom, FlaskConical, Sigma, Dna, Timer, CheckCircle2, XCircle,
   Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, Flag, Loader2,
   Sparkles, TrendingUp, TrendingDown, ArrowRight, RotateCcw, Database,
@@ -41,8 +45,9 @@ type Config = {
   subjects: Record<string, string[]>;   // subject -> chapters
   count: number;
   difficulties: Difficulty[];
-  pyqOnly: boolean;
-  ncertOnly: boolean;
+  pyqOnly?: boolean;
+  ncertOnly?: boolean;
+  sourceTypes?: SourceType[];
   timeMode: TimeMode;
   minutes: number;
 };
@@ -179,6 +184,7 @@ function CustomPracticePage() {
     }
   }
 
+
   return (
     <PageShell>
       <PageHeader
@@ -215,123 +221,152 @@ function CustomPracticePage() {
 /* ============================== SETUP ============================== */
 
 function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (cfg: Config, qs: DbQuestion[]) => void }) {
-  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const [exam, setExam] = useState<ExamCode>("JEE Main");
   const [classSel, setClassSel] = useState<ClassSel>("both");
   const availSubjects = EXAM_SUBJECTS[exam];
-  const [subjects, setSubjects] = useState<Record<string, string[]>>({});
-  const [chaptersMap, setChaptersMap] = useState<Record<string, string[]>>({});
+  /** subject -> selected chapter IDs (stable syllabus IDs, never names) */
+  const [selection, setSelection] = useState<Record<string, string[]>>({});
+  const [chapters, setChapters] = useState<SyllabusChapter[]>([]);
   const [count, setCount] = useState(25);
   const [customCount, setCustomCount] = useState("");
   const [difficulties, setDifficulties] = useState<Difficulty[]>(["Easy", "Medium", "Hard"]);
-  const [pyqOnly, setPyqOnly] = useState(false);
-  const [ncertOnly, setNcertOnly] = useState(false);
+  const [sourceTypes, setSourceTypes] = useState<SourceType[]>([]);
   const [timeMode, setTimeMode] = useState<TimeMode>("timed");
   const [minutes, setMinutes] = useState(30);
   const [loading, setLoading] = useState(false);
-  const [loadingCounts, setLoadingCounts] = useState(false);
+  const [loadingCounts, setLoadingCounts] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [bankTotal, setBankTotal] = useState<number | null>(null);
+  const [available, setAvailable] = useState<number | null>(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
-  const [countsMap, setCountsMap] = useState<Record<string, Record<string, number>>>({});
+  const chaptersBySubject = useMemo(() => groupBySubject(chapters), [chapters]);
+  const bankTotal = useMemo(() => chapters.reduce((a, c) => a + c.total, 0), [chapters]);
 
-  // Load syllabus chapters immediately + fetch DB counts per chapter
+  const classLevels = useMemo<(11 | 12)[] | undefined>(
+    () => (classSel === "both" ? undefined : [classSel as 11 | 12]),
+    [classSel],
+  );
+
+  // Official syllabus + real per-chapter counts, straight from the database.
   useEffect(() => {
-    setSubjects({});
-    const map: Record<string, string[]> = {};
-    for (const s of availSubjects) {
-      map[s] = chaptersFor(s as SyllabusSubject, classSel === "both" ? "all" : (String(classSel) as "11" | "12"));
-    }
-    setChaptersMap(map);
-
-    // Fetch counts from DB (best-effort; failures leave counts at 0)
+    let cancelled = false;
+    setSelection({});
+    setLoadingCounts(true);
+    setError(null);
     (async () => {
-      setLoadingCounts(true);
-      const levels = classSel === "both" ? undefined : [classSel as 11 | 12];
       try {
-        await ensureSeed();
-        const [total, rawCounts] = await Promise.all([
-          countQuestionBank(),
-          fetchChapterCounts({ exams: [exam], classLevels: levels }),
-        ]);
-        const next: Record<string, Record<string, number>> = {};
-        for (const s of availSubjects) next[s] = rawCounts[s] ?? {};
-        setBankTotal(total);
-        setCountsMap(next);
+        const rows = await fetchSyllabusChapters(exam, classLevels);
+        if (!cancelled) setChapters(rows);
       } catch (err) {
-        console.error("[custom-practice] Failed to fetch chapter counts", { exam, classSel, error: err });
-        const next: Record<string, Record<string, number>> = {};
-        for (const s of availSubjects) next[s] = {};
-        setCountsMap(next);
+        console.error("[custom-practice] syllabus load failed", { exam, classSel, error: err });
+        if (!cancelled) {
+          setChapters([]);
+          setError("We could not load the syllabus right now. Please refresh and try again.");
+        }
       } finally {
-        setLoadingCounts(false);
+        if (!cancelled) setLoadingCounts(false);
       }
     })();
-  }, [exam, classSel, availSubjects, ensureSeed]);
+    return () => { cancelled = true; };
+  }, [exam, classSel, classLevels]);
 
+  const selectedChapterIds = useMemo(() => Object.values(selection).flat(), [selection]);
+  const selectedSubjects = useMemo(
+    () => Object.entries(selection).filter(([, c]) => c.length > 0).map(([s]) => s),
+    [selection],
+  );
 
-  function toggleChapter(subject: string, chapter: string) {
-    setSubjects((prev) => {
+  const currentSelection = useMemo<PracticeSelection>(() => ({
+    exam,
+    classLevels,
+    chapterIds: selectedChapterIds.length ? selectedChapterIds : undefined,
+    subjects: selectedChapterIds.length ? undefined : availSubjects,
+    difficulties,
+    sourceTypes: sourceTypes.length ? sourceTypes : undefined,
+    questionTypes: ["single_correct"], // the v1 CBT runner renders single-correct
+  }), [exam, classLevels, selectedChapterIds, availSubjects, difficulties, sourceTypes]);
+
+  // Live, exact availability for the current filter set.
+  useEffect(() => {
+    let cancelled = false;
+    setCheckingAvailability(true);
+    const timer = setTimeout(async () => {
+      try {
+        const n = await practiceAvailability(currentSelection);
+        if (!cancelled) setAvailable(n);
+      } catch (err) {
+        console.error("[custom-practice] availability check failed", err);
+        if (!cancelled) setAvailable(null);
+      } finally {
+        if (!cancelled) setCheckingAvailability(false);
+      }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [currentSelection]);
+
+  function toggleChapter(subject: string, chapterId: string) {
+    setSelection((prev) => {
       const cur = prev[subject] ?? [];
-      const next = cur.includes(chapter) ? cur.filter((c) => c !== chapter) : [...cur, chapter];
+      const next = cur.includes(chapterId) ? cur.filter((c) => c !== chapterId) : [...cur, chapterId];
       return { ...prev, [subject]: next };
     });
   }
   function selectAllChapters(subject: string) {
-    setSubjects((p) => ({ ...p, [subject]: chaptersMap[subject] ?? [] }));
+    setSelection((p) => ({ ...p, [subject]: (chaptersBySubject[subject] ?? []).filter((c) => c.total > 0).map((c) => c.chapterId) }));
   }
-  function clearSubject(subject: string) { setSubjects((p) => ({ ...p, [subject]: [] })); }
+  function clearSubject(subject: string) { setSelection((p) => ({ ...p, [subject]: [] })); }
 
   function toggleDifficulty(d: Difficulty) {
     setDifficulties((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
   }
+  function toggleSource(s: SourceType) {
+    setSourceTypes((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]);
+  }
 
-  const totalChapters = Object.values(subjects).reduce((a, c) => a + c.length, 0);
-  const selectedSubjects = Object.entries(subjects).filter(([, c]) => c.length > 0).map(([s]) => s);
+  const requestedCount = count === -1 ? Math.max(5, Math.min(200, Number(customCount) || 25)) : count;
+  const shortfall = available !== null && available > 0 && available < requestedCount;
 
-  async function start() {
+  async function launch(howMany: number) {
     setError(null);
-    const finalCount = count === -1 ? Math.max(5, Math.min(200, Number(customCount) || 25)) : count;
-    if (difficulties.length === 0) { setError("Pick at least one difficulty."); return; }
     setLoading(true);
     try {
-      const allChapters = Object.values(subjects).flat();
-      await ensureSeed();
-      const filters: QuestionFilters = {
-        exams: [exam],
-        classLevels: classSel === "both" ? undefined : [classSel],
-        subjects: selectedSubjects.length ? selectedSubjects : undefined,
-        chapters: allChapters.length ? allChapters : undefined,
-        difficulties,
-        pyqOnly, ncertOnly,
-        questionTypes: ["single_correct"], // v1 runner supports single-correct
-        count: finalCount,
-      };
-      console.info("[custom-practice] Start Practice clicked", { appliedFilters: filters, selectedChapters: allChapters, requestedCount: finalCount });
-      const result = await fetchQuestionsWithRelaxation(filters);
-      console.info("[custom-practice] Question fetch summary", {
-        totalQuestionsInDatabase: result.totalQuestions,
-        questionsFoundAfterFiltering: result.questions.length,
-        relaxedStage: result.relaxedStage,
-        attempts: result.attempts,
-      });
-      if (result.totalQuestions === 0) throw new Error("Question bank seed did not complete.");
-      if (result.questions.length === 0) {
-        setError("No matching questions were found after checking all safe filter combinations. Try a different exam or class.");
-        setLoading(false);
+      const qs = await fetchPracticeQuestions(currentSelection, howMany);
+      if (qs.length === 0) {
+        setError("No questions are currently available for this exact selection. Choose another chapter or return later.");
         return;
       }
-      const qs = result.questions;
       const realMin = exam === "NEET" ? Math.round(qs.length * 1.08) : Math.round(qs.length * 1.2);
       const finalMinutes = timeMode === "real" ? realMin : timeMode === "timed" ? minutes : 0;
       onStart(
-        { exam, classSel, subjects, count: qs.length, difficulties, pyqOnly, ncertOnly, timeMode, minutes: finalMinutes },
+        { exam, classSel, subjects: selection, count: qs.length, difficulties, sourceTypes, timeMode, minutes: finalMinutes },
         qs,
       );
     } catch (e) {
       console.error("[custom-practice] Failed to start practice", e);
       setError("We could not start practice right now. Please try again in a moment.");
     } finally { setLoading(false); }
+  }
+
+  async function start() {
+    setError(null);
+    if (difficulties.length === 0) { setError("Pick at least one difficulty."); return; }
+    setLoading(true);
+    let exact = 0;
+    try {
+      exact = await practiceAvailability(currentSelection);
+      setAvailable(exact);
+    } catch (e) {
+      console.error("[custom-practice] availability check failed", e);
+      setError("We could not check question availability right now. Please try again in a moment.");
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+    if (exact === 0) {
+      setError("No questions are currently available for this exact selection. Choose another chapter or return later.");
+      return;
+    }
+    await launch(Math.min(requestedCount, exact));
   }
 
   return (
@@ -342,14 +377,14 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
           Questions are served from Nexoras' curated question bank — no AI generation during practice.
         </div>
         <div className="flex gap-3 text-xs">
-          <span>{bankTotal === null ? "Checking bank…" : `${bankTotal} questions available`}</span>
+          <span>{loadingCounts ? "Checking bank…" : `${bankTotal} ${exam} questions in the bank`}</span>
           {bookmarksCount > 0 && <span>{bookmarksCount} bookmarked</span>}
-          <Link to="/practice-history" className="text-accent underline">History & analytics</Link>
+          <Link to="/practice-history" className="text-accent underline">History &amp; analytics</Link>
         </div>
       </div>
 
       <div className="glass space-y-6 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold">1 · Exam & Class</h2>
+        <h2 className="text-lg font-semibold">1 · Exam &amp; Class</h2>
         <div className="grid gap-3 sm:grid-cols-3">
           {(["JEE Main", "JEE Advanced", "NEET"] as ExamCode[]).map((e) => (
             <Picker key={e} label={e} active={exam === e} onClick={() => setExam(e)} />
@@ -360,60 +395,72 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
           <Picker label="Class 12" active={classSel === 12} onClick={() => setClassSel(12)} />
           <Picker label="Both (11 + 12)" active={classSel === "both"} onClick={() => setClassSel("both")} />
         </div>
+        <p className="text-xs text-muted-foreground">
+          Chapters below follow the official {exam} syllabus for the selected class — Class 11 and Class 12 chapters are kept separate.
+        </p>
       </div>
 
       <div className="glass space-y-4 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold">2 · Subjects & Chapters</h2>
+        <h2 className="text-lg font-semibold">2 · Subjects &amp; Chapters</h2>
         <div className="grid gap-4 lg:grid-cols-2">
           {availSubjects.map((s) => {
             const Icon = SUBJECT_ICONS[s] ?? Database;
-            const chapters = chaptersMap[s] ?? [];
-            const counts = countsMap[s] ?? {};
-            const selected = subjects[s] ?? [];
-            const totalQs = Object.values(counts).reduce((a, b) => a + b, 0);
+            const list = chaptersBySubject[s] ?? [];
+            const selected = selection[s] ?? [];
+            const totalQs = list.reduce((a, c) => a + c.total, 0);
+            const populated = list.filter((c) => c.total > 0).length;
             return (
               <div key={s} className="rounded-xl border border-border bg-background/40 p-4">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-2 font-medium">
                     <Icon className="h-4 w-4 text-accent" /> {s}
                     <span className="text-xs text-muted-foreground">
-                      ({selected.length}/{chapters.length}) · {totalQs} Qs
+                      ({selected.length}/{list.length}) · {totalQs} Qs
                     </span>
                   </div>
                   <div className="flex gap-1.5 text-[11px]">
-                    <button onClick={() => selectAllChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All</button>
+                    <button onClick={() => selectAllChapters(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">All with Qs</button>
                     <button onClick={() => clearSubject(s)} className="rounded border border-border px-2 py-0.5 hover:border-accent/40">Clear</button>
                   </div>
                 </div>
-                <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto pr-1">
-                  {chapters.map((c) => {
-                    const on = selected.includes(c);
-                    const n = counts[c] ?? 0;
-                    return (
-                      <button key={c} onClick={() => toggleChapter(s, c)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/60 hover:border-accent/40"}`}>
-                        <span>{c}</span>
-                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${on ? "bg-black/20" : n > 0 ? "bg-accent/15 text-accent" : "bg-muted/50 text-muted-foreground"}`}>
-                          {loadingCounts ? "…" : `${n} ${n === 1 ? "Q" : "Qs"}`}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {loadingCounts ? (
+                  <p className="text-xs text-muted-foreground">Loading official syllabus…</p>
+                ) : (
+                  <>
+                    <div className="flex max-h-64 flex-wrap gap-1.5 overflow-y-auto pr-1">
+                      {list.map((c) => {
+                        const on = selected.includes(c.chapterId);
+                        const empty = c.total === 0;
+                        return (
+                          <button key={c.chapterId} onClick={() => toggleChapter(s, c.chapterId)} disabled={empty}
+                            title={empty ? "No questions in the bank for this chapter yet" : `${c.total} questions · ${c.pyq} PYQ · ${c.ncert} NCERT-based`}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${on ? "border-accent/60 bg-gradient-primary text-primary-foreground" : empty ? "cursor-not-allowed border-border/60 bg-background/30 text-muted-foreground/70" : "border-border bg-background/60 hover:border-accent/40"}`}>
+                            <span>{c.name}</span>
+                            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${on ? "bg-black/20" : c.total > 0 ? "bg-accent/15 text-accent" : "bg-muted/50 text-muted-foreground"}`}>
+                              {c.total} {c.total === 1 ? "Q" : "Qs"}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-2 text-[11px] text-muted-foreground">
+                      {populated} of {list.length} chapters have questions in the bank. Counts are live database counts.
+                    </p>
+                  </>
+                )}
               </div>
             );
           })}
-
         </div>
         <p className="text-xs text-muted-foreground">
           {selectedSubjects.length === 0
-            ? "No subjects selected — all subjects will be included."
-            : `${selectedSubjects.length} subject${selectedSubjects.length === 1 ? "" : "s"} · ${totalChapters} chapter${totalChapters === 1 ? "" : "s"} selected`}
+            ? "No chapters selected — every chapter of this exam and class is included."
+            : `${selectedSubjects.length} subject${selectedSubjects.length === 1 ? "" : "s"} · ${selectedChapterIds.length} chapter${selectedChapterIds.length === 1 ? "" : "s"} selected`}
         </p>
       </div>
 
       <div className="glass space-y-4 rounded-2xl p-6">
-        <h2 className="text-lg font-semibold">3 · Questions & Difficulty</h2>
+        <h2 className="text-lg font-semibold">3 · Questions &amp; Difficulty</h2>
         <div className="flex flex-wrap gap-2">
           {[10, 25, 50, 100].map((n) => (
             <Picker key={n} label={`${n} Questions`} active={count === n} onClick={() => setCount(n)} />
@@ -428,11 +475,16 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
           {(["Easy", "Medium", "Hard"] as Difficulty[]).map((d) => (
             <Picker key={d} label={d} active={difficulties.includes(d)} onClick={() => toggleDifficulty(d)} />
           ))}
+          <Picker label="Mixed (all)" active={difficulties.length === 3} onClick={() => setDifficulties(["Easy", "Medium", "Hard"])} />
         </div>
-        <div className="flex flex-wrap gap-2 pt-2">
-          <Picker label="Previous Year Only" active={pyqOnly} onClick={() => setPyqOnly((v) => !v)} />
-          <Picker label="NCERT-based Only" active={ncertOnly} onClick={() => setNcertOnly((v) => !v)} />
-          <Picker label="Mixed" active={!pyqOnly && !ncertOnly} onClick={() => { setPyqOnly(false); setNcertOnly(false); }} />
+        <div className="space-y-2 pt-2">
+          <p className="text-xs text-muted-foreground">Question source — only genuinely tagged questions are returned. AI never fabricates previous-year or official questions.</p>
+          <div className="flex flex-wrap gap-2">
+            <Picker label="Any source" active={sourceTypes.length === 0} onClick={() => setSourceTypes([])} />
+            {(Object.keys(SOURCE_LABELS) as SourceType[]).map((s) => (
+              <Picker key={s} label={SOURCE_LABELS[s]} active={sourceTypes.includes(s)} onClick={() => toggleSource(s)} />
+            ))}
+          </div>
         </div>
       </div>
 
@@ -455,19 +507,33 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
         )}
       </div>
 
+      <div className="glass space-y-3 rounded-2xl p-6">
+        <h2 className="text-lg font-semibold">5 · Availability</h2>
+        <p className="text-sm">
+          {checkingAvailability || available === null
+            ? "Checking how many questions match this selection…"
+            : available === 0
+              ? "No questions are currently available for this exact selection. Choose another chapter or return later."
+              : `${available} question${available === 1 ? "" : "s"} ${available === 1 ? "is" : "are"} currently available for this selection.`}
+        </p>
+        {shortfall && (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent/40 bg-accent/10 p-3 text-sm">
+            <span>You asked for {requestedCount}. {available} matching question{available === 1 ? "" : "s"} available.</span>
+            <Button size="sm" variant="secondary" onClick={() => launch(available!)} disabled={loading}>
+              Start with {available}
+            </Button>
+          </div>
+        )}
+      </div>
+
       {error && (
         <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
           <p>{error}</p>
-          {error.includes("0 questions") && (
-            <Link to="/admin/questions" className="mt-2 inline-flex text-accent underline">
-              Import Questions
-            </Link>
-          )}
         </div>
       )}
 
       <div className="flex justify-end">
-        <Button onClick={start} disabled={loading} className="bg-gradient-primary text-primary-foreground shadow-glow">
+        <Button onClick={start} disabled={loading || available === 0} className="bg-gradient-primary text-primary-foreground shadow-glow">
           {loading ? <><Loader2 className="h-4 w-4 animate-spin" /> Loading…</> : <>Start practice <ArrowRight className="h-4 w-4" /></>}
         </Button>
       </div>
@@ -483,6 +549,8 @@ function Picker({ label, active, onClick }: { label: string; active: boolean; on
     </button>
   );
 }
+
+
 
 /* ============================== EXAM ============================== */
 
