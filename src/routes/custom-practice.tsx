@@ -541,6 +541,16 @@ function Setup({ bookmarksCount, onStart }: { bookmarksCount: number; onStart: (
   );
 }
 
+function Picker({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button onClick={onClick}
+      className={`rounded-lg border px-3 py-1.5 text-xs transition-colors ${active ? "border-accent/60 bg-gradient-primary text-primary-foreground" : "border-border bg-background/40 hover:border-accent/40"}`}>
+      {label}
+    </button>
+  );
+}
+
+
 
 /* ============================== EXAM ============================== */
 
