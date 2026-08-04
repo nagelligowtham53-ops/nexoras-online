@@ -41,8 +41,9 @@ type Config = {
   subjects: Record<string, string[]>;   // subject -> chapters
   count: number;
   difficulties: Difficulty[];
-  pyqOnly: boolean;
-  ncertOnly: boolean;
+  pyqOnly?: boolean;
+  ncertOnly?: boolean;
+  sourceTypes?: SourceType[];
   timeMode: TimeMode;
   minutes: number;
 };
