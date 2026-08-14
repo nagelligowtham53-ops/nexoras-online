@@ -1,13 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
-import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
-import { fetchQuestions, gradeAnswers, type DbQuestion, type Difficulty as DbDifficulty, type GradeResult } from "@/lib/questions";
+import { gradeAnswers, type DbQuestion, type GradeResult } from "@/lib/questions";
 import { fetchExamConfigs, papersFor, type ExamConfig } from "@/lib/exam-config";
 import {
   checkAvailability, generateTest, TestGenerationError,
@@ -152,7 +150,6 @@ type Difficulty = "mixed" | "easy" | "medium" | "hard";
 type Phase = "select" | "instructions" | "loading" | "running" | "summary" | "result";
 
 function MockTestsPage() {
-  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>("select");
   const [exam, setExam] = useState<ExamSpec>(EXAMS[0]);
