@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
-import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
-import { fetchQuestions, gradeAnswers, type DbQuestion, type Difficulty as DbDifficulty, type GradeResult } from "@/lib/questions";
+import { gradeAnswers, type DbQuestion, type GradeResult } from "@/lib/questions";
+import { fetchExamConfigs, papersFor, type ExamConfig } from "@/lib/exam-config";
+import {
+  checkAvailability, generateTest, TestGenerationError,
+  type AvailabilityReport, type GenerationOptions,
+} from "@/lib/test-generation";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles,
@@ -40,7 +43,12 @@ type Question = {
   /** Only set for the offline demo fallback; DB-sourced questions never carry the key. */
   correct?: number;
   explanation?: string;
+  /** Provenance label: Official PYQ, NCERT-based, PYQ Style (original), … */
+  sourceLabel?: string;
+  chapter?: string;
+  difficulty?: string;
 };
+
 
 type ExamSpec = {
   key: string;
@@ -142,7 +150,6 @@ type Difficulty = "mixed" | "easy" | "medium" | "hard";
 type Phase = "select" | "instructions" | "loading" | "running" | "summary" | "result";
 
 function MockTestsPage() {
-  const ensureSeed = useServerFn(ensureQuestionBankSeeded);
   const { user } = useAuth();
   const [phase, setPhase] = useState<Phase>("select");
   const [exam, setExam] = useState<ExamSpec>(EXAMS[0]);
@@ -229,121 +236,80 @@ function MockTestsPage() {
     }
   }
 
-  // ---- DB-backed question loading (real question bank)
-  const EXAM_DB_MAP: Record<string, string | null> = {
-    "JEE Main": "JEE Main",
-    "JEE Advanced": "JEE Advanced",
-    "NEET UG": "NEET",
-    "BITSAT": "BITSAT",
-    "MHT CET": "MHT CET",
-    "COMEDK UGET": "COMEDK UGET",
-    "EAMCET (AP/TS)": "EAMCET (AP/TS)",
-    "UPSC CSE Prelims": "UPSC CSE Prelims",
-    "CAT (IIM)": "CAT (IIM)",
-    "GATE (CSE)": "GATE (CSE)",
-    "CA Foundation": "CA Foundation",
-    "CFA Level I": "CFA Level I",
-    "USMLE Step 1": "USMLE Step 1",
-    "SAT": "SAT",
-    "GRE General": "GRE General",
-    "IELTS Academic": "IELTS Academic",
-    "TOEFL iBT": "TOEFL iBT",
-    "IMO / Math Olympiad": "IMO / Math Olympiad",
-    "Coding Contest": "Coding Contest",
-    "ICPC Prep": "ICPC Prep",
-  };
-  function dbSubjectFor(examKey: string, subjectName: string): string {
-    if (examKey === "neet" && (subjectName === "Botany" || subjectName === "Zoology")) return "Biology";
-    return subjectName;
-  }
-  function difficultyFilter(): DbDifficulty[] | undefined {
-    if (difficulty === "mixed") return undefined;
-    if (difficulty === "easy") return ["Easy"];
-    if (difficulty === "medium") return ["Medium"];
-    return ["Hard"];
-  }
-  function mapDbToQuestion(r: DbQuestion, displaySubject: string): Question | null {
-    if (r.question_type === "single_correct" && r.options) {
-      return {
-        subject: displaySubject, type: "mcq", q: r.question_text,
-        options: r.options, dbId: r.id,
-      };
-    }
-    if (r.question_type === "integer" || r.question_type === "numerical") {
-      return {
-        subject: displaySubject, type: "numerical", q: r.question_text, dbId: r.id,
-      };
-    }
-    return null;
-  }
+  // Question loading, validation and provenance now live in src/lib/test-generation.ts.
 
-  async function loadQuestions(spec: ExamSpec): Promise<Question[]> {
-    await ensureSeed();
-    const dbExam = EXAM_DB_MAP[spec.name];
-    if (!dbExam) throw new Error("This exam is not linked to the question bank yet.");
-    const effective: { name: string; count: number }[] =
-      testType === "chapter"
-        ? [{ name: chapterSubject, count: 25 }]
-        : spec.subjects.map((s) => ({ ...s }));
-    const total = effective.reduce((a, s) => a + s.count, 0);
-    const diffs = difficultyFilter();
-    const all: Question[] = [];
-    try {
-      for (const s of effective) {
-        setLoadProgress(`Loading ${s.name} questions… (${all.length}/${total})`);
-        const rows = await fetchQuestions({
-          exams: [dbExam],
-          subjects: [dbSubjectFor(spec.key, s.name)],
-          difficulties: diffs,
-          count: s.count,
-        });
-        for (const r of rows) {
-          const mapped = mapDbToQuestion(r, s.name);
-          if (mapped) all.push(mapped);
-        }
+
+  // ---- Exam configuration (patterns live in the database, not in this file)
+  const [configs, setConfigs] = useState<ExamConfig[]>([]);
+  const [configError, setConfigError] = useState<string | null>(null);
+  const [paperName, setPaperName] = useState<string | null>(null);
+  const [sizeOverride, setSizeOverride] = useState<number | null>(null);
+  const [pyqOnly, setPyqOnly] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setConfigs(await fetchExamConfigs());
+      } catch (e) {
+        console.error("[mock-tests] exam config load failed", e);
+        setConfigError("Exam patterns could not be loaded from the database.");
       }
-    } catch (e) {
-      console.error("[mock-tests] DB fetch failed", e);
-    }
-    if (all.length === 0) throw new Error("No real questions matched this mock test after seeding.");
-    return all;
-  }
+    })();
+  }, []);
 
+  const papers = useMemo(() => papersFor(configs, exam.key), [configs, exam.key]);
+  const activeConfig: ExamConfig = useMemo(() => {
+    const found = papers.find((p) => p.paperName === paperName) ?? papers[0];
+    if (found) return found;
+    // Exam has no database pattern yet — surface it honestly instead of guessing.
+    return {
+      id: `local-${exam.key}`, examKey: exam.key, examName: exam.name, examYear: new Date().getFullYear(),
+      paperName: "Paper 1", dbExam: null,
+      totalQuestions: exam.subjects.reduce((a, s) => a + s.count, 0),
+      durationMinutes: exam.duration_min, marksPerCorrect: exam.marking.correct,
+      negativeMarks: exam.marking.wrong, questionTypes: ["single_correct"],
+      subjectDistribution: exam.subjects, patternNote: exam.pattern,
+      difficultyProfile: "mixed", active: true,
+    };
+  }, [papers, paperName, exam]);
 
-  // ---- Availability probe (so we can disable the Begin button ahead of time)
-  const [availableCount, setAvailableCount] = useState<number | null>(null);
+  const generationOptions: GenerationOptions = useMemo(() => ({
+    difficulty,
+    onlySection: testType === "chapter" ? chapterSubject : undefined,
+    totalOverride: testType === "chapter" ? 25 : sizeOverride ?? undefined,
+    pyqOnly,
+  }), [difficulty, testType, chapterSubject, sizeOverride, pyqOnly]);
+
+  // ---- Pre-flight availability (same code path the generator uses)
+  const [availability, setAvailability] = useState<AvailabilityReport | null>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
-  async function probeAvailability(spec: ExamSpec) {
-    const dbExam = EXAM_DB_MAP[spec.name];
-    if (!dbExam) { setAvailableCount(0); return; }
-    setCheckingAvailability(true);
-    try {
-      await ensureSeed();
-      const subjects = testType === "chapter"
-        ? [dbSubjectFor(spec.key, chapterSubject)]
-        : spec.subjects.map((s) => dbSubjectFor(spec.key, s.name));
-      let q = supabase
-        .from("questions")
-        .select("id", { count: "exact", head: true })
-        .overlaps("exams", [dbExam])
-        .in("subject", subjects);
-      const diffs = difficultyFilter();
-      if (diffs) q = q.in("difficulty", diffs);
-      const { count, error } = await q;
-      if (error) throw error;
-      setAvailableCount(count ?? 0);
-    } catch (error) {
-      console.error("[mock-tests] Availability check failed", error);
-      setAvailableCount(0);
-    } finally {
-      setCheckingAvailability(false);
-    }
-  }
+
   useEffect(() => {
     if (phase !== "instructions") return;
-    void probeAvailability(exam);
+    let cancelled = false;
+    setCheckingAvailability(true);
+    setAvailability(null);
+    (async () => {
+      try {
+        const report = await checkAvailability(activeConfig, generationOptions);
+        if (!cancelled) setAvailability(report);
+      } catch (e) {
+        console.error("[mock-tests] availability check failed", e);
+        if (!cancelled) {
+          setAvailability({
+            requested: activeConfig.totalQuestions, usable: 0, sections: [], unmappedSections: [],
+            ready: false, suggestedSizes: [],
+            reason: e instanceof TestGenerationError ? e.message : "The question bank could not be reached.",
+          });
+        }
+      } finally {
+        if (!cancelled) setCheckingAvailability(false);
+      }
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exam.key, testType, chapterSubject, difficulty]);
+  }, [phase, activeConfig.id, generationOptions]);
+
 
   function openInstructions(spec: ExamSpec) {
     setExam(spec);
@@ -352,16 +318,31 @@ function MockTestsPage() {
     setChapterSubject(spec.subjects[0].name);
     setAgreed(false);
     setError(null);
-    setAvailableCount(null);
+    setPaperName(null);
+    setSizeOverride(null);
+    setPyqOnly(false);
+    setAvailability(null);
     setPhase("instructions");
   }
 
   async function beginExam() {
     setError(null);
     setPhase("loading");
-    setLoadProgress("Preparing your exam…");
+    setLoadProgress(`Validating the ${activeConfig.examName} question pool…`);
     try {
-      let qs = await loadQuestions(exam);
+      const { questions: generated, report } = await generateTest(activeConfig, generationOptions);
+      setLoadProgress(`Assembling ${generated.length} questions…`);
+      const qs: Question[] = generated.map((g) => ({
+        subject: g.sectionName,
+        type: g.type,
+        q: g.text,
+        options: g.options.length ? g.options : undefined,
+        dbId: g.dbId,
+        sourceLabel: g.sourceLabel,
+        chapter: g.chapter,
+        difficulty: g.difficulty,
+      }));
+      setAvailability(report);
       setQuestions(qs);
       setAnswers(Array(qs.length).fill(null));
       setMarked(Array(qs.length).fill(false));
@@ -369,7 +350,10 @@ function MockTestsPage() {
       setTimePerQ(Array(qs.length).fill(0));
       setCurrent(0);
       setActiveSection(qs[0].subject);
-      const minutes = testType === "chapter" ? 30 : exam.duration_min;
+      const fullMinutes = activeConfig.durationMinutes;
+      const minutes = testType === "chapter"
+        ? 30
+        : Math.max(10, Math.round((fullMinutes * qs.length) / Math.max(1, activeConfig.totalQuestions)));
       setSecondsLeft(minutes * 60);
       startedAtRef.current = Date.now();
       lastTickRef.current = Date.now();
@@ -377,10 +361,16 @@ function MockTestsPage() {
       setTimeout(() => enterFullscreen(), 200);
     } catch (e) {
       console.error("[mock-tests] beginExam failed", e);
-      setError("We could not prepare this test right now. Please try again in a moment.");
+      const message = e instanceof TestGenerationError
+        ? e.message
+        : e instanceof Error && e.message
+          ? e.message
+          : "The question bank could not be reached just now.";
+      setError(message);
       setPhase("instructions");
     }
   }
+
 
 
 
@@ -454,8 +444,8 @@ function MockTestsPage() {
       }
       subMap.set(q.subject, sub);
     });
-    const score = correct * exam.marking.correct - wrong * exam.marking.wrong;
-    const max_score = questions.length * exam.marking.correct;
+    const score = correct * activeConfig.marksPerCorrect - wrong * activeConfig.negativeMarks;
+    const max_score = questions.length * activeConfig.marksPerCorrect;
     const subject_breakdown: SubjectStat[] = Array.from(subMap.entries()).map(([subject, s]) => ({
       subject, correct: s.correct, total: s.total,
     }));
@@ -520,8 +510,8 @@ function MockTestsPage() {
       }
       subMap.set(q.subject, cur);
     });
-    const score = correct * exam.marking.correct - wrong * exam.marking.wrong;
-    const max_score = questions.length * exam.marking.correct;
+    const score = correct * activeConfig.marksPerCorrect - wrong * activeConfig.negativeMarks;
+    const max_score = questions.length * activeConfig.marksPerCorrect;
     const percent = Math.max(0, Math.round((score / Math.max(1, max_score)) * 100));
     const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
     const rank = Math.max(1, Math.round((100 - percent) * 1500));
@@ -646,21 +636,30 @@ function MockTestsPage() {
       {phase === "instructions" && (
         <InstructionsView
           exam={exam}
+          config={activeConfig}
+          papers={papers}
+          paperName={activeConfig.paperName}
+          setPaperName={setPaperName}
           testType={testType}
           setTestType={setTestType}
           chapterSubject={chapterSubject}
           setChapterSubject={setChapterSubject}
           difficulty={difficulty}
           setDifficulty={setDifficulty}
+          pyqOnly={pyqOnly}
+          setPyqOnly={setPyqOnly}
+          sizeOverride={sizeOverride}
+          setSizeOverride={setSizeOverride}
           agreed={agreed}
           setAgreed={setAgreed}
-          error={error}
-          availableCount={availableCount}
+          error={error ?? configError}
+          availability={availability}
           checkingAvailability={checkingAvailability}
           onBack={() => setPhase("select")}
           onBegin={beginExam}
         />
       )}
+
 
       {phase === "loading" && (
         <section className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
@@ -682,17 +681,30 @@ function MockTestsPage() {
 /* ===================== SUB-VIEWS ===================== */
 
 function InstructionsView(props: {
-  exam: ExamSpec; testType: TestType; setTestType: (t: TestType) => void;
+  exam: ExamSpec; config: ExamConfig; papers: ExamConfig[];
+  paperName: string; setPaperName: (p: string) => void;
+  testType: TestType; setTestType: (t: TestType) => void;
   chapterSubject: string; setChapterSubject: (s: string) => void;
   difficulty: Difficulty; setDifficulty: (d: Difficulty) => void;
+  pyqOnly: boolean; setPyqOnly: (b: boolean) => void;
+  sizeOverride: number | null; setSizeOverride: (n: number | null) => void;
   agreed: boolean; setAgreed: (b: boolean) => void; error: string | null;
-  availableCount: number | null; checkingAvailability: boolean;
+  availability: AvailabilityReport | null; checkingAvailability: boolean;
   onBack: () => void; onBegin: () => void;
 }) {
-  const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, availableCount, checkingAvailability, onBack, onBegin } = props;
-  const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
-  const minutes = testType === "chapter" ? 30 : exam.duration_min;
-  const canBegin = agreed && !checkingAvailability;
+  const {
+    exam, config, papers, paperName, setPaperName, testType, setTestType, chapterSubject, setChapterSubject,
+    difficulty, setDifficulty, pyqOnly, setPyqOnly, sizeOverride, setSizeOverride,
+    agreed, setAgreed, error, availability, checkingAvailability, onBack, onBegin,
+  } = props;
+  const fullTotal = sizeOverride ?? config.totalQuestions;
+  const total = testType === "chapter" ? 25 : fullTotal;
+  const minutes = testType === "chapter"
+    ? 30
+    : Math.max(10, Math.round((config.durationMinutes * total) / Math.max(1, config.totalQuestions)));
+  const usable = availability?.usable ?? 0;
+  const canBegin = agreed && !checkingAvailability && usable > 0;
+
 
 
   return (
@@ -730,8 +742,8 @@ function InstructionsView(props: {
 
             <Section title="Marking Scheme">
               <ul className="ml-5 list-disc space-y-1.5 text-muted-foreground">
-                <li>Correct answer: <span className="font-medium text-emerald-400">+{exam.marking.correct}</span></li>
-                <li>Incorrect answer: <span className="font-medium text-rose-400">−{exam.marking.wrong}</span></li>
+                <li>Correct answer: <span className="font-medium text-emerald-400">+{config.marksPerCorrect}</span></li>
+                <li>Incorrect answer: <span className="font-medium text-rose-400">−{config.negativeMarks}</span></li>
                 <li>Unattempted: <span className="font-medium text-foreground">0</span></li>
               </ul>
             </Section>
@@ -748,10 +760,20 @@ function InstructionsView(props: {
 
             <Section title="Test Configuration">
               <div className="space-y-3">
+                {papers.length > 1 && (
+                  <div>
+                    <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Paper</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {papers.map((p) => (
+                        <ChoiceChip key={p.id} active={paperName === p.paperName} onClick={() => setPaperName(p.paperName)} label={`${p.paperName} · ${p.totalQuestions} Qs`} />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Test Type</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <ChoiceChip active={testType === "full"} onClick={() => setTestType("full")} label={`Full-length (${exam.subjects.reduce((a, s) => a + s.count, 0)} Qs · ${exam.duration_min}m)`} />
+                    <ChoiceChip active={testType === "full"} onClick={() => setTestType("full")} label={`Full-length (${config.totalQuestions} Qs · ${config.durationMinutes}m)`} />
                     <ChoiceChip active={testType === "chapter"} onClick={() => setTestType("chapter")} label="Chapter-wise (25 Qs · 30m)" />
                   </div>
                 </div>
@@ -759,7 +781,7 @@ function InstructionsView(props: {
                   <div>
                     <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Subject</label>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {exam.subjects.map((s) => (
+                      {config.subjectDistribution.map((s) => (
                         <ChoiceChip key={s.name} active={chapterSubject === s.name} onClick={() => setChapterSubject(s.name)} label={s.name} />
                       ))}
                     </div>
@@ -771,6 +793,13 @@ function InstructionsView(props: {
                     {(["mixed", "easy", "medium", "hard"] as const).map((d) => (
                       <ChoiceChip key={d} active={difficulty === d} onClick={() => setDifficulty(d)} label={d[0].toUpperCase() + d.slice(1)} />
                     ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Question Source</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <ChoiceChip active={!pyqOnly} onClick={() => setPyqOnly(false)} label="All verified questions" />
+                    <ChoiceChip active={pyqOnly} onClick={() => setPyqOnly(true)} label="Official PYQs only" />
                   </div>
                 </div>
               </div>
@@ -788,15 +817,49 @@ function InstructionsView(props: {
                 Checking the question bank for available questions…
               </div>
             )}
-            {!checkingAvailability && availableCount !== null && availableCount > 0 && availableCount < total && (
-              <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
-                {availableCount} questions available for these filters. Your test will use as many as possible.
+
+            {!checkingAvailability && availability && (
+              <div className={`rounded-lg border px-3 py-3 text-xs ${availability.ready ? "border-emerald-400/40 bg-emerald-500/5" : usable > 0 ? "border-accent/40 bg-accent/5" : "border-destructive/40 bg-destructive/10"}`}>
+                <p className={`font-medium ${availability.ready ? "text-emerald-300" : usable > 0 ? "text-foreground" : "text-destructive"}`}>
+                  {availability.ready
+                    ? `Ready — ${usable} verified questions matched.`
+                    : usable > 0
+                      ? `${usable} of ${availability.requested} questions available.`
+                      : "This test cannot be generated yet."}
+                </p>
+                {availability.reason && <p className="mt-1 text-muted-foreground">{availability.reason}</p>}
+                {availability.sections.length > 0 && (
+                  <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+                    {availability.sections.map((s) => (
+                      <li key={s.sectionName} className="flex items-center justify-between gap-2 text-muted-foreground">
+                        <span>{s.sectionName}</span>
+                        <span className={s.dbSubject === null ? "text-destructive" : s.usable >= s.requested ? "text-emerald-300" : "text-amber-300"}>
+                          {s.dbSubject === null ? "not in bank" : `${Math.min(s.usable, s.requested)} / ${s.requested}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!availability.ready && availability.suggestedSizes.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-muted-foreground">Start a shorter test that the bank can fully deliver:</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {availability.suggestedSizes.map((n) => (
+                        <ChoiceChip key={n} active={sizeOverride === n} onClick={() => setSizeOverride(n)} label={`${n} questions`} />
+                      ))}
+                      {sizeOverride !== null && (
+                        <ChoiceChip active={false} onClick={() => setSizeOverride(null)} label="Reset to full length" />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             {error && (
               <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</div>
             )}
+
 
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={onBack}>Cancel</Button>
@@ -812,7 +875,8 @@ function InstructionsView(props: {
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Summary</p>
               <p className="mt-2 font-display text-2xl font-bold">{total} <span className="text-sm font-normal text-muted-foreground">questions</span></p>
               <p className="font-display text-2xl font-bold">{minutes}m <span className="text-sm font-normal text-muted-foreground">duration</span></p>
-              <p className="mt-2 text-xs text-muted-foreground">+{exam.marking.correct} / −{exam.marking.wrong} marking</p>
+              <p className="mt-2 text-xs text-muted-foreground">+{config.marksPerCorrect} / −{config.negativeMarks} marking</p>
+              <p className="mt-1 text-xs text-muted-foreground">{config.examName} · {config.paperName} · {config.patternNote}</p>
             </div>
             <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-xs text-muted-foreground">
               <Maximize2 className="h-4 w-4 text-accent" />
@@ -898,6 +962,8 @@ function RunningView(props: {
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-secondary/60 px-2 py-0.5 font-mono">Question {current + 1}</span>
               <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent">{q.subject}</span>
+              {q.sourceLabel && <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground">{q.sourceLabel}</span>}
+              {q.difficulty && <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground">{q.difficulty}</span>}
               <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground">{q.type === "numerical" ? "Numerical" : "MCQ"}</span>
             </div>
             <div className="text-muted-foreground">

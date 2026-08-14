@@ -101,6 +101,66 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_configs: {
+        Row: {
+          active: boolean
+          created_at: string
+          db_exam: string | null
+          difficulty_profile: string
+          duration_minutes: number
+          exam_key: string
+          exam_name: string
+          exam_year: number
+          id: string
+          marks_per_correct: number
+          negative_marks: number
+          paper_name: string
+          pattern_note: string
+          question_types: string[]
+          subject_distribution: Json
+          total_questions: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          db_exam?: string | null
+          difficulty_profile?: string
+          duration_minutes: number
+          exam_key: string
+          exam_name: string
+          exam_year?: number
+          id?: string
+          marks_per_correct?: number
+          negative_marks?: number
+          paper_name?: string
+          pattern_note?: string
+          question_types?: string[]
+          subject_distribution?: Json
+          total_questions: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          db_exam?: string | null
+          difficulty_profile?: string
+          duration_minutes?: number
+          exam_key?: string
+          exam_name?: string
+          exam_year?: number
+          id?: string
+          marks_per_correct?: number
+          negative_marks?: number
+          paper_name?: string
+          pattern_note?: string
+          question_types?: string[]
+          subject_distribution?: Json
+          total_questions?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       import_history: {
         Row: {
           created_at: string
