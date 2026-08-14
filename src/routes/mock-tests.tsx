@@ -8,6 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { fetchQuestions, gradeAnswers, type DbQuestion, type Difficulty as DbDifficulty, type GradeResult } from "@/lib/questions";
+import { fetchExamConfigs, papersFor, type ExamConfig } from "@/lib/exam-config";
+import {
+  checkAvailability, generateTest, TestGenerationError,
+  type AvailabilityReport, type GenerationOptions,
+} from "@/lib/test-generation";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Trophy, Timer, CheckCircle2, XCircle, BarChart3, RotateCcw, Loader2, Flag, Sparkles,
