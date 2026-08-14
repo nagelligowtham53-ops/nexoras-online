@@ -239,53 +239,8 @@ function MockTestsPage() {
     }
   }
 
-  // ---- DB-backed question loading (real question bank)
-  const EXAM_DB_MAP: Record<string, string | null> = {
-    "JEE Main": "JEE Main",
-    "JEE Advanced": "JEE Advanced",
-    "NEET UG": "NEET",
-    "BITSAT": "BITSAT",
-    "MHT CET": "MHT CET",
-    "COMEDK UGET": "COMEDK UGET",
-    "EAMCET (AP/TS)": "EAMCET (AP/TS)",
-    "UPSC CSE Prelims": "UPSC CSE Prelims",
-    "CAT (IIM)": "CAT (IIM)",
-    "GATE (CSE)": "GATE (CSE)",
-    "CA Foundation": "CA Foundation",
-    "CFA Level I": "CFA Level I",
-    "USMLE Step 1": "USMLE Step 1",
-    "SAT": "SAT",
-    "GRE General": "GRE General",
-    "IELTS Academic": "IELTS Academic",
-    "TOEFL iBT": "TOEFL iBT",
-    "IMO / Math Olympiad": "IMO / Math Olympiad",
-    "Coding Contest": "Coding Contest",
-    "ICPC Prep": "ICPC Prep",
-  };
-  function dbSubjectFor(examKey: string, subjectName: string): string {
-    if (examKey === "neet" && (subjectName === "Botany" || subjectName === "Zoology")) return "Biology";
-    return subjectName;
-  }
-  function difficultyFilter(): DbDifficulty[] | undefined {
-    if (difficulty === "mixed") return undefined;
-    if (difficulty === "easy") return ["Easy"];
-    if (difficulty === "medium") return ["Medium"];
-    return ["Hard"];
-  }
-  function mapDbToQuestion(r: DbQuestion, displaySubject: string): Question | null {
-    if (r.question_type === "single_correct" && r.options) {
-      return {
-        subject: displaySubject, type: "mcq", q: r.question_text,
-        options: r.options, dbId: r.id,
-      };
-    }
-    if (r.question_type === "integer" || r.question_type === "numerical") {
-      return {
-        subject: displaySubject, type: "numerical", q: r.question_text, dbId: r.id,
-      };
-    }
-    return null;
-  }
+  // Question loading, validation and provenance now live in src/lib/test-generation.ts.
+
 
   // ---- Exam configuration (patterns live in the database, not in this file)
   const [configs, setConfigs] = useState<ExamConfig[]>([]);
