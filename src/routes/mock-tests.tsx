@@ -361,16 +361,31 @@ function MockTestsPage() {
     setChapterSubject(spec.subjects[0].name);
     setAgreed(false);
     setError(null);
-    setAvailableCount(null);
+    setPaperName(null);
+    setSizeOverride(null);
+    setPyqOnly(false);
+    setAvailability(null);
     setPhase("instructions");
   }
 
   async function beginExam() {
     setError(null);
     setPhase("loading");
-    setLoadProgress("Preparing your exam…");
+    setLoadProgress(`Validating the ${activeConfig.examName} question pool…`);
     try {
-      let qs = await loadQuestions(exam);
+      const { questions: generated, report } = await generateTest(activeConfig, generationOptions);
+      setLoadProgress(`Assembling ${generated.length} questions…`);
+      const qs: Question[] = generated.map((g) => ({
+        subject: g.sectionName,
+        type: g.type,
+        q: g.text,
+        options: g.options.length ? g.options : undefined,
+        dbId: g.dbId,
+        sourceLabel: g.sourceLabel,
+        chapter: g.chapter,
+        difficulty: g.difficulty,
+      }));
+      setAvailability(report);
       setQuestions(qs);
       setAnswers(Array(qs.length).fill(null));
       setMarked(Array(qs.length).fill(false));
@@ -378,7 +393,10 @@ function MockTestsPage() {
       setTimePerQ(Array(qs.length).fill(0));
       setCurrent(0);
       setActiveSection(qs[0].subject);
-      const minutes = testType === "chapter" ? 30 : exam.duration_min;
+      const fullMinutes = activeConfig.durationMinutes;
+      const minutes = testType === "chapter"
+        ? 30
+        : Math.max(10, Math.round((fullMinutes * qs.length) / Math.max(1, activeConfig.totalQuestions)));
       setSecondsLeft(minutes * 60);
       startedAtRef.current = Date.now();
       lastTickRef.current = Date.now();
@@ -386,10 +404,16 @@ function MockTestsPage() {
       setTimeout(() => enterFullscreen(), 200);
     } catch (e) {
       console.error("[mock-tests] beginExam failed", e);
-      setError("We could not prepare this test right now. Please try again in a moment.");
+      const message = e instanceof TestGenerationError
+        ? e.message
+        : e instanceof Error && e.message
+          ? e.message
+          : "The question bank could not be reached just now.";
+      setError(message);
       setPhase("instructions");
     }
   }
+
 
 
 
