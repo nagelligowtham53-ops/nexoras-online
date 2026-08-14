@@ -323,6 +323,7 @@ export type Database = {
       }
       questions: {
         Row: {
+          active: boolean
           chapter: string
           chapter_id: string | null
           class_level: number
@@ -331,6 +332,7 @@ export type Database = {
           created_at: string
           difficulty: string
           exam_session: string | null
+          exam_version: string
           exams: string[]
           explanation: string | null
           external_id: string | null
@@ -345,8 +347,10 @@ export type Database = {
           negative_marks: number
           options: Json | null
           paper: string | null
+          question_hash: string | null
           question_text: string
           question_type: string
+          review_status: string
           solution: string | null
           source: string | null
           source_reference: string | null
@@ -357,9 +361,11 @@ export type Database = {
           time_estimate_seconds: number
           topic: string | null
           updated_at: string
+          verified: boolean
           year: number | null
         }
         Insert: {
+          active?: boolean
           chapter: string
           chapter_id?: string | null
           class_level: number
@@ -368,6 +374,7 @@ export type Database = {
           created_at?: string
           difficulty: string
           exam_session?: string | null
+          exam_version?: string
           exams?: string[]
           explanation?: string | null
           external_id?: string | null
@@ -382,8 +389,10 @@ export type Database = {
           negative_marks?: number
           options?: Json | null
           paper?: string | null
+          question_hash?: string | null
           question_text: string
           question_type: string
+          review_status?: string
           solution?: string | null
           source?: string | null
           source_reference?: string | null
@@ -394,9 +403,11 @@ export type Database = {
           time_estimate_seconds?: number
           topic?: string | null
           updated_at?: string
+          verified?: boolean
           year?: number | null
         }
         Update: {
+          active?: boolean
           chapter?: string
           chapter_id?: string | null
           class_level?: number
@@ -405,6 +416,7 @@ export type Database = {
           created_at?: string
           difficulty?: string
           exam_session?: string | null
+          exam_version?: string
           exams?: string[]
           explanation?: string | null
           external_id?: string | null
@@ -419,8 +431,10 @@ export type Database = {
           negative_marks?: number
           options?: Json | null
           paper?: string | null
+          question_hash?: string | null
           question_text?: string
           question_type?: string
+          review_status?: string
           solution?: string | null
           source?: string | null
           source_reference?: string | null
@@ -431,6 +445,7 @@ export type Database = {
           time_estimate_seconds?: number
           topic?: string | null
           updated_at?: string
+          verified?: boolean
           year?: number | null
         }
         Relationships: [
@@ -653,6 +668,7 @@ export type Database = {
     Views: {
       questions_public: {
         Row: {
+          active: boolean | null
           chapter: string | null
           chapter_id: string | null
           class_level: number | null
@@ -660,6 +676,7 @@ export type Database = {
           created_at: string | null
           difficulty: string | null
           exam_session: string | null
+          exam_version: string | null
           exams: string[] | null
           external_id: string | null
           id: string | null
@@ -675,6 +692,7 @@ export type Database = {
           paper: string | null
           question_text: string | null
           question_type: string | null
+          review_status: string | null
           source: string | null
           source_reference: string | null
           source_type: string | null
@@ -684,9 +702,11 @@ export type Database = {
           time_estimate_seconds: number | null
           topic: string | null
           updated_at: string | null
+          verified: boolean | null
           year: number | null
         }
         Insert: {
+          active?: boolean | null
           chapter?: string | null
           chapter_id?: string | null
           class_level?: number | null
@@ -694,6 +714,7 @@ export type Database = {
           created_at?: string | null
           difficulty?: string | null
           exam_session?: string | null
+          exam_version?: string | null
           exams?: string[] | null
           external_id?: string | null
           id?: string | null
@@ -709,6 +730,7 @@ export type Database = {
           paper?: string | null
           question_text?: string | null
           question_type?: string | null
+          review_status?: string | null
           source?: string | null
           source_reference?: string | null
           source_type?: string | null
@@ -718,9 +740,11 @@ export type Database = {
           time_estimate_seconds?: number | null
           topic?: string | null
           updated_at?: string | null
+          verified?: boolean | null
           year?: number | null
         }
         Update: {
+          active?: boolean | null
           chapter?: string | null
           chapter_id?: string | null
           class_level?: number | null
@@ -728,6 +752,7 @@ export type Database = {
           created_at?: string | null
           difficulty?: string | null
           exam_session?: string | null
+          exam_version?: string | null
           exams?: string[] | null
           external_id?: string | null
           id?: string | null
@@ -743,6 +768,7 @@ export type Database = {
           paper?: string | null
           question_text?: string | null
           question_type?: string | null
+          review_status?: string | null
           source?: string | null
           source_reference?: string | null
           source_type?: string | null
@@ -752,6 +778,7 @@ export type Database = {
           time_estimate_seconds?: number | null
           topic?: string | null
           updated_at?: string | null
+          verified?: boolean | null
           year?: number | null
         }
         Relationships: [
@@ -834,12 +861,14 @@ export type Database = {
           p_classes?: number[]
           p_difficulties?: string[]
           p_exam: string
+          p_exclude_ids?: string[]
           p_limit?: number
           p_question_types?: string[]
           p_source_types?: string[]
           p_subjects?: string[]
         }
         Returns: {
+          active: boolean | null
           chapter: string | null
           chapter_id: string | null
           class_level: number | null
@@ -847,6 +876,7 @@ export type Database = {
           created_at: string | null
           difficulty: string | null
           exam_session: string | null
+          exam_version: string | null
           exams: string[] | null
           external_id: string | null
           id: string | null
@@ -862,6 +892,7 @@ export type Database = {
           paper: string | null
           question_text: string | null
           question_type: string | null
+          review_status: string | null
           source: string | null
           source_reference: string | null
           source_type: string | null
@@ -871,6 +902,7 @@ export type Database = {
           time_estimate_seconds: number | null
           topic: string | null
           updated_at: string | null
+          verified: boolean | null
           year: number | null
         }[]
         SetofOptions: {
