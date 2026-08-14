@@ -9,7 +9,10 @@ export const ensureQuestionBankSeeded = createServerFn({ method: "POST" })
       .from("questions")
       .select("id", { count: "exact", head: true });
     if (countError) throw new Error(countError.message);
-    if ((count ?? 0) > 0) return { seeded: false, count: count ?? 0 };
+    // Legacy placeholder seeding is retired: the bank is now populated with
+    // curated academic questions (verified + active) via migrations.
+    return { seeded: false, count: count ?? 0 };
+    // eslint-disable-next-line no-unreachable
 
     const syllabus: Record<string, Record<11 | 12, string[]>> = {
       Physics: {
