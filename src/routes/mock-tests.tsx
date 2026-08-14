@@ -492,8 +492,8 @@ function MockTestsPage() {
       }
       subMap.set(q.subject, sub);
     });
-    const score = correct * exam.marking.correct - wrong * exam.marking.wrong;
-    const max_score = questions.length * exam.marking.correct;
+    const score = correct * activeConfig.marksPerCorrect - wrong * activeConfig.negativeMarks;
+    const max_score = questions.length * activeConfig.marksPerCorrect;
     const subject_breakdown: SubjectStat[] = Array.from(subMap.entries()).map(([subject, s]) => ({
       subject, correct: s.correct, total: s.total,
     }));
@@ -558,8 +558,8 @@ function MockTestsPage() {
       }
       subMap.set(q.subject, cur);
     });
-    const score = correct * exam.marking.correct - wrong * exam.marking.wrong;
-    const max_score = questions.length * exam.marking.correct;
+    const score = correct * activeConfig.marksPerCorrect - wrong * activeConfig.negativeMarks;
+    const max_score = questions.length * activeConfig.marksPerCorrect;
     const percent = Math.max(0, Math.round((score / Math.max(1, max_score)) * 100));
     const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
     const rank = Math.max(1, Math.round((100 - percent) * 1500));
@@ -790,8 +790,8 @@ function InstructionsView(props: {
 
             <Section title="Marking Scheme">
               <ul className="ml-5 list-disc space-y-1.5 text-muted-foreground">
-                <li>Correct answer: <span className="font-medium text-emerald-400">+{exam.marking.correct}</span></li>
-                <li>Incorrect answer: <span className="font-medium text-rose-400">−{exam.marking.wrong}</span></li>
+                <li>Correct answer: <span className="font-medium text-emerald-400">+{config.marksPerCorrect}</span></li>
+                <li>Incorrect answer: <span className="font-medium text-rose-400">−{config.negativeMarks}</span></li>
                 <li>Unattempted: <span className="font-medium text-foreground">0</span></li>
               </ul>
             </Section>
@@ -923,7 +923,8 @@ function InstructionsView(props: {
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Summary</p>
               <p className="mt-2 font-display text-2xl font-bold">{total} <span className="text-sm font-normal text-muted-foreground">questions</span></p>
               <p className="font-display text-2xl font-bold">{minutes}m <span className="text-sm font-normal text-muted-foreground">duration</span></p>
-              <p className="mt-2 text-xs text-muted-foreground">+{exam.marking.correct} / −{exam.marking.wrong} marking</p>
+              <p className="mt-2 text-xs text-muted-foreground">+{config.marksPerCorrect} / −{config.negativeMarks} marking</p>
+              <p className="mt-1 text-xs text-muted-foreground">{config.examName} · {config.paperName} · {config.patternNote}</p>
             </div>
             <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-xs text-muted-foreground">
               <Maximize2 className="h-4 w-4 text-accent" />
@@ -1009,6 +1010,8 @@ function RunningView(props: {
             <div className="flex items-center gap-2">
               <span className="rounded-md bg-secondary/60 px-2 py-0.5 font-mono">Question {current + 1}</span>
               <span className="rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-accent">{q.subject}</span>
+              {q.sourceLabel && <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground">{q.sourceLabel}</span>}
+              {q.difficulty && <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground">{q.difficulty}</span>}
               <span className="rounded-full border border-border px-2 py-0.5 text-muted-foreground">{q.type === "numerical" ? "Numerical" : "MCQ"}</span>
             </div>
             <div className="text-muted-foreground">
