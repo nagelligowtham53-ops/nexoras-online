@@ -117,6 +117,6 @@ export const ensureQuestionBankSeeded = createServerFn({ method: "POST" })
     );
     const allRows = [...rows, ...mockRows];
     const result = await supabaseAdmin.from("questions").upsert(allRows as never, { onConflict: "external_id" });
-    if (result.error) throw new Error(result.error.message);
+    if (result?.error) throw new Error(String(result.error?.message ?? "seed failed"));
     return { seeded: true, count: allRows.length };
   });
