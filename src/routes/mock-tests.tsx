@@ -45,7 +45,12 @@ type Question = {
   /** Only set for the offline demo fallback; DB-sourced questions never carry the key. */
   correct?: number;
   explanation?: string;
+  /** Provenance label: Official PYQ, NCERT-based, PYQ Style (original), … */
+  sourceLabel?: string;
+  chapter?: string;
+  difficulty?: string;
 };
+
 
 type ExamSpec = {
   key: string;
