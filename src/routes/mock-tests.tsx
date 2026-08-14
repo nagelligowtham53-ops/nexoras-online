@@ -803,10 +803,20 @@ function InstructionsView(props: {
 
             <Section title="Test Configuration">
               <div className="space-y-3">
+                {papers.length > 1 && (
+                  <div>
+                    <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Paper</label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {papers.map((p) => (
+                        <ChoiceChip key={p.id} active={paperName === p.paperName} onClick={() => setPaperName(p.paperName)} label={`${p.paperName} · ${p.totalQuestions} Qs`} />
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Test Type</label>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <ChoiceChip active={testType === "full"} onClick={() => setTestType("full")} label={`Full-length (${exam.subjects.reduce((a, s) => a + s.count, 0)} Qs · ${exam.duration_min}m)`} />
+                    <ChoiceChip active={testType === "full"} onClick={() => setTestType("full")} label={`Full-length (${config.totalQuestions} Qs · ${config.durationMinutes}m)`} />
                     <ChoiceChip active={testType === "chapter"} onClick={() => setTestType("chapter")} label="Chapter-wise (25 Qs · 30m)" />
                   </div>
                 </div>
@@ -814,7 +824,7 @@ function InstructionsView(props: {
                   <div>
                     <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Subject</label>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {exam.subjects.map((s) => (
+                      {config.subjectDistribution.map((s) => (
                         <ChoiceChip key={s.name} active={chapterSubject === s.name} onClick={() => setChapterSubject(s.name)} label={s.name} />
                       ))}
                     </div>
@@ -826,6 +836,13 @@ function InstructionsView(props: {
                     {(["mixed", "easy", "medium", "hard"] as const).map((d) => (
                       <ChoiceChip key={d} active={difficulty === d} onClick={() => setDifficulty(d)} label={d[0].toUpperCase() + d.slice(1)} />
                     ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Question Source</label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <ChoiceChip active={!pyqOnly} onClick={() => setPyqOnly(false)} label="All verified questions" />
+                    <ChoiceChip active={pyqOnly} onClick={() => setPyqOnly(true)} label="Official PYQs only" />
                   </div>
                 </div>
               </div>
@@ -843,15 +860,49 @@ function InstructionsView(props: {
                 Checking the question bank for available questions…
               </div>
             )}
-            {!checkingAvailability && availableCount !== null && availableCount > 0 && availableCount < total && (
-              <div className="rounded-lg border border-accent/40 bg-accent/5 px-3 py-2 text-xs text-muted-foreground">
-                {availableCount} questions available for these filters. Your test will use as many as possible.
+
+            {!checkingAvailability && availability && (
+              <div className={`rounded-lg border px-3 py-3 text-xs ${availability.ready ? "border-emerald-400/40 bg-emerald-500/5" : usable > 0 ? "border-accent/40 bg-accent/5" : "border-destructive/40 bg-destructive/10"}`}>
+                <p className={`font-medium ${availability.ready ? "text-emerald-300" : usable > 0 ? "text-foreground" : "text-destructive"}`}>
+                  {availability.ready
+                    ? `Ready — ${usable} verified questions matched.`
+                    : usable > 0
+                      ? `${usable} of ${availability.requested} questions available.`
+                      : "This test cannot be generated yet."}
+                </p>
+                {availability.reason && <p className="mt-1 text-muted-foreground">{availability.reason}</p>}
+                {availability.sections.length > 0 && (
+                  <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+                    {availability.sections.map((s) => (
+                      <li key={s.sectionName} className="flex items-center justify-between gap-2 text-muted-foreground">
+                        <span>{s.sectionName}</span>
+                        <span className={s.dbSubject === null ? "text-destructive" : s.usable >= s.requested ? "text-emerald-300" : "text-amber-300"}>
+                          {s.dbSubject === null ? "not in bank" : `${Math.min(s.usable, s.requested)} / ${s.requested}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!availability.ready && availability.suggestedSizes.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-muted-foreground">Start a shorter test that the bank can fully deliver:</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {availability.suggestedSizes.map((n) => (
+                        <ChoiceChip key={n} active={sizeOverride === n} onClick={() => setSizeOverride(n)} label={`${n} questions`} />
+                      ))}
+                      {sizeOverride !== null && (
+                        <ChoiceChip active={false} onClick={() => setSizeOverride(null)} label="Reset to full length" />
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             {error && (
               <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive">{error}</div>
             )}
+
 
             <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={onBack}>Cancel</Button>
