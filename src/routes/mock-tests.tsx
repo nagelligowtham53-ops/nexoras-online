@@ -679,21 +679,30 @@ function MockTestsPage() {
       {phase === "instructions" && (
         <InstructionsView
           exam={exam}
+          config={activeConfig}
+          papers={papers}
+          paperName={activeConfig.paperName}
+          setPaperName={setPaperName}
           testType={testType}
           setTestType={setTestType}
           chapterSubject={chapterSubject}
           setChapterSubject={setChapterSubject}
           difficulty={difficulty}
           setDifficulty={setDifficulty}
+          pyqOnly={pyqOnly}
+          setPyqOnly={setPyqOnly}
+          sizeOverride={sizeOverride}
+          setSizeOverride={setSizeOverride}
           agreed={agreed}
           setAgreed={setAgreed}
-          error={error}
-          availableCount={availableCount}
+          error={error ?? configError}
+          availability={availability}
           checkingAvailability={checkingAvailability}
           onBack={() => setPhase("select")}
           onBegin={beginExam}
         />
       )}
+
 
       {phase === "loading" && (
         <section className="mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center">
