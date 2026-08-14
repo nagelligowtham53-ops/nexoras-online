@@ -277,73 +277,77 @@ function MockTestsPage() {
     return null;
   }
 
-  async function loadQuestions(spec: ExamSpec): Promise<Question[]> {
-    await ensureSeed();
-    const dbExam = EXAM_DB_MAP[spec.name];
-    if (!dbExam) throw new Error("This exam is not linked to the question bank yet.");
-    const effective: { name: string; count: number }[] =
-      testType === "chapter"
-        ? [{ name: chapterSubject, count: 25 }]
-        : spec.subjects.map((s) => ({ ...s }));
-    const total = effective.reduce((a, s) => a + s.count, 0);
-    const diffs = difficultyFilter();
-    const all: Question[] = [];
-    try {
-      for (const s of effective) {
-        setLoadProgress(`Loading ${s.name} questions… (${all.length}/${total})`);
-        const rows = await fetchQuestions({
-          exams: [dbExam],
-          subjects: [dbSubjectFor(spec.key, s.name)],
-          difficulties: diffs,
-          count: s.count,
-        });
-        for (const r of rows) {
-          const mapped = mapDbToQuestion(r, s.name);
-          if (mapped) all.push(mapped);
-        }
+  // ---- Exam configuration (patterns live in the database, not in this file)
+  const [configs, setConfigs] = useState<ExamConfig[]>([]);
+  const [configError, setConfigError] = useState<string | null>(null);
+  const [paperName, setPaperName] = useState<string | null>(null);
+  const [sizeOverride, setSizeOverride] = useState<number | null>(null);
+  const [pyqOnly, setPyqOnly] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        setConfigs(await fetchExamConfigs());
+      } catch (e) {
+        console.error("[mock-tests] exam config load failed", e);
+        setConfigError("Exam patterns could not be loaded from the database.");
       }
-    } catch (e) {
-      console.error("[mock-tests] DB fetch failed", e);
-    }
-    if (all.length === 0) throw new Error("No real questions matched this mock test after seeding.");
-    return all;
-  }
+    })();
+  }, []);
 
+  const papers = useMemo(() => papersFor(configs, exam.key), [configs, exam.key]);
+  const activeConfig: ExamConfig = useMemo(() => {
+    const found = papers.find((p) => p.paperName === paperName) ?? papers[0];
+    if (found) return found;
+    // Exam has no database pattern yet — surface it honestly instead of guessing.
+    return {
+      id: `local-${exam.key}`, examKey: exam.key, examName: exam.name, examYear: new Date().getFullYear(),
+      paperName: "Paper 1", dbExam: null,
+      totalQuestions: exam.subjects.reduce((a, s) => a + s.count, 0),
+      durationMinutes: exam.duration_min, marksPerCorrect: exam.marking.correct,
+      negativeMarks: exam.marking.wrong, questionTypes: ["single_correct"],
+      subjectDistribution: exam.subjects, patternNote: exam.pattern,
+      difficultyProfile: "mixed", active: true,
+    };
+  }, [papers, paperName, exam]);
 
-  // ---- Availability probe (so we can disable the Begin button ahead of time)
-  const [availableCount, setAvailableCount] = useState<number | null>(null);
+  const generationOptions: GenerationOptions = useMemo(() => ({
+    difficulty,
+    onlySection: testType === "chapter" ? chapterSubject : undefined,
+    totalOverride: testType === "chapter" ? 25 : sizeOverride ?? undefined,
+    pyqOnly,
+  }), [difficulty, testType, chapterSubject, sizeOverride, pyqOnly]);
+
+  // ---- Pre-flight availability (same code path the generator uses)
+  const [availability, setAvailability] = useState<AvailabilityReport | null>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
-  async function probeAvailability(spec: ExamSpec) {
-    const dbExam = EXAM_DB_MAP[spec.name];
-    if (!dbExam) { setAvailableCount(0); return; }
-    setCheckingAvailability(true);
-    try {
-      await ensureSeed();
-      const subjects = testType === "chapter"
-        ? [dbSubjectFor(spec.key, chapterSubject)]
-        : spec.subjects.map((s) => dbSubjectFor(spec.key, s.name));
-      let q = supabase
-        .from("questions")
-        .select("id", { count: "exact", head: true })
-        .overlaps("exams", [dbExam])
-        .in("subject", subjects);
-      const diffs = difficultyFilter();
-      if (diffs) q = q.in("difficulty", diffs);
-      const { count, error } = await q;
-      if (error) throw error;
-      setAvailableCount(count ?? 0);
-    } catch (error) {
-      console.error("[mock-tests] Availability check failed", error);
-      setAvailableCount(0);
-    } finally {
-      setCheckingAvailability(false);
-    }
-  }
+
   useEffect(() => {
     if (phase !== "instructions") return;
-    void probeAvailability(exam);
+    let cancelled = false;
+    setCheckingAvailability(true);
+    setAvailability(null);
+    (async () => {
+      try {
+        const report = await checkAvailability(activeConfig, generationOptions);
+        if (!cancelled) setAvailability(report);
+      } catch (e) {
+        console.error("[mock-tests] availability check failed", e);
+        if (!cancelled) {
+          setAvailability({
+            requested: activeConfig.totalQuestions, usable: 0, sections: [], unmappedSections: [],
+            ready: false, suggestedSizes: [],
+            reason: e instanceof TestGenerationError ? e.message : "The question bank could not be reached.",
+          });
+        }
+      } finally {
+        if (!cancelled) setCheckingAvailability(false);
+      }
+    })();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exam.key, testType, chapterSubject, difficulty]);
+  }, [phase, activeConfig.id, generationOptions]);
+
 
   function openInstructions(spec: ExamSpec) {
     setExam(spec);
