@@ -724,17 +724,30 @@ function MockTestsPage() {
 /* ===================== SUB-VIEWS ===================== */
 
 function InstructionsView(props: {
-  exam: ExamSpec; testType: TestType; setTestType: (t: TestType) => void;
+  exam: ExamSpec; config: ExamConfig; papers: ExamConfig[];
+  paperName: string; setPaperName: (p: string) => void;
+  testType: TestType; setTestType: (t: TestType) => void;
   chapterSubject: string; setChapterSubject: (s: string) => void;
   difficulty: Difficulty; setDifficulty: (d: Difficulty) => void;
+  pyqOnly: boolean; setPyqOnly: (b: boolean) => void;
+  sizeOverride: number | null; setSizeOverride: (n: number | null) => void;
   agreed: boolean; setAgreed: (b: boolean) => void; error: string | null;
-  availableCount: number | null; checkingAvailability: boolean;
+  availability: AvailabilityReport | null; checkingAvailability: boolean;
   onBack: () => void; onBegin: () => void;
 }) {
-  const { exam, testType, setTestType, chapterSubject, setChapterSubject, difficulty, setDifficulty, agreed, setAgreed, error, availableCount, checkingAvailability, onBack, onBegin } = props;
-  const total = testType === "chapter" ? 25 : exam.subjects.reduce((a, s) => a + s.count, 0);
-  const minutes = testType === "chapter" ? 30 : exam.duration_min;
-  const canBegin = agreed && !checkingAvailability;
+  const {
+    exam, config, papers, paperName, setPaperName, testType, setTestType, chapterSubject, setChapterSubject,
+    difficulty, setDifficulty, pyqOnly, setPyqOnly, sizeOverride, setSizeOverride,
+    agreed, setAgreed, error, availability, checkingAvailability, onBack, onBegin,
+  } = props;
+  const fullTotal = sizeOverride ?? config.totalQuestions;
+  const total = testType === "chapter" ? 25 : fullTotal;
+  const minutes = testType === "chapter"
+    ? 30
+    : Math.max(10, Math.round((config.durationMinutes * total) / Math.max(1, config.totalQuestions)));
+  const usable = availability?.usable ?? 0;
+  const canBegin = agreed && !checkingAvailability && usable > 0;
+
 
 
   return (
