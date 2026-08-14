@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (s: Record<string, unknown>) => ({ redirect: (s.redirect as string) || "/dashboard" }),
+  validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({ redirect: (s.redirect as string) || "/dashboard" }),
   head: () => ({ meta: [{ title: "Log in — Nexoras" }] }),
   component: Login,
 });
