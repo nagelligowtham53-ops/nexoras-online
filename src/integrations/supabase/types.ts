@@ -384,6 +384,7 @@ export type Database = {
       questions: {
         Row: {
           active: boolean
+          category: string
           chapter: string
           chapter_id: string | null
           class_level: number
@@ -420,12 +421,14 @@ export type Database = {
           tags: string[]
           time_estimate_seconds: number
           topic: string | null
+          topic_id: string | null
           updated_at: string
           verified: boolean
           year: number | null
         }
         Insert: {
           active?: boolean
+          category?: string
           chapter: string
           chapter_id?: string | null
           class_level: number
@@ -462,12 +465,14 @@ export type Database = {
           tags?: string[]
           time_estimate_seconds?: number
           topic?: string | null
+          topic_id?: string | null
           updated_at?: string
           verified?: boolean
           year?: number | null
         }
         Update: {
           active?: boolean
+          category?: string
           chapter?: string
           chapter_id?: string | null
           class_level?: number
@@ -504,6 +509,7 @@ export type Database = {
           tags?: string[]
           time_estimate_seconds?: number
           topic?: string | null
+          topic_id?: string | null
           updated_at?: string
           verified?: boolean
           year?: number | null
@@ -514,6 +520,13 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "syllabus_chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_topics"
             referencedColumns: ["id"]
           },
         ]
@@ -549,39 +562,86 @@ export type Database = {
           class_level: number
           created_at: string
           id: string
+          in_bitsat: boolean
+          in_comedk: boolean
+          in_eamcet: boolean
           in_jee_advanced: boolean
           in_jee_main: boolean
           in_neet: boolean
           name: string
           order_index: number
           subject: string
+          unit: string | null
           updated_at: string
         }
         Insert: {
           class_level: number
           created_at?: string
           id: string
+          in_bitsat?: boolean
+          in_comedk?: boolean
+          in_eamcet?: boolean
           in_jee_advanced?: boolean
           in_jee_main?: boolean
           in_neet?: boolean
           name: string
           order_index?: number
           subject: string
+          unit?: string | null
           updated_at?: string
         }
         Update: {
           class_level?: number
           created_at?: string
           id?: string
+          in_bitsat?: boolean
+          in_comedk?: boolean
+          in_eamcet?: boolean
           in_jee_advanced?: boolean
           in_jee_main?: boolean
           in_neet?: boolean
           name?: string
           order_index?: number
           subject?: string
+          unit?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      syllabus_topics: {
+        Row: {
+          chapter_id: string
+          created_at: string
+          id: string
+          name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          chapter_id: string
+          created_at?: string
+          id: string
+          name: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          chapter_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "syllabus_topics_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       test_attempts: {
         Row: {
@@ -729,6 +789,7 @@ export type Database = {
       questions_public: {
         Row: {
           active: boolean | null
+          category: string | null
           chapter: string | null
           chapter_id: string | null
           class_level: number | null
@@ -761,12 +822,14 @@ export type Database = {
           tags: string[] | null
           time_estimate_seconds: number | null
           topic: string | null
+          topic_id: string | null
           updated_at: string | null
           verified: boolean | null
           year: number | null
         }
         Insert: {
           active?: boolean | null
+          category?: string | null
           chapter?: string | null
           chapter_id?: string | null
           class_level?: number | null
@@ -799,12 +862,14 @@ export type Database = {
           tags?: string[] | null
           time_estimate_seconds?: number | null
           topic?: string | null
+          topic_id?: string | null
           updated_at?: string | null
           verified?: boolean | null
           year?: number | null
         }
         Update: {
           active?: boolean | null
+          category?: string | null
           chapter?: string | null
           chapter_id?: string | null
           class_level?: number | null
@@ -837,6 +902,7 @@ export type Database = {
           tags?: string[] | null
           time_estimate_seconds?: number | null
           topic?: string | null
+          topic_id?: string | null
           updated_at?: string | null
           verified?: boolean | null
           year?: number | null
@@ -847,6 +913,13 @@ export type Database = {
             columns: ["chapter_id"]
             isOneToOne: false
             referencedRelation: "syllabus_chapters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "questions_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "syllabus_topics"
             referencedColumns: ["id"]
           },
         ]
@@ -870,6 +943,20 @@ export type Database = {
         }[]
       }
       admin_question_bank_health: { Args: never; Returns: Json }
+      chapter_topic_counts: {
+        Args: { p_chapter_ids: string[]; p_exam: string }
+        Returns: {
+          chapter_id: string
+          conceptual: number
+          easy: number
+          hard: number
+          medium: number
+          numerical: number
+          topic_id: string
+          topic_name: string
+          total: number
+        }[]
+      }
       exam_chapter_counts: {
         Args: { p_classes?: number[]; p_exam: string }
         Returns: {
@@ -884,6 +971,35 @@ export type Database = {
           pyq: number
           subject: string
           total: number
+        }[]
+      }
+      exam_chapter_matches: {
+        Args: {
+          c: Database["public"]["Tables"]["syllabus_chapters"]["Row"]
+          p_exam: string
+        }
+        Returns: boolean
+      }
+      exam_syllabus_tree: {
+        Args: { p_classes?: number[]; p_exam: string }
+        Returns: {
+          application: number
+          assertion: number
+          chapter_id: string
+          chapter_name: string
+          class_level: number
+          conceptual: number
+          critical_thinking: number
+          easy: number
+          graph: number
+          hard: number
+          medium: number
+          ncert: number
+          numerical: number
+          pyq: number
+          subject: string
+          total: number
+          unit: string
         }[]
       }
       grade_answers: {
@@ -905,30 +1021,38 @@ export type Database = {
       }
       practice_availability: {
         Args: {
+          p_categories?: string[]
           p_chapter_ids?: string[]
           p_classes?: number[]
           p_difficulties?: string[]
           p_exam: string
+          p_exclude_attempted?: boolean
           p_question_types?: string[]
           p_source_types?: string[]
           p_subjects?: string[]
+          p_topic_ids?: string[]
         }
         Returns: number
       }
       practice_questions: {
         Args: {
+          p_categories?: string[]
           p_chapter_ids?: string[]
           p_classes?: number[]
           p_difficulties?: string[]
           p_exam: string
+          p_exclude_attempted?: boolean
           p_exclude_ids?: string[]
           p_limit?: number
           p_question_types?: string[]
+          p_seed?: number
           p_source_types?: string[]
           p_subjects?: string[]
+          p_topic_ids?: string[]
         }
         Returns: {
           active: boolean | null
+          category: string | null
           chapter: string | null
           chapter_id: string | null
           class_level: number | null
@@ -961,6 +1085,7 @@ export type Database = {
           tags: string[] | null
           time_estimate_seconds: number | null
           topic: string | null
+          topic_id: string | null
           updated_at: string | null
           verified: boolean | null
           year: number | null
@@ -972,9 +1097,31 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      question_reject_reason: {
+        Args: {
+          p_answer: Json
+          p_options: Json
+          p_text: string
+          p_type: string
+        }
+        Returns: string
+      }
       recompute_practice_session: {
         Args: { session_uuid: string }
         Returns: undefined
+      }
+      user_weak_areas: {
+        Args: { p_exam?: string; p_min_attempts?: number }
+        Returns: {
+          accuracy: number
+          attempted: number
+          available: number
+          chapter_id: string
+          chapter_name: string
+          class_level: number
+          correct: number
+          subject: string
+        }[]
       }
     }
     Enums: {
