@@ -364,36 +364,72 @@ export async function generateTest(
   const report = summarize(config, opts, pools);
 
   if (report.usable === 0) {
+    const allFailed = report.sections.every((s) => !s.dbSubject || s.error);
     throw new TestGenerationError(
-      config.dbExam ? "no_questions" : "exam_unmapped",
+      allFailed && report.sections.some((s) => s.error)
+        ? "bank_unavailable"
+        : config.dbExam
+          ? "no_questions"
+          : "exam_unmapped",
       report.reason ?? "No questions are available for this configuration.",
+      report.sections.map((s) => s.error).filter(Boolean).join(" | "),
     );
   }
 
   const seen = recentlyServed(config.examKey);
   const picked: GeneratedQuestion[] = [];
   const usedIds = new Set<string>();
+  const usedTexts = new Set<string>();
 
-  const take = (pool: Pool, quota: number) => {
+  /** Concept signature: chapter + first meaningful words, used to avoid near-duplicates. */
+  const conceptKey = (row: Row) =>
+    `${String(row.chapter_id ?? row.chapter ?? "")}::${normalizeText(String(row.question_text))
+      .replace(/[0-9.]+/g, "#")
+      .split(" ")
+      .slice(0, 8)
+      .join(" ")}`;
+
+  const take = (pool: Pool, quota: number, conceptCap: number) => {
+    const conceptCounts = new Map<string, number>();
+    for (const p of picked) {
+      /* seed caps from already-picked questions of this section */
+      if (p.sectionName === pool.section.sectionName) {
+        const k = `${p.chapterId ?? p.chapter}`;
+        conceptCounts.set(k, (conceptCounts.get(k) ?? 0) + 1);
+      }
+    }
     const fresh = shuffle(pool.rows.filter((r) => !usedIds.has(String(r.id)) && !seen.has(String(r.id))));
     const repeats = shuffle(pool.rows.filter((r) => !usedIds.has(String(r.id)) && seen.has(String(r.id))));
     for (const row of [...fresh, ...repeats]) {
       if (picked.filter((p) => p.sectionName === pool.section.sectionName).length >= quota) break;
+      const textKey = normalizeText(String(row.question_text));
+      if (usedTexts.has(textKey)) continue;
+      const nearKey = conceptKey(row);
+      if ((conceptCounts.get(nearKey) ?? 0) >= 1) continue; // no near-duplicate stems
+      const chapterKey = String(row.chapter_id ?? row.chapter ?? "");
+      if (conceptCap > 0 && (conceptCounts.get(chapterKey) ?? 0) >= conceptCap) continue;
       usedIds.add(String(row.id));
+      usedTexts.add(textKey);
+      conceptCounts.set(nearKey, 1);
+      conceptCounts.set(chapterKey, (conceptCounts.get(chapterKey) ?? 0) + 1);
       picked.push(toQuestion(row, pool.section.sectionName));
     }
   };
 
-  for (const pool of pools) take(pool, pool.section.requested);
+  // Pass 1: spread across chapters (max ~1/4 of a section from one chapter).
+  for (const pool of pools) take(pool, pool.section.requested, Math.max(2, Math.ceil(pool.section.requested / 4)));
+  // Pass 2: relax the chapter cap if a section is still short.
+  for (const pool of pools) take(pool, pool.section.requested, 0);
 
   // Backfill from spare capacity so the paper reaches the target length.
   if (picked.length < report.usable) {
     for (const pool of pools) {
       const remaining = report.usable - picked.length;
       if (remaining <= 0) break;
-      take(pool, pool.section.requested + remaining);
+      take(pool, pool.section.requested + remaining, 0);
     }
   }
+
 
   const ordered = pools.flatMap((p) => picked.filter((q) => q.sectionName === p.section.sectionName));
   rememberServed(config.examKey, ordered.map((q) => q.dbId));
