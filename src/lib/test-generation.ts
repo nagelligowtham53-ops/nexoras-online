@@ -59,6 +59,8 @@ export type SectionReport = {
   usable: number;
   rejectedInvalid: number;
   rejectedDuplicate: number;
+  /** Set only when this subject's query itself failed — never blocks other subjects. */
+  error?: string | null;
 };
 
 export type AvailabilityReport = {
