@@ -303,21 +303,37 @@ function summarize(config: ExamConfig, opts: GenerationOptions, pools: Pool[]): 
   const sizeLadder = [10, 15, 20, 25, 30, 45, 50, 60, 75, 90, 120, 150, 180];
   const suggested = sizeLadder.filter((n) => n <= usable && n < requested).slice(-3);
 
+  const failed = sections.filter((s) => s.error);
   let reason: string | null = null;
   if (!config.dbExam) {
     reason = `${config.examName} is not linked to the question bank yet, so no questions can be selected for it.`;
+  } else if (failed.length) {
+    reason = `The question bank is temporarily unreachable for ${failed
+      .map((s) => s.sectionName)
+      .join(", ")}. ${sections
+      .filter((s) => !s.error && s.dbSubject)
+      .map((s) => `${s.sectionName} ${s.usable}/${s.requested} ready`)
+      .join(" · ")}`.trim();
   } else if (usable === 0) {
+    const detail = sections
+      .filter((s) => s.dbSubject)
+      .map((s) => `${s.sectionName} 0/${s.requested}`)
+      .join(" · ");
     reason =
       opts.difficulty === "mixed"
-        ? `The question bank has no verified ${config.examName} questions for ${sections.map((s) => s.sectionName).join(", ")} yet.`
-        : `No verified ${opts.difficulty} questions are available for ${config.examName} right now. Try the Mixed difficulty.`;
+        ? `No verified ${config.examName} questions are available for this configuration yet (${detail}).`
+        : `No verified ${opts.difficulty} questions are available for ${config.examName} right now (${detail}). Try the Mixed difficulty.`;
   } else if (usable < requested) {
     const short = sections
       .filter((s) => s.dbSubject && s.usable < s.requested)
-      .map((s) => `${s.sectionName} ${s.usable}/${s.requested}`)
+      .map(
+        (s) =>
+          `${s.sectionName} question bank currently has ${s.usable} valid question${s.usable === 1 ? "" : "s"} for this configuration (needs ${s.requested})`,
+      )
       .join(" · ");
-    reason = `Only ${usable} of ${requested} questions are available (${short}).`;
+    reason = `Only ${usable} of ${requested} questions can be selected. ${short}.`;
   }
+
 
   return {
     requested,
