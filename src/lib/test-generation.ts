@@ -226,12 +226,13 @@ async function fetchPool(
 
   const { data, error } = await q;
   if (error) {
-    throw new TestGenerationError(
-      "db_error",
-      `The question bank could not be read for ${sectionName}.`,
-      error.message,
-    );
+    // A subject-level query failure must never abort the whole paper: record it
+    // precisely and let the other subjects be validated independently.
+    console.error("[test-generation] query failed", { section: sectionName, dbSubject, error });
+    report.error = error.message;
+    return { section: report, rows: [] };
   }
+
 
   const seenTexts = new Set<string>();
   const rows: Row[] = [];
