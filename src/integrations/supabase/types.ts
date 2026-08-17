@@ -943,6 +943,28 @@ export type Database = {
         }[]
       }
       admin_question_bank_health: { Args: never; Returns: Json }
+      admin_questions_list: {
+        Args: { p_limit?: number; p_search?: string; p_subject?: string }
+        Returns: {
+          active: boolean
+          chapter: string
+          correct_answer: Json
+          difficulty: string
+          explanation: string
+          id: string
+          image_url: string
+          options: Json
+          question_text: string
+          question_type: string
+          review_status: string
+          solution: string
+          source_type: string
+          subject: string
+          topic: string
+          verified: boolean
+          year: number
+        }[]
+      }
       chapter_topic_counts: {
         Args: { p_chapter_ids: string[]; p_exam: string }
         Returns: {
