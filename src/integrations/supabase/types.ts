@@ -1246,10 +1246,6 @@ export type Database = {
           timezone: string
         }[]
       }
-      admin_campaign_dashboard: {
-        Args: { p_campaign_id: string }
-        Returns: Json
-      }
       admin_chapter_health: {
         Args: never
         Returns: {
@@ -1289,47 +1285,6 @@ export type Database = {
           year: number
         }[]
       }
-      admin_update_campaign: {
-        Args: {
-          p_banner_deadline: string
-          p_banner_message: string
-          p_banner_title: string
-          p_eligibility_rules: Json
-          p_enabled: boolean
-          p_ends_at: string
-          p_id: string
-          p_referral_enabled: boolean
-          p_referred_reward: number
-          p_referrer_reward: number
-          p_starts_at: string
-          p_theme_enabled: boolean
-        }
-        Returns: {
-          banner_deadline: string
-          banner_message: string
-          banner_title: string
-          created_at: string
-          eligibility_rules: Json
-          enabled: boolean
-          ends_at: string
-          id: string
-          name: string
-          referral_enabled: boolean
-          referred_reward: number
-          referrer_reward: number
-          slug: string
-          starts_at: string
-          theme_enabled: boolean
-          timezone: string
-          updated_at: string
-        }
-        SetofOptions: {
-          from: "*"
-          to: "campaigns"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
       campaign_runtime_status: {
         Args: { p_enabled: boolean; p_ends_at: string; p_starts_at: string }
         Returns: string
@@ -1348,7 +1303,6 @@ export type Database = {
           total: number
         }[]
       }
-      ensure_my_referral_code: { Args: never; Returns: string }
       exam_chapter_counts: {
         Args: { p_classes?: number[]; p_exam: string }
         Returns: {
@@ -1394,7 +1348,10 @@ export type Database = {
           unit: string
         }[]
       }
-      finalize_my_referral: { Args: never; Returns: string }
+      finalize_referral_for_user: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       generate_referral_code: { Args: never; Returns: string }
       grade_answers: {
         Args: { q_ids: string[]; user_answers: Json[] }
@@ -1413,7 +1370,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      my_referral_dashboard: { Args: never; Returns: Json }
       practice_availability: {
         Args: {
           p_categories?: string[]
@@ -1505,7 +1461,6 @@ export type Database = {
         Args: { session_uuid: string }
         Returns: undefined
       }
-      record_referral_share: { Args: never; Returns: undefined }
       user_weak_areas: {
         Args: { p_exam?: string; p_min_attempts?: number }
         Returns: {
