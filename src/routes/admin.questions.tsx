@@ -10,7 +10,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
 import { listAdminQuestions, type AdminQuestionRow } from "@/lib/admin-questions.functions";
-import { isAdmin, fetchSubjectStats } from "@/lib/questions";
+import { countQuestionBank, isAdmin, fetchSubjectStats } from "@/lib/questions";
 import {
   AlertCircle, CheckCircle2, Upload, Database, Loader2, FileJson,
   FileSpreadsheet, Trash2, Search, Pencil, X, History, BarChart3,
@@ -115,8 +115,7 @@ function AdminQuestionsPage() {
     await ensureSeed().catch((error) => console.error("[admin/questions] Question bank seed check failed", error));
     const s = await fetchSubjectStats();
     setStats(s);
-    const { count } = await supabase.from("questions").select("*", { count: "exact", head: true });
-    setTotalCount(count ?? 0);
+    setTotalCount(await countQuestionBank());
   }
 
   if (checking) return <PageShell><PageHeader title="Loading…" /></PageShell>;
@@ -318,9 +317,9 @@ function DashboardPanel() {
   const [total, setTotal] = useState<number>(0);
 
   useEffect(() => { (async () => {
-    const { count } = await supabase.from("questions").select("*", { count: "exact", head: true });
+    const { count } = await supabase.from("questions_public").select("id", { count: "exact", head: true });
     setTotal(count ?? 0);
-    const { data } = await supabase.from("questions").select("subject,chapter,year,question_text").limit(20000);
+    const { data } = await supabase.from("questions_public").select("subject,chapter,year,question_text").limit(20000);
     const rows = (data ?? []) as { subject: string; chapter: string; year: number | null; question_text: string }[];
     const bumper = (map: Map<string, number>, key: string) => map.set(key, (map.get(key) ?? 0) + 1);
     const sMap = new Map<string, number>(), cMap = new Map<string, number>(), yMap = new Map<string, number>(), tMap = new Map<string, number>();
