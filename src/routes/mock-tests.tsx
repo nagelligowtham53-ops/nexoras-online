@@ -653,7 +653,7 @@ function MockTestsPage() {
       )}
 
 
-      {phase === "result" && stats && (
+      {phase === "result" && stats && evaluation && (
         <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} gradedMap={gradedMap} evaluation={evaluation} onReset={reset} />
       )}
     </PageShell>
