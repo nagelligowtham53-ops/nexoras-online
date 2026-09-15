@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+
 const ListInput = z.object({
   subject: z.string().max(60).default(""),
   search: z.string().max(200).default(""),
@@ -17,8 +19,8 @@ export type AdminQuestionRow = {
   question_type: string;
   year: number | null;
   question_text: string;
-  options: unknown;
-  correct_answer: unknown;
+  options: Json;
+  correct_answer: Json;
   explanation: string | null;
   solution: string | null;
   image_url: string | null;
@@ -39,8 +41,8 @@ export const listAdminQuestions = createServerFn({ method: "POST" })
     if (roleError || !allowed) throw new Error("Admin access required");
 
     const { data: rows, error } = await context.supabase.rpc("admin_questions_list", {
-      p_subject: data.subject || null,
-      p_search: data.search || null,
+      p_subject: data.subject || undefined,
+      p_search: data.search || undefined,
       p_limit: data.limit,
     });
     if (error) throw new Error("The question list could not be loaded.");

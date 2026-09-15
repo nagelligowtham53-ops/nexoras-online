@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
 import { gradeAnswers, type DbQuestion, type GradeResult } from "@/lib/questions";
+import { evaluateTest, type EvaluationResult, type EvaluableQuestion } from "@/lib/evaluation";
 import { fetchExamConfigs, papersFor, type ExamConfig } from "@/lib/exam-config";
 import {
   checkAvailability, generateTest, TestGenerationError,
@@ -178,20 +179,7 @@ function MockTestsPage() {
   const [fullscreen, setFullscreen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [gradedMap, setGradedMap] = useState<Record<string, GradeResult>>({});
-
-  // Score one question against either the server-graded map (DB questions) or the
-  // demo answer key baked into offline fallback questions. Never trusts the browser
-  // with correct keys for DB-backed content.
-  function scoreQuestion(q: Question, ans: string | null): boolean {
-    if (ans === null || ans === "") return false;
-    if (q.dbId) {
-      const g = gradedMap[q.dbId];
-      return g ? g.is_correct : false;
-    }
-    if (q.correct === undefined) return false;
-    if (q.type === "mcq") return Number(ans) === q.correct;
-    return Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
-  }
+  const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
 
   const startedAtRef = useRef<number>(0);
   const lastTickRef = useRef<number>(0);
@@ -425,29 +413,37 @@ function MockTestsPage() {
     } catch (e) { console.error("[mock-tests] gradeAnswers failed", e); }
     setGradedMap(freshGraded);
 
-    let correct = 0, wrong = 0, attempted = 0;
-    const subMap = new Map<string, { correct: number; total: number }>();
-    questions.forEach((q, i) => {
-      const sub = subMap.get(q.subject) ?? { correct: 0, total: 0 };
-      sub.total += 1;
-      const ans = answers[i];
-      if (ans !== null && ans !== "") {
-        attempted += 1;
-        let isCorrect = false;
-        if (q.dbId) isCorrect = freshGraded[q.dbId]?.is_correct ?? false;
-        else if (q.correct !== undefined) {
-          isCorrect = q.type === "mcq"
-            ? Number(ans) === q.correct
-            : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
-        }
-        if (isCorrect) { correct += 1; sub.correct += 1; } else wrong += 1;
-      }
-      subMap.set(q.subject, sub);
+    const evaluable: EvaluableQuestion[] = questions.map((q, i) => ({
+      id: q.dbId ?? `demo-${i}`,
+      question_type: q.type === "mcq" ? "single_correct" : "numerical",
+      subject: q.subject,
+      chapter: q.chapter,
+      difficulty: q.difficulty,
+      options: q.options?.map((text, optionIndex) => ({ id: String(optionIndex), text })),
+      local_key: q.correct === undefined
+        ? null
+        : q.type === "mcq"
+          ? { type: "single", value: q.correct }
+          : { type: "numeric", value: q.correct, tolerance: 0.01 },
+    }));
+    const result = evaluateTest({
+      test_id: `${exam.key}-${startedAtRef.current}`,
+      marking: { positive: activeConfig.marksPerCorrect, negative: activeConfig.negativeMarks, unattempted: 0 },
+      questions: evaluable,
+      answers,
+      grades: Object.fromEntries(Object.entries(freshGraded).map(([id, grade]) => [id, {
+        question_id: id,
+        correct_answer: grade.correct_answer,
+        solution: grade.solution,
+        explanation: grade.explanation,
+      }])),
+      timePerQuestion: timePerQ,
+      markedForReview: marked,
     });
-    const score = correct * activeConfig.marksPerCorrect - wrong * activeConfig.negativeMarks;
-    const max_score = questions.length * activeConfig.marksPerCorrect;
-    const subject_breakdown: SubjectStat[] = Array.from(subMap.entries()).map(([subject, s]) => ({
-      subject, correct: s.correct, total: s.total,
+    setEvaluation(result);
+    const { attempted, correct, incorrect: wrong, score, max_score } = result.summary;
+    const subject_breakdown: SubjectStat[] = result.summary.bySubject.map((subject) => ({
+      subject: subject.label, correct: subject.correct, total: subject.total,
     }));
     setPhase("result");
     if (auto) {
@@ -468,7 +464,7 @@ function MockTestsPage() {
   function reset() {
     setPhase("select");
     setQuestions([]); setAnswers([]); setMarked([]); setVisited([]); setTimePerQ([]);
-    setCurrent(0); setError(null); setReward(null); setGradedMap({});
+    setCurrent(0); setError(null); setReward(null); setGradedMap({}); setEvaluation(null);
   }
 
   // ---- Status counts
@@ -496,43 +492,29 @@ function MockTestsPage() {
 
   // ---- Result stats
   const stats = useMemo(() => {
-    if (phase !== "result") return null;
-    let correct = 0, wrong = 0, attempted = 0;
-    const subMap = new Map<string, { correct: number; total: number; time: number }>();
-    questions.forEach((q, i) => {
-      const cur = subMap.get(q.subject) ?? { correct: 0, total: 0, time: 0 };
-      cur.total += 1; cur.time += timePerQ[i] ?? 0;
-      const ans = answers[i];
-      if (ans !== null && ans !== "") {
-        attempted += 1;
-        const isCorrect = scoreQuestion(q, ans);
-        if (isCorrect) { correct += 1; cur.correct += 1; } else wrong += 1;
-      }
-      subMap.set(q.subject, cur);
-    });
-    const score = correct * activeConfig.marksPerCorrect - wrong * activeConfig.negativeMarks;
-    const max_score = questions.length * activeConfig.marksPerCorrect;
+    if (phase !== "result" || !evaluation) return null;
+    const { correct, incorrect: wrong, attempted, unanswered: skipped, score, max_score, accuracy } = evaluation.summary;
     const percent = Math.max(0, Math.round((score / Math.max(1, max_score)) * 100));
-    const accuracy = attempted ? Math.round((correct / attempted) * 100) : 0;
     const rank = Math.max(1, Math.round((100 - percent) * 1500));
-    const subs = Array.from(subMap.entries()).map(([s, v]) => ({
-      subject: s, ...v, pct: Math.round((v.correct / Math.max(1, v.total)) * 100),
-      avg: v.total ? Math.round(v.time / v.total) : 0,
+    const subs = evaluation.summary.bySubject.map((subject) => ({
+      subject: subject.label, correct: subject.correct, total: subject.total, time: subject.time,
+      pct: subject.accuracy, avg: subject.total ? Math.round(subject.time / subject.total) : 0,
     }));
     const weakest = [...subs].sort((a, b) => a.pct - b.pct)[0];
     const strongest = [...subs].sort((a, b) => b.pct - a.pct)[0];
-    const totalTime = timePerQ.reduce((a, b) => a + b, 0);
-    const avgPerQ = questions.length ? Math.round(totalTime / questions.length) : 0;
+    const totalTime = evaluation.summary.time_used;
+    const avgPerQ = evaluation.summary.avg_time_per_question;
     const suggestions: string[] = [];
     if (weakest && weakest.pct < 50) suggestions.push(`Focus your next 7 days on ${weakest.subject} — current accuracy is only ${weakest.pct}%.`);
     if (accuracy < 60 && attempted > 5) suggestions.push(`Accuracy is ${accuracy}%. Slow down on tricky questions to reduce silly mistakes.`);
     if (avgPerQ > 150) suggestions.push(`Average time per question is ${avgPerQ}s — practice timed sets to improve speed.`);
     if (avgPerQ < 30 && attempted > 5) suggestions.push("Your pacing is very fast — double-check answers before moving on.");
-    if (questions.length - attempted > questions.length * 0.25) suggestions.push(`You skipped ${questions.length - attempted} questions. Even a guess on no-negative questions can boost your score.`);
+    if (skipped > questions.length * 0.25) suggestions.push(`You skipped ${skipped} questions. Even a guess on no-negative questions can boost your score.`);
+    if (evaluation.summary.ungraded > 0) suggestions.push(`${evaluation.summary.ungraded} answer${evaluation.summary.ungraded === 1 ? " was" : "s were"} not graded and received zero marks, with no penalty.`);
     if (strongest && strongest.pct >= 80) suggestions.push(`${strongest.subject} is your strength (${strongest.pct}%). Maintain it with weekly revision.`);
     if (suggestions.length === 0) suggestions.push("Great consistency across sections — push to the next difficulty tier next time.");
-    return { correct, wrong, attempted, skipped: questions.length - attempted, score, max_score, percent, accuracy, rank, subs, weakest, strongest, totalTime, avgPerQ, suggestions };
-  }, [phase, questions, answers, exam, timePerQ]);
+    return { correct, wrong, attempted, skipped, ungraded: evaluation.summary.ungraded, score, max_score, percent, accuracy, rank, subs, weakest, strongest, totalTime, avgPerQ, suggestions };
+  }, [phase, questions, evaluation]);
 
   // ============== RENDER ==============
 
@@ -672,7 +654,7 @@ function MockTestsPage() {
 
 
       {phase === "result" && stats && (
-        <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} gradedMap={gradedMap} onReset={reset} />
+        <ResultView exam={exam} stats={stats} reward={reward} questions={questions} answers={answers} gradedMap={gradedMap} evaluation={evaluation} onReset={reset} />
       )}
     </PageShell>
   );
@@ -1125,6 +1107,7 @@ function SummaryView(props: { exam: ExamSpec; counts: { answered: number; notAns
 
 type ResultStats = {
   correct: number; wrong: number; attempted: number; skipped: number;
+  ungraded: number;
   score: number; max_score: number; percent: number; accuracy: number; rank: number;
   subs: { subject: string; correct: number; total: number; time: number; pct: number; avg: number }[];
   weakest: { subject: string; pct: number } | undefined;
@@ -1136,9 +1119,9 @@ function ResultView(props: {
   exam: ExamSpec;
   stats: ResultStats;
   reward: { earnedXp: number; newBadges: { name: string; description: string }[] } | null;
-  questions: Question[]; answers: (string | null)[]; gradedMap: Record<string, GradeResult>; onReset: () => void;
+  questions: Question[]; answers: (string | null)[]; gradedMap: Record<string, GradeResult>; evaluation: EvaluationResult; onReset: () => void;
 }) {
-  const { exam, stats, reward, questions, answers, gradedMap, onReset } = props;
+  const { exam, stats, reward, questions, answers, gradedMap, evaluation, onReset } = props;
   return (
     <section className="mx-auto max-w-5xl space-y-6 px-4 py-10 lg:px-8">
       <div className="glass relative overflow-hidden rounded-2xl p-6 text-center">
@@ -1188,6 +1171,12 @@ function ResultView(props: {
         <Tile icon={BarChart3} label="Skipped" value={String(stats.skipped)} />
         <Tile icon={Timer} label="Time used" value={`${Math.floor(stats.totalTime / 60)}m`} />
       </div>
+
+      {stats.ungraded > 0 && (
+        <div className="rounded-lg border border-accent/40 bg-accent/10 px-4 py-3 text-sm">
+          {stats.ungraded} attempted answer{stats.ungraded === 1 ? " was" : "s were"} not graded. No negative marks were applied.
+        </div>
+      )}
 
       <div className="glass rounded-2xl p-6">
         <h3 className="font-display text-lg font-semibold">Subject Performance</h3>
@@ -1244,15 +1233,9 @@ function ResultView(props: {
           {questions.map((q, i) => {
             const ans = answers[i];
             const graded = q.dbId ? gradedMap[q.dbId] : null;
-            let isCorrect = false;
-            if (ans !== null && ans !== "") {
-              if (graded) isCorrect = graded.is_correct;
-              else if (q.correct !== undefined) {
-                isCorrect = q.type === "mcq"
-                  ? Number(ans) === q.correct
-                  : Math.abs(parseFloat(ans) - Number(q.correct)) < 0.01;
-              }
-            }
+            const submission = evaluation.submissions[i];
+            const isCorrect = submission?.is_correct === true;
+            const isUngraded = submission?.is_attempted && submission.is_correct === null;
             let correctLabel: string | null = null;
             if (graded) {
               const ca = graded.correct_answer;
@@ -1269,8 +1252,8 @@ function ResultView(props: {
                 <div className="flex items-start gap-2">
                   <span className="font-mono text-xs text-muted-foreground">Q{i + 1}.</span>
                   <span className="flex-1">{q.q}</span>
-                  <span className={`text-xs ${isCorrect ? "text-emerald-400" : ans ? "text-rose-400" : "text-muted-foreground"}`}>
-                    {isCorrect ? "✓" : ans ? "✗" : "—"}
+                  <span className={`text-xs ${isCorrect ? "text-emerald-400" : isUngraded ? "text-accent" : ans ? "text-rose-400" : "text-muted-foreground"}`}>
+                    {isCorrect ? "✓" : isUngraded ? "Not graded" : ans ? "✗" : "—"}
                   </span>
                 </div>
                 {(correctLabel || explanation) && (

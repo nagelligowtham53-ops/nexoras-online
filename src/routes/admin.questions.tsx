@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { ensureQuestionBankSeeded } from "@/lib/question-bank.functions";
+import { listAdminQuestions, type AdminQuestionRow } from "@/lib/admin-questions.functions";
 import { isAdmin, fetchSubjectStats } from "@/lib/questions";
 import {
   AlertCircle, CheckCircle2, Upload, Database, Loader2, FileJson,
@@ -385,21 +386,23 @@ function ChartList({ title, rows }: { title: string; rows: { label: string; coun
 
 /* ------------- Browse Panel ------------- */
 function BrowsePanel({ onChanged }: { onChanged: () => void }) {
+  const loadAdminQuestions = useServerFn(listAdminQuestions);
   const [q, setQ] = useState("");
   const [subject, setSubject] = useState("");
-  const [rows, setRows] = useState<any[]>([]);
+  const [rows, setRows] = useState<AdminQuestionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
 
   async function run() {
     setLoading(true);
-    let qb = supabase.from("questions").select("id,subject,chapter,topic,difficulty,question_type,year,question_text,options,correct_answer,explanation,image_url").order("created_at", { ascending: false }).limit(100);
-    if (subject) qb = qb.eq("subject", subject);
-    if (q) qb = qb.ilike("question_text", `%${q}%`);
-    const { data, error } = await qb;
-    setLoading(false);
-    if (error) return toast.error(error.message);
-    setRows(data ?? []);
+    try {
+      const data = await loadAdminQuestions({ data: { subject, search: q, limit: 100 } });
+      setRows(data);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The question list could not be loaded.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { run(); /* initial */ // eslint-disable-next-line
