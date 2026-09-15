@@ -17,6 +17,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReferRouteImport } from './routes/refer'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -65,6 +66,7 @@ import { Route as ApiExplainQuestionRouteImport } from './routes/api/explain-que
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
 import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
+import { Route as AdminCampaignRouteImport } from './routes/admin.campaign'
 import { Route as AdminBlogRouteImport } from './routes/admin.blog'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
@@ -111,6 +113,11 @@ const ResumeRoute = ResumeRouteImport.update({
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferRoute = ReferRouteImport.update({
+  id: '/refer',
+  path: '/refer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -353,6 +360,11 @@ const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
   path: '/admin/questions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCampaignRoute = AdminCampaignRouteImport.update({
+  id: '/admin/campaign',
+  path: '/admin/campaign',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminBlogRoute = AdminBlogRouteImport.update({
   id: '/admin/blog',
   path: '/admin/blog',
@@ -431,6 +443,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
+  '/refer': typeof ReferRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
@@ -442,6 +455,7 @@ export interface FileRoutesByFullPath {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/campaign': typeof AdminCampaignRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
@@ -496,6 +510,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
+  '/refer': typeof ReferRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
@@ -507,6 +522,7 @@ export interface FileRoutesByTo {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/campaign': typeof AdminCampaignRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
@@ -562,6 +578,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
+  '/refer': typeof ReferRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resume': typeof ResumeRoute
   '/roadmaps': typeof RoadmapsRoute
@@ -573,6 +590,7 @@ export interface FileRoutesById {
   '/.mcp/list-tools': typeof Char91DotmcpChar93ListToolsRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/admin/blog': typeof AdminBlogRoute
+  '/admin/campaign': typeof AdminCampaignRoute
   '/admin/questions': typeof AdminQuestionsRoute
   '/api/blog-admin': typeof ApiBlogAdminRoute
   '/api/chat': typeof ApiChatRoute
@@ -629,6 +647,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privacy-policy'
     | '/profile'
+    | '/refer'
     | '/reset-password'
     | '/resume'
     | '/roadmaps'
@@ -640,6 +659,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/blog'
+    | '/admin/campaign'
     | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
@@ -694,6 +714,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privacy-policy'
     | '/profile'
+    | '/refer'
     | '/reset-password'
     | '/resume'
     | '/roadmaps'
@@ -705,6 +726,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/blog'
+    | '/admin/campaign'
     | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
@@ -759,6 +781,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privacy-policy'
     | '/profile'
+    | '/refer'
     | '/reset-password'
     | '/resume'
     | '/roadmaps'
@@ -770,6 +793,7 @@ export interface FileRouteTypes {
     | '/.mcp/list-tools'
     | '/.well-known/oauth-protected-resource'
     | '/admin/blog'
+    | '/admin/campaign'
     | '/admin/questions'
     | '/api/blog-admin'
     | '/api/chat'
@@ -825,6 +849,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProfileRoute: typeof ProfileRoute
+  ReferRoute: typeof ReferRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResumeRoute: typeof ResumeRoute
   RoadmapsRoute: typeof RoadmapsRoute
@@ -836,6 +861,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   AdminBlogRoute: typeof AdminBlogRoute
+  AdminCampaignRoute: typeof AdminCampaignRoute
   AdminQuestionsRoute: typeof AdminQuestionsRoute
   ApiBlogAdminRoute: typeof ApiBlogAdminRoute
   ApiChatRoute: typeof ApiChatRoute
@@ -907,6 +933,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/refer': {
+      id: '/refer'
+      path: '/refer'
+      fullPath: '/refer'
+      preLoaderRoute: typeof ReferRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -1245,6 +1278,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/campaign': {
+      id: '/admin/campaign'
+      path: '/admin/campaign'
+      fullPath: '/admin/campaign'
+      preLoaderRoute: typeof AdminCampaignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/blog': {
       id: '/admin/blog'
       path: '/admin/blog'
@@ -1347,6 +1387,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProfileRoute: ProfileRoute,
+  ReferRoute: ReferRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResumeRoute: ResumeRoute,
   RoadmapsRoute: RoadmapsRoute,
@@ -1359,6 +1400,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   AdminBlogRoute: AdminBlogRoute,
+  AdminCampaignRoute: AdminCampaignRoute,
   AdminQuestionsRoute: AdminQuestionsRoute,
   ApiBlogAdminRoute: ApiBlogAdminRoute,
   ApiChatRoute: ApiChatRoute,
