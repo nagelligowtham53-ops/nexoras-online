@@ -101,6 +101,204 @@ export type Database = {
         }
         Relationships: []
       }
+      campaign_events: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          occurred_on: string
+          referral_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          occurred_on?: string
+          referral_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          occurred_on?: string
+          referral_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_events_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          banner_deadline: string
+          banner_message: string
+          banner_title: string
+          created_at: string
+          eligibility_rules: Json
+          enabled: boolean
+          ends_at: string
+          id: string
+          name: string
+          referral_enabled: boolean
+          referred_reward: number
+          referrer_reward: number
+          slug: string
+          starts_at: string
+          theme_enabled: boolean
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          banner_deadline?: string
+          banner_message?: string
+          banner_title?: string
+          created_at?: string
+          eligibility_rules?: Json
+          enabled?: boolean
+          ends_at: string
+          id?: string
+          name: string
+          referral_enabled?: boolean
+          referred_reward?: number
+          referrer_reward?: number
+          slug: string
+          starts_at: string
+          theme_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          banner_deadline?: string
+          banner_message?: string
+          banner_title?: string
+          created_at?: string
+          eligibility_rules?: Json
+          enabled?: boolean
+          ends_at?: string
+          id?: string
+          name?: string
+          referral_enabled?: boolean
+          referred_reward?: number
+          referrer_reward?: number
+          slug?: string
+          starts_at?: string
+          theme_enabled?: boolean
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      credit_balances: {
+        Row: {
+          balance: number
+          lifetime_earned: number
+          lifetime_spent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          lifetime_earned?: number
+          lifetime_spent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          lifetime_earned?: number
+          lifetime_spent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_balances_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          idempotency_key: string
+          referral_id: string | null
+          status: string
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description: string
+          id?: string
+          idempotency_key: string
+          referral_id?: string | null
+          status?: string
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string
+          id?: string
+          idempotency_key?: string
+          referral_id?: string | null
+          status?: string
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_transactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exam_configs: {
         Row: {
           active: boolean
@@ -531,6 +729,109 @@ export type Database = {
           },
         ]
       }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          eligibility_status: string
+          id: string
+          referral_code_id: string
+          referred_user_id: string
+          referrer_user_id: string
+          rejection_reason: string | null
+          status: string
+          successful_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          eligibility_status?: string
+          id?: string
+          referral_code_id: string
+          referred_user_id: string
+          referrer_user_id: string
+          rejection_reason?: string | null
+          status?: string
+          successful_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          eligibility_status?: string
+          id?: string
+          referral_code_id?: string
+          referred_user_id?: string
+          referrer_user_id?: string
+          rejection_reason?: string | null
+          status?: string
+          successful_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referred_user_id_fkey"
+            columns: ["referred_user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_user_id_fkey"
+            columns: ["referrer_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       syllabus_chapter_aliases: {
         Row: {
           alias: string
@@ -926,6 +1227,29 @@ export type Database = {
       }
     }
     Functions: {
+      active_campaign: {
+        Args: never
+        Returns: {
+          banner_deadline: string
+          banner_message: string
+          banner_title: string
+          ends_at: string
+          id: string
+          name: string
+          referral_enabled: boolean
+          referred_reward: number
+          referrer_reward: number
+          slug: string
+          starts_at: string
+          status: string
+          theme_enabled: boolean
+          timezone: string
+        }[]
+      }
+      admin_campaign_dashboard: {
+        Args: { p_campaign_id: string }
+        Returns: Json
+      }
       admin_chapter_health: {
         Args: never
         Returns: {
@@ -965,6 +1289,51 @@ export type Database = {
           year: number
         }[]
       }
+      admin_update_campaign: {
+        Args: {
+          p_banner_deadline: string
+          p_banner_message: string
+          p_banner_title: string
+          p_eligibility_rules: Json
+          p_enabled: boolean
+          p_ends_at: string
+          p_id: string
+          p_referral_enabled: boolean
+          p_referred_reward: number
+          p_referrer_reward: number
+          p_starts_at: string
+          p_theme_enabled: boolean
+        }
+        Returns: {
+          banner_deadline: string
+          banner_message: string
+          banner_title: string
+          created_at: string
+          eligibility_rules: Json
+          enabled: boolean
+          ends_at: string
+          id: string
+          name: string
+          referral_enabled: boolean
+          referred_reward: number
+          referrer_reward: number
+          slug: string
+          starts_at: string
+          theme_enabled: boolean
+          timezone: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "campaigns"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      campaign_runtime_status: {
+        Args: { p_enabled: boolean; p_ends_at: string; p_starts_at: string }
+        Returns: string
+      }
       chapter_topic_counts: {
         Args: { p_chapter_ids: string[]; p_exam: string }
         Returns: {
@@ -979,6 +1348,7 @@ export type Database = {
           total: number
         }[]
       }
+      ensure_my_referral_code: { Args: never; Returns: string }
       exam_chapter_counts: {
         Args: { p_classes?: number[]; p_exam: string }
         Returns: {
@@ -1024,6 +1394,8 @@ export type Database = {
           unit: string
         }[]
       }
+      finalize_my_referral: { Args: never; Returns: string }
+      generate_referral_code: { Args: never; Returns: string }
       grade_answers: {
         Args: { q_ids: string[]; user_answers: Json[] }
         Returns: {
@@ -1041,6 +1413,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      my_referral_dashboard: { Args: never; Returns: Json }
       practice_availability: {
         Args: {
           p_categories?: string[]
@@ -1132,6 +1505,7 @@ export type Database = {
         Args: { session_uuid: string }
         Returns: undefined
       }
+      record_referral_share: { Args: never; Returns: undefined }
       user_weak_areas: {
         Args: { p_exam?: string; p_min_attempts?: number }
         Returns: {
@@ -1143,6 +1517,15 @@ export type Database = {
           class_level: number
           correct: number
           subject: string
+        }[]
+      }
+      validate_referral_code: {
+        Args: { p_code: string }
+        Returns: {
+          campaign_name: string
+          referred_reward: number
+          referrer_reward: number
+          valid: boolean
         }[]
       }
     }
