@@ -44,10 +44,11 @@ function ReferPage() {
     if (!referralUrl) return;
     const shareData = { title: "Join me on Nexoras", text: "Study smarter with Nexoras. Join through my Ganesh Utsav invitation and earn AI Credits after verification.", url: referralUrl };
     try {
-      if (navigator.share) await navigator.share(shareData);
+      const usedNativeShare = typeof navigator.share === "function";
+      if (usedNativeShare) await navigator.share(shareData);
       else await navigator.clipboard.writeText(referralUrl);
       await trackShare();
-      toast.success(navigator.share ? "Invitation shared" : "Invitation link copied");
+      toast.success(usedNativeShare ? "Invitation shared" : "Invitation link copied");
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
       toast.error("Could not share the invitation");
