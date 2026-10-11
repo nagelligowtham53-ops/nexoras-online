@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 
@@ -39,7 +40,7 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
 
@@ -89,8 +90,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Nexoras — Study Smarter with AI" },
       { name: "twitter:description", content: "Nexoras is the AI-powered productivity platform for students: study planner, smart calculators, resume builder, interview prep, and career guidance — all in one futuristic dashboard." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ae17a931-f5f8-48ec-bda7-ff8031860131/id-preview-c42e1516--eca0e6ce-3882-4da4-9df0-4ca85e9ab460.lovable.app-1778233219449.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/ae17a931-f5f8-48ec-bda7-ff8031860131/id-preview-c42e1516--eca0e6ce-3882-4da4-9df0-4ca85e9ab460.lovable.app-1778233219449.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -104,8 +103,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
+          "@id": "https://nexoras.online/#organization",
           name: "Nexoras",
           url: "https://nexoras.online",
+          founder: { "@type": "Person", "@id": "https://nexoras.online/about#founder", name: "Nagelli Gowtham", url: "https://nexoras.online/about" },
           logo: "https://nexoras.online/favicon.ico",
           sameAs: [] as string[],
           description: "AI-powered study platform for JEE, NEET, and other competitive exams — free for students.",
