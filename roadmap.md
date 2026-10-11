@@ -1,9 +1,9 @@
 # Roadmap
 
 ## Founder identity correction
-- [ ] Correct About page copy, search metadata and founder structured data
-- [ ] Audit website and published blog content for conflicting founder claims
-- [ ] Verify About indexing signals, sitemap, and desktop/mobile presentation
+- [x] Correct About page copy, search metadata and founder structured data
+- [x] Audit website and published blog content for conflicting founder claims (none found)
+- [x] Verify About indexing signals, sitemap, and desktop/mobile presentation (published page returns 200; corrected metadata verified in preview; publishing and Google recrawl still required)
 
 ## Earlier campaign work (outside this correction)
 
