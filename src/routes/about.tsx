@@ -5,13 +5,38 @@ import { Heart, Rocket, Users, Target, Shield, Sparkles, UserRound, Quote } from
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "About Nexoras — Nagelli Gowtham, Founder & Creator" },
-      { name: "description", content: "Meet Nagelli Gowtham, founder and creator of Nexoras, and discover his vision for AI-powered learning, productivity, and career preparation for students." },
-      { property: "og:title", content: "About Nexoras — Meet Founder Nagelli Gowtham" },
-      { property: "og:description", content: "The founder's story, mission, and vision behind Nexoras: helping students study smarter, grow their skills, and move confidently toward their goals." },
+      { title: "About Nexoras | Founded by Nagelli Gowtham" },
+      { name: "description", content: "Meet Nagelli Gowtham, founder and creator of Nexoras, an AI-powered student productivity platform for learning, exam preparation, and career development." },
+      { property: "og:title", content: "About Nexoras | Founded by Nagelli Gowtham" },
+      { property: "og:description", content: "Meet Nagelli Gowtham, founder and creator of Nexoras, an AI-powered student productivity platform for learning, exam preparation, and career development." },
+      { property: "og:url", content: "https://nexoras.online/about" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: "https://nexoras.online/about" }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Person",
+            "@id": "https://nexoras.online/about#founder",
+            name: "Nagelli Gowtham",
+            jobTitle: "Founder & Creator of Nexoras",
+            url: "https://nexoras.online/about",
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://nexoras.online/#organization",
+            name: "Nexoras",
+            url: "https://nexoras.online/",
+            founder: { "@id": "https://nexoras.online/about#founder" },
+            description: "An AI-powered student productivity platform for learning, exam preparation, and career development.",
+          },
+        ],
+      }),
+    }],
   }),
   component: About,
 });
@@ -21,7 +46,7 @@ function About() {
     <PageShell>
       <PageHeader
         eyebrow="About Nexoras"
-        title="Nexoras — built for students"
+        title="About Nexoras"
         description="The story, purpose, and vision behind a platform for smarter learning, practical skills, and career preparation."
       />
       <section className="about-founder mx-auto max-w-5xl space-y-14 px-4 py-12 lg:px-8">
@@ -37,12 +62,12 @@ function About() {
             </div>
             <div className="min-w-0 p-6 sm:p-8">
               <p className="text-sm font-medium text-accent">Meet the founder</p>
-              <h2 id="founder-name" className="mt-2 font-display text-3xl font-bold sm:text-4xl">Nagelli Gowtham</h2>
+              <h2 id="founder-name" className="mt-2 font-display text-3xl font-bold sm:text-4xl">Nagelli Gowtham — Founder &amp; Creator</h2>
               <p className="mt-2 font-medium text-muted-foreground">Founder &amp; Creator of Nexoras</p>
               <h3 className="mt-8 text-lg font-semibold">About the Founder</h3>
               <div className="mt-4 space-y-4 text-muted-foreground leading-relaxed">
                 <p>Hi, I’m Nagelli Gowtham, the founder and creator of Nexoras.</p>
-                <p>I started Nexoras with a simple vision: to make learning smarter, productivity easier, and career preparation more accessible through the power of artificial intelligence.</p>
+                <p>I founded Nexoras with a simple vision: to make AI-powered learning, exam preparation, productivity, and career development tools accessible to students.</p>
                 <p>I believe that every student deserves access to useful tools that help them learn, explore their potential, build practical skills, and prepare for future opportunities. Nexoras is my step toward turning that vision into reality.</p>
                 <p>My goal is to build a platform that brings together AI-powered study tools, exam preparation, resume building, interview practice, productivity features, and career guidance in one convenient place.</p>
                 <p>For me, Nexoras is more than just a website. It is a journey of innovation, learning, and continuous improvement. I want to keep improving the platform based on students’ needs and feedback, making it more useful, accessible, and reliable over time.</p>
