@@ -1,5 +1,13 @@
 # Roadmap
 
+## Secure Gemini integration
+- [ ] Audit existing AI features and application credit wallet
+- [ ] Configure GEMINI_API_KEY securely and verify supported model access
+- [ ] Add shared authenticated Gemini integration without replacing reliable providers unnecessarily
+- [ ] Implement durable rate limits and exactly-once successful-action credit charging
+- [ ] Validate errors, structured outputs, real feature flows, and desktop/mobile regression safety
+- [ ] Report connected features, incomplete work, credit test results, and publishing requirements
+
 ## Founder identity correction
 - [x] Correct About page copy, search metadata and founder structured data
 - [x] Audit website and published blog content for conflicting founder claims (none found)
