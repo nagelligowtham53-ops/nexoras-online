@@ -10,9 +10,10 @@ export const Route = createFileRoute("/api/explain-question")({
         if (auth instanceof Response) return auth;
 
         const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500 });
+        if (!apiKey && !process.env.GEMINI_API_KEY) return Response.json({ error: "AI not configured" }, { status: 500 });
 
         let body: {
+          provider?: "groq" | "gemini";
           question?: string;
           options?: string[];
           correctAnswer?: string;
@@ -49,6 +50,12 @@ ${userAnswer ? `Student's answer: ${userAnswer}` : ""}
 
 Task: ${modeInstruction}
 Keep it under 220 words. Use plain text with unicode maths (no LaTeX, no markdown fences).`;
+
+        if (body.provider !== "groq") {
+          const { geminiText, geminiErrorResponse } = await import("@/lib/gemini.server");
+          try { return Response.json({ text: await geminiText(auth.userId, { system: "You are an expert JEE/NEET tutor. Explain accurately; never invent syllabus details, official PYQs, or references. Objective grading is handled separately.", contents: prompt, signal: request.signal }) }); }
+          catch (error) { return geminiErrorResponse(error); }
+        }
 
         let upstream: Response;
         try {

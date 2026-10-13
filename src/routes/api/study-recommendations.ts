@@ -9,9 +9,10 @@ export const Route = createFileRoute("/api/study-recommendations")({
         const auth = await requireAuthFromRequest(request);
         if (auth instanceof Response) return auth;
         const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500 });
+        if (!apiKey && !process.env.GEMINI_API_KEY) return Response.json({ error: "AI not configured" }, { status: 500 });
 
         let body: {
+          provider?: "groq" | "gemini";
           exam?: string;
           weak?: { chapter: string; subject: string; accuracy: number }[];
           strong?: { chapter: string; subject: string; accuracy: number }[];
@@ -41,6 +42,17 @@ Return STRICT JSON only:
   "chaptersToRevise": ["chapter 1", "chapter 2", ...],                          // top 5
   "practiceTips": ["...", "...", "..."]                                         // 3-5 actionable tips
 }`;
+
+        if (body.provider !== "groq") {
+          const { geminiJson, geminiErrorResponse } = await import("@/lib/gemini.server");
+          try {
+            const { z } = await import("zod");
+            const schema = z.object({ summary: z.string().min(1), revisionPlan: z.array(z.object({ day: z.number().int().min(1).max(5), focus: z.string().min(1), tasks: z.array(z.string().min(1)).min(1) })).length(5), chaptersToRevise: z.array(z.string()), practiceTips: z.array(z.string()).min(3).max(5) });
+            const result = schema.safeParse(await geminiJson(auth.userId, { system: "You are an expert study mentor. Return valid JSON only; do not invent results or official syllabus facts.", contents: prompt, signal: request.signal }));
+            if (!result.success) return Response.json({ error: "The AI revision plan was incomplete. Nothing was saved or charged." }, { status: 502 });
+            return Response.json(result.data);
+          } catch (error) { return geminiErrorResponse(error); }
+        }
 
         let upstream: Response;
         try {

@@ -12,14 +12,14 @@ export const Route = createFileRoute("/api/chat")({
         if (auth instanceof Response) return auth;
 
         const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
+        if (!apiKey && !process.env.GEMINI_API_KEY) {
           return new Response(
             JSON.stringify({ error: "GROQ_API_KEY not configured" }),
             { status: 500, headers: { "content-type": "application/json" } },
           );
         }
 
-        let body: { messages?: ChatMessage[]; system?: string; model?: string };
+        let body: { messages?: ChatMessage[]; system?: string; model?: string; provider?: "groq" | "gemini" };
         try {
           body = await request.json();
         } catch {
@@ -61,6 +61,15 @@ export const Route = createFileRoute("/api/chat")({
           typeof body.model === "string" && body.model.length > 0
             ? body.model
             : "llama-3.3-70b-versatile";
+
+        if (body.provider !== "groq") {
+          const { geminiChatResponse } = await import("@/lib/gemini.server");
+          return geminiChatResponse(auth.userId, {
+            system: systemPrompt,
+            contents: safeMessages.filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+            signal: request.signal,
+          });
+        }
 
         let upstream: Response;
         try {

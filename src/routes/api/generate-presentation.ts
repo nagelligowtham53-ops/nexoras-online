@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/generate-presentation")({
         if (provider === "groq" && !process.env.GROQ_API_KEY) {
           return Response.json({ error: FRIENDLY_EXHAUSTED, friendly: true, code: "no_key" }, { status: 503 });
         }
-        if (provider !== "groq" && !userKey) {
+        if (provider !== "groq" && provider !== "gemini" && !userKey) {
           return Response.json({ error: `Add your ${provider} API key in Presentation Settings.`, friendly: true, code: "missing_user_key" }, { status: 400 });
         }
 
@@ -70,13 +70,22 @@ Rules: exactly ${slideCount} slides; bullets <90 chars; 3-6 bullets max; concise
             return Response.json(r);
           }
           if (provider === "gemini") {
-            const r = await callGemini(userKey, sys, user);
+            const { geminiJson } = await import("@/lib/gemini.server");
+            const { z } = await import("zod");
+            const schema = z.object({ title: z.string().min(1), subtitle: z.string(), slides: z.array(z.object({ layout: z.enum(["title","agenda","content","two-column","bullets","quote","stats","chart","references","thanks"]), title: z.string().min(1), subtitle: z.string().optional(), body: z.string().optional(), bullets: z.array(z.string()).optional(), stats: z.array(z.object({label:z.string(),value:z.string()})).optional(), chart: z.object({type:z.enum(["bar","pie","line"]),labels:z.array(z.string()),data:z.array(z.number()),title:z.string().optional()}).optional(), quote:z.object({text:z.string(),author:z.string().optional()}).optional(),references:z.array(z.string()).optional(),notes:z.string().optional() })).length(slideCount) });
+            const result = schema.safeParse(await geminiJson(auth.userId, { system: sys, contents: user, signal: request.signal }));
+            if (!result.success) return Response.json({ error: "The generated deck was incomplete. Nothing was saved or charged." }, { status: 502 });
+            const r = result.data;
             return Response.json(r);
           }
           // groq (default)
-          const r = await callGroq(process.env.GROQ_API_KEY!, sys, user);
+          const r = await callGroq(process.env.GROQ_API_KEY ?? "", sys, user);
           return Response.json(r);
         } catch (e) {
+          if (provider === "gemini") {
+            const { geminiErrorResponse } = await import("@/lib/gemini.server");
+            return geminiErrorResponse(e);
+          }
           const err = e as { status?: number; message?: string; friendly?: boolean };
           if (err.status === 402 || err.status === 429) {
             return Response.json(
@@ -161,21 +170,3 @@ async function callAnthropic(key: string, sys: string, user: string) {
   return parseJson(data.content?.[0]?.text ?? "");
 }
 
-async function callGemini(key: string, sys: string, user: string) {
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: sys }] },
-        contents: [{ role: "user", parts: [{ text: user }] }],
-        generationConfig: { responseMimeType: "application/json", maxOutputTokens: 8192 },
-      }),
-    },
-  );
-  if (!res.ok) throw aiError(`Gemini error ${res.status}`, res.status);
-  const data = await res.json() as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
-  const text = data.candidates?.[0]?.content?.parts?.map(p => p.text ?? "").join("") ?? "";
-  return parseJson(text);
-}
