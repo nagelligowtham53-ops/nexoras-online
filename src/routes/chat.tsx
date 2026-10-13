@@ -21,7 +21,7 @@ export const Route = createFileRoute("/chat")({
   component: ChatPage,
 });
 
-type Msg = { id: string; role: "user" | "assistant"; content: string };
+type Msg = { id: string; role: "user" | "assistant"; content: string; failed?: boolean };
 
 const STORAGE_KEY = "nexoras.chat.history.v1";
 
@@ -45,6 +45,7 @@ function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const inFlightRef = useRef(false);
 
   useEffect(() => {
     setMessages(loadHistory());
@@ -70,16 +71,20 @@ function ChatPage() {
 
   async function send() {
     const text = input.trim();
-    if (!text || isStreaming) return;
+    // Synchronous ref guard: blocks double Enter/click before React re-renders.
+    if (!text || isStreaming || inFlightRef.current) return;
+    inFlightRef.current = true;
     const userMsg: Msg = { id: crypto.randomUUID(), role: "user", content: text };
     const assistantId = crypto.randomUUID();
-    const next = [...messages, userMsg];
-    setMessages([...next, { id: assistantId, role: "assistant", content: "" }]);
+    // Drop earlier failed/empty assistant placeholders so they are not sent back as context.
+    const next = [...messages.filter((m) => m.role === "user" || (m.content && !m.failed)), userMsg];
+    setMessages([...messages, userMsg, { id: assistantId, role: "assistant", content: "" }]);
     setInput("");
     setIsStreaming(true);
 
     const controller = new AbortController();
     abortRef.current = controller;
+
 
     try {
       const res = await authedFetch("/api/chat", {
@@ -121,12 +126,13 @@ function ChatPage() {
         );
       }
     } catch (e) {
-      const msg = controller.signal.aborted ? "AI generation was stopped." : e instanceof Error && e.message !== "Failed to fetch" ? e.message : "The AI connection was interrupted. Please try again later.";
+      const msg = controller.signal.aborted ? "AI generation was stopped." : e instanceof Error && e.message !== "Failed to fetch" ? e.message : "The AI connection was interrupted. Please try again in a moment.";
       toast.error(msg);
-      setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: m.content ? `${m.content}\n\n_Response interrupted. Please try again later._` : msg } : m));
+      setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, failed: !m.content, content: m.content ? `${m.content}\n\n_Response interrupted. Please try again._` : msg } : m));
     } finally {
       setIsStreaming(false);
       abortRef.current = null;
+      inFlightRef.current = false;
     }
   }
 
