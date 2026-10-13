@@ -157,7 +157,7 @@ export const Route = createFileRoute("/api/blog-admin")({
 
         let body: Action;
         try {
-          body = (await request.json()) as Action;
+          body = await readAIRequest(request) as Action;
         } catch (error) {
           return invalidAIRequest(error);
         }
