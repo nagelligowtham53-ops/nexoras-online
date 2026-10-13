@@ -751,7 +751,10 @@ Keywords = up to 8 missing/recommended keywords for the target role.`,
         `Target role / JD: ${jobDesc || data.role}\n\nResume JSON: ${resumeText}`
       );
       const cleaned = out.replace(/^```json|^```|```$/gm, "").trim();
-      const parsed = JSON.parse(cleaned);
+      const { z } = await import("zod");
+      const result = z.object({ score: z.number().min(0).max(100), strengths: z.array(z.string()), gaps: z.array(z.string()), keywords: z.array(z.string()).max(8) }).safeParse(JSON.parse(cleaned));
+      if (!result.success) throw new Error("AI returned incomplete ATS feedback. Nothing was changed.");
+      const parsed = result.data;
       setAts(parsed);
       toast.success(`ATS score: ${parsed.score}/100`);
     } catch (e) { toast.error("ATS analysis failed: " + (e as Error).message); }
