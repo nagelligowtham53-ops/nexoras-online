@@ -1,12 +1,14 @@
 # Roadmap
 
 ## Secure Gemini integration
-- [ ] Audit existing AI features and application credit wallet
-- [ ] Configure GEMINI_API_KEY securely and verify supported model access
-- [ ] Add shared authenticated Gemini integration without replacing reliable providers unnecessarily
-- [ ] Implement durable rate limits and exactly-once successful-action credit charging
-- [ ] Validate errors, structured outputs, real feature flows, and desktop/mobile regression safety
-- [ ] Report connected features, incomplete work, credit test results, and publishing requirements
+- [x] Audit existing AI features and application credit wallet
+- [x] Configure GEMINI_API_KEY securely; verify gemini-3.8-flash with a useful direct response
+- [x] Add shared authenticated Gemini access to chat (including resume/interview callers), planner, explanations, recommendations, themes, presentations, and blog drafts; retain explicit provider branches
+- [x] Implement durable per-user request limits; defer credit charging per owner's Keep AI free decision (zero AI debit rows verified)
+- [x] Validate bounded inputs, structured-output checks, safe errors, 28 automated tests, signed-in failure flows, and desktop/mobile rendering
+- [ ] Verify successful app-level AI flows: blocked by repeated Google 503 high-demand responses, despite one successful direct streaming request; no automatic model/provider fallback
+- [ ] Verify published Gemini behavior: requires owner publishing updated app and secrets
+- [x] Identify unsupported runtime AI exam generation and static career roadmaps; leave verified question bank and deterministic grading unchanged
 
 ## Founder identity correction
 - [x] Correct About page copy, search metadata and founder structured data

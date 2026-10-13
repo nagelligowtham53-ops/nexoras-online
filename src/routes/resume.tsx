@@ -688,8 +688,8 @@ function AIPanel({ data, setData }: { data: ResumeData; setData: (d: ResumeData)
       body: JSON.stringify({ system, messages: [{ role: "user", content: user }] }),
     });
     if (!res.ok || !res.body) {
-      const t = await res.text().catch(() => "");
-      throw new Error(t || `HTTP ${res.status}`);
+      const error = await res.json().catch(() => null) as { error?: string } | null;
+      throw new Error(error?.error ?? "AI is temporarily unavailable. Please try again later.");
     }
     const reader = res.body.getReader();
     const dec = new TextDecoder();
@@ -699,6 +699,7 @@ function AIPanel({ data, setData }: { data: ResumeData; setData: (d: ResumeData)
       if (done) break;
       out += dec.decode(value, { stream: true });
     }
+    if (!out.trim()) throw new Error("AI returned no usable response. Nothing was changed.");
     return out.trim();
   }
 

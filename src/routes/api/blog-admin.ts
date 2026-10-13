@@ -3,7 +3,6 @@ import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 
-import { ADMIN_EMAILS } from "@/lib/premium";
 
 type Action =
   | { action: "list" }
@@ -42,13 +41,15 @@ async function requireAdmin(request: Request): Promise<{ email: string; userId: 
   const token = auth.slice(7).trim();
   const sb = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const { data, error } = await sb.auth.getUser(token);
   if (error || !data.user?.email) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   const email = data.user.email.toLowerCase();
-  if (!ADMIN_EMAILS.includes(email)) {
+  const { data: isAdmin, error: roleError } = await sb.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+  if (roleError || !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
   return { email, userId: data.user.id };
@@ -127,6 +128,12 @@ Rules:
   if (!parsed.title || !parsed.content) {
     return { error: "AI returned malformed article", status: 502 };
   }
+  const { z } = await import("zod");
+  const blocks = z.array(z.union([
+    z.object({ type: z.enum(["p", "h2", "h3", "quote"]), text: z.string().min(1).max(12000) }),
+    z.object({ type: z.literal("ul"), items: z.array(z.string().min(1).max(2000)).min(1).max(30) }),
+  ])).min(5).max(120).safeParse(parsed.content);
+  if (!blocks.success) return { error: "The AI article was incomplete. Nothing was saved or charged.", status: 502 };
   const slug = slugify(parsed.slug || parsed.title);
   return {
     slug,
@@ -136,7 +143,7 @@ Rules:
     author: "Nexoras Team",
     read_time: String(parsed.read_time ?? "6 min").slice(0, 12),
     cover: null,
-    content: parsed.content,
+    content: blocks.data,
     meta_title: parsed.meta_title ? String(parsed.meta_title).slice(0, 70) : null,
     meta_description: parsed.meta_description
       ? String(parsed.meta_description).slice(0, 180)
