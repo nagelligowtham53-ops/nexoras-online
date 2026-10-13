@@ -1,3 +1,4 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
@@ -21,12 +22,9 @@ export const Route = createFileRoute("/api/chat")({
 
         let body: { messages?: ChatMessage[]; system?: string; model?: string; provider?: "groq" | "gemini" };
         try {
-          body = await request.json();
-        } catch {
-          return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-            status: 400,
-            headers: { "content-type": "application/json" },
-          });
+          body = await readAIRequest(request) as typeof body;
+        } catch (error) {
+          return invalidAIRequest(error);
         }
 
         const messages = Array.isArray(body.messages) ? body.messages : [];

@@ -1,3 +1,4 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
@@ -22,8 +23,8 @@ export const Route = createFileRoute("/api/generate-presentation")({
           customPrompt?: string;
           provider?: Provider; userApiKey?: string;
         };
-        try { body = await request.json(); } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+        try { body = await readAIRequest(request) as typeof body; } catch (error) {
+          return invalidAIRequest(error);
         }
 
         const topic = String(body.topic ?? "").slice(0, 200).trim();

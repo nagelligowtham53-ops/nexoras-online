@@ -1,3 +1,4 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
@@ -22,8 +23,8 @@ export const Route = createFileRoute("/api/explain-question")({
           userAnswer?: string;
           mode?: "explain" | "hint" | "alt-method" | "mistake";
         };
-        try { body = await request.json(); } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+        try { body = await readAIRequest(request) as typeof body; } catch (error) {
+          return invalidAIRequest(error);
         }
 
         const question = String(body.question ?? "").slice(0, 2000);

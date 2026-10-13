@@ -1,3 +1,4 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
@@ -157,8 +158,8 @@ export const Route = createFileRoute("/api/blog-admin")({
         let body: Action;
         try {
           body = (await request.json()) as Action;
-        } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+        } catch (error) {
+          return invalidAIRequest(error);
         }
 
         if (body.action === "list") {

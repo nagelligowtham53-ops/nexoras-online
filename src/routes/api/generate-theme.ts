@@ -1,3 +1,4 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
 
@@ -12,8 +13,8 @@ export const Route = createFileRoute("/api/generate-theme")({
         if (!apiKey && !process.env.GEMINI_API_KEY) return Response.json({ error: "AI not configured" }, { status: 500 });
 
         let body: { prompt?: string; provider?: "groq" | "gemini" };
-        try { body = await request.json(); } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+        try { body = await readAIRequest(request) as typeof body; } catch (error) {
+          return invalidAIRequest(error);
         }
         const prompt = String(body.prompt ?? "").slice(0, 400).trim();
         if (!prompt) return Response.json({ error: "Prompt required" }, { status: 400 });
