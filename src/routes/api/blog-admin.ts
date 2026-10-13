@@ -1,7 +1,7 @@
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
 import { ADMIN_EMAILS } from "@/lib/premium";
 
 type Action =
@@ -28,7 +28,7 @@ type PostInput = {
   scheduled_for?: string | null;
 };
 
-async function requireAdmin(request: Request): Promise<{ email: string } | Response> {
+async function requireAdmin(request: Request): Promise<{ email: string; userId: string } | Response> {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
@@ -50,7 +50,7 @@ async function requireAdmin(request: Request): Promise<{ email: string } | Respo
   if (!ADMIN_EMAILS.includes(email)) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
-  return { email };
+  return { email, userId: data.user.id };
 }
 
 function slugify(s: string) {
@@ -64,9 +64,10 @@ function slugify(s: string) {
 async function generateArticle(
   topic: string | undefined,
   category: string | undefined,
+  userId: string,
 ): Promise<PostInput | { error: string; status: number }> {
   const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return { error: "AI not configured", status: 500 };
+
   const cat = category || "Exams";
   const seedTopic =
     topic ||
@@ -102,30 +103,15 @@ Rules:
 - Naturally weave 1-2 internal links by mentioning Nexoras pages: /mock-tests, /mock-interview, /roadmaps, /competitive-exams, /resume — as plain text references like "(see /mock-tests)" inside paragraphs.
 - No images. No HTML. No code fences. JSON only.`;
 
-  const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert education SEO writer. Output JSON only, no prose.",
-        },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  }).catch(() => null);
-  if (!upstream || !upstream.ok) {
-    const status = upstream?.status ?? 502;
-    return { error: `AI error (${status})`, status };
+  let content: string;
+  try {
+    const { geminiText } = await import("@/lib/gemini.server");
+    content = await geminiText(userId, { system: "You are an education editor. Output valid JSON only. Never invent founder facts, credentials, official exam rules, or current news.", contents: prompt, json: true });
+  } catch (error) {
+    const { safeAIError } = await import("@/lib/ai-errors");
+    const safe = safeAIError(error);
+    return { error: safe.message, status: safe.status };
   }
-  const j = (await upstream.json().catch(() => null)) as
-    | { choices?: Array<{ message?: { content?: string } }> }
-    | null;
-  const content = j?.choices?.[0]?.message?.content ?? "";
   let parsed: Partial<PostInput> & { content?: unknown } = {};
   try {
     parsed = JSON.parse(content);
@@ -167,6 +153,8 @@ export const Route = createFileRoute("/api/blog-admin")({
       POST: async ({ request }: { request: Request }) => {
         const admin = await requireAdmin(request);
         if (admin instanceof Response) return admin;
+
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         let body: Action;
         try {
@@ -233,7 +221,7 @@ export const Route = createFileRoute("/api/blog-admin")({
         }
 
         if (body.action === "generate") {
-          const result = await generateArticle(body.topic, body.category);
+          const result = await generateArticle(body.topic, body.category, admin.userId);
           if ("error" in result)
             return Response.json({ error: result.error }, { status: result.status });
           return Response.json({ draft: result });

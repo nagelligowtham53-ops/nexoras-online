@@ -12,6 +12,10 @@ export const Route = createFileRoute("/chat")({
     meta: [
       { title: "Nexoras AI Chat — Study Smarter with AI" },
       { name: "description", content: "Chat with Nexoras AI for instant help with studies, concepts, planning, and career advice." },
+      { property: "og:title", content: "Nexoras AI Chat — Study Smarter with AI" },
+      { property: "og:description", content: "Free AI study help, concept explanations, and career advice from Nexoras." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: ChatPage,
@@ -163,7 +167,7 @@ function ChatPage() {
             </div>
             <div>
               <h1 className="font-display text-xl font-bold leading-tight">Nexoras AI Chat</h1>
-              <p className="text-xs text-muted-foreground">Your AI study companion · Powered by OpenAI</p>
+              <p className="text-xs text-muted-foreground">Your AI study companion · Powered by Gemini</p>
             </div>
           </div>
           <Button
