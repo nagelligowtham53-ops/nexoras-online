@@ -25,16 +25,20 @@ function Tools() {
   const [hours, setHours] = useState(4);
   const [plan, setPlan] = useState<WeeklyTimetable | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onGenerate() {
     setLoading(true);
     setPlan(null);
+    setError(null);
     try {
       const result = await generate({ data: { goals, subjects, deadlines, hoursPerDay: hours } });
       setPlan(result);
       toast.success("Weekly timetable generated");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to generate timetable");
+      const message = e instanceof Error ? e.message : "The AI timetable is temporarily unavailable. Please try again later.";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -91,6 +95,7 @@ function Tools() {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {loading ? "Generating with AI…" : "Generate AI Plan"}
               </Button>
+              {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             </div>
           </div>
 
