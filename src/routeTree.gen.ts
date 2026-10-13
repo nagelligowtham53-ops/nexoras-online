@@ -9,290 +9,75 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as AchievementsRouteImport } from './routes/achievements'
-import { Route as AiPresentationRouteImport } from './routes/ai-presentation'
-import { Route as BillingRouteImport } from './routes/billing'
-import { Route as BlogRouteImport } from './routes/blog'
-import { Route as CalculatorsRouteImport } from './routes/calculators'
-import { Route as CareerRouteImport } from './routes/career'
-import { Route as ChatRouteImport } from './routes/chat'
-import { Route as CompetitiveExamsRouteImport } from './routes/competitive-exams'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
-import { Route as CopyrightRouteImport } from './routes/copyright'
-import { Route as CoursesRouteImport } from './routes/courses'
-import { Route as CrackJeeRouteImport } from './routes/crack-jee'
-import { Route as CustomPracticeRouteImport } from './routes/custom-practice'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as DisclaimerRouteImport } from './routes/disclaimer'
-import { Route as DmcaRouteImport } from './routes/dmca'
-import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
-import { Route as FutureCareersRouteImport } from './routes/future-careers'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as McpRouteImport } from './routes/mcp'
-import { Route as MockInterviewRouteImport } from './routes/mock-interview'
-import { Route as MockTestsRouteImport } from './routes/mock-tests'
-import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
-import { Route as PptMakerRouteImport } from './routes/ppt-maker'
-import { Route as PracticeRouteImport } from './routes/practice'
-import { Route as PracticeHistoryRouteImport } from './routes/practice-history'
-import { Route as PresentationSettingsRouteImport } from './routes/presentation-settings'
-import { Route as PresentationsRouteImport } from './routes/presentations'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
-import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as ReferRouteImport } from './routes/refer'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as ResumeRouteImport } from './routes/resume'
-import { Route as RoadmapsRouteImport } from './routes/roadmaps'
-import { Route as SignupRouteImport } from './routes/signup'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
 import { Route as ToolsRouteImport } from './routes/tools'
-import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
-import { Route as AdminBlogRouteImport } from './routes/admin.blog'
-import { Route as AdminCampaignRouteImport } from './routes/admin.campaign'
-import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
-import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as ApiExplainQuestionRouteImport } from './routes/api/explain-question'
-import { Route as ApiGeneratePresentationRouteImport } from './routes/api/generate-presentation'
-import { Route as ApiGenerateThemeRouteImport } from './routes/api/generate-theme'
-import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
-import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
-import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
-import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
+import { Route as TermsOfServiceRouteImport } from './routes/terms-of-service'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as RoadmapsRouteImport } from './routes/roadmaps'
+import { Route as ResumeRouteImport } from './routes/resume'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as ReferRouteImport } from './routes/refer'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PresentationsRouteImport } from './routes/presentations'
+import { Route as PresentationSettingsRouteImport } from './routes/presentation-settings'
+import { Route as PracticeHistoryRouteImport } from './routes/practice-history'
+import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as PptMakerRouteImport } from './routes/ppt-maker'
+import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
+import { Route as MockTestsRouteImport } from './routes/mock-tests'
+import { Route as MockInterviewRouteImport } from './routes/mock-interview'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as FutureCareersRouteImport } from './routes/future-careers'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as EngineeringRoadmapsRouteImport } from './routes/engineering-roadmaps'
+import { Route as DmcaRouteImport } from './routes/dmca'
+import { Route as DisclaimerRouteImport } from './routes/disclaimer'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CustomPracticeRouteImport } from './routes/custom-practice'
+import { Route as CrackJeeRouteImport } from './routes/crack-jee'
+import { Route as CoursesRouteImport } from './routes/courses'
+import { Route as CopyrightRouteImport } from './routes/copyright'
+import { Route as CookiePolicyRouteImport } from './routes/cookie-policy'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CompetitiveExamsRouteImport } from './routes/competitive-exams'
+import { Route as ChatRouteImport } from './routes/chat'
+import { Route as CareerRouteImport } from './routes/career'
+import { Route as CalculatorsRouteImport } from './routes/calculators'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as BillingRouteImport } from './routes/billing'
+import { Route as AiPresentationRouteImport } from './routes/ai-presentation'
+import { Route as AchievementsRouteImport } from './routes/achievements'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
-import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
-import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
+import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
+import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
+import { Route as ApiGenerateThemeRouteImport } from './routes/api/generate-theme'
+import { Route as ApiGeneratePresentationRouteImport } from './routes/api/generate-presentation'
+import { Route as ApiExplainQuestionRouteImport } from './routes/api/explain-question'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiBlogAdminRouteImport } from './routes/api/blog-admin'
+import { Route as AdminQuestionsRouteImport } from './routes/admin.questions'
+import { Route as AdminCampaignRouteImport } from './routes/admin.campaign'
+import { Route as AdminBlogRouteImport } from './routes/admin.blog'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as Char91DotmcpChar93ListToolsRouteImport } from './routes/[.mcp]/list-tools'
 import { Route as BlogCategoryCatRouteImport } from './routes/blog.category.$cat'
+import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHooksPublishScheduledRouteImport } from './routes/api/public/hooks/publish-scheduled'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AchievementsRoute = AchievementsRouteImport.update({
-  id: '/achievements',
-  path: '/achievements',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AiPresentationRoute = AiPresentationRouteImport.update({
-  id: '/ai-presentation',
-  path: '/ai-presentation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingRoute = BillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CalculatorsRoute = CalculatorsRouteImport.update({
-  id: '/calculators',
-  path: '/calculators',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CareerRoute = CareerRouteImport.update({
-  id: '/career',
-  path: '/career',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatRoute = ChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CompetitiveExamsRoute = CompetitiveExamsRouteImport.update({
-  id: '/competitive-exams',
-  path: '/competitive-exams',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CookiePolicyRoute = CookiePolicyRouteImport.update({
-  id: '/cookie-policy',
-  path: '/cookie-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CopyrightRoute = CopyrightRouteImport.update({
-  id: '/copyright',
-  path: '/copyright',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CoursesRoute = CoursesRouteImport.update({
-  id: '/courses',
-  path: '/courses',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CrackJeeRoute = CrackJeeRouteImport.update({
-  id: '/crack-jee',
-  path: '/crack-jee',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CustomPracticeRoute = CustomPracticeRouteImport.update({
-  id: '/custom-practice',
-  path: '/custom-practice',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DisclaimerRoute = DisclaimerRouteImport.update({
-  id: '/disclaimer',
-  path: '/disclaimer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DmcaRoute = DmcaRouteImport.update({
-  id: '/dmca',
-  path: '/dmca',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
-  id: '/engineering-roadmaps',
-  path: '/engineering-roadmaps',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
-  id: '/forgot-password',
-  path: '/forgot-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FutureCareersRoute = FutureCareersRouteImport.update({
-  id: '/future-careers',
-  path: '/future-careers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MockInterviewRoute = MockInterviewRouteImport.update({
-  id: '/mock-interview',
-  path: '/mock-interview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MockTestsRoute = MockTestsRouteImport.update({
-  id: '/mock-tests',
-  path: '/mock-tests',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
-  id: '/payment-success',
-  path: '/payment-success',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PptMakerRoute = PptMakerRouteImport.update({
-  id: '/ppt-maker',
-  path: '/ppt-maker',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PracticeRoute = PracticeRouteImport.update({
-  id: '/practice',
-  path: '/practice',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PracticeHistoryRoute = PracticeHistoryRouteImport.update({
-  id: '/practice-history',
-  path: '/practice-history',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PresentationSettingsRoute = PresentationSettingsRouteImport.update({
-  id: '/presentation-settings',
-  path: '/presentation-settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PresentationsRoute = PresentationsRouteImport.update({
-  id: '/presentations',
-  path: '/presentations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
-  id: '/privacy-policy',
-  path: '/privacy-policy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProfileRoute = ProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReferRoute = ReferRouteImport.update({
-  id: '/refer',
-  path: '/refer',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResumeRoute = ResumeRouteImport.update({
-  id: '/resume',
-  path: '/resume',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RoadmapsRoute = RoadmapsRouteImport.update({
-  id: '/roadmaps',
-  path: '/roadmaps',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SignupRoute = SignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
@@ -300,81 +85,224 @@ const TermsOfServiceRoute = TermsOfServiceRouteImport.update({
   path: '/terms-of-service',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ToolsRoute = ToolsRouteImport.update({
-  id: '/tools',
-  path: '/tools',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotmcpChar93ListToolsRoute =
-  Char91DotmcpChar93ListToolsRouteImport.update({
-    id: '/.mcp/list-tools',
-    path: '/.mcp/list-tools',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AdminBlogRoute = AdminBlogRouteImport.update({
-  id: '/admin/blog',
-  path: '/admin/blog',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminCampaignRoute = AdminCampaignRouteImport.update({
-  id: '/admin/campaign',
-  path: '/admin/campaign',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
-  id: '/admin/questions',
-  path: '/admin/questions',
+const RoadmapsRoute = RoadmapsRouteImport.update({
+  id: '/roadmaps',
+  path: '/roadmaps',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiBlogAdminRoute = ApiBlogAdminRouteImport.update({
-  id: '/api/blog-admin',
-  path: '/api/blog-admin',
+const ResumeRoute = ResumeRouteImport.update({
+  id: '/resume',
+  path: '/resume',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiExplainQuestionRoute = ApiExplainQuestionRouteImport.update({
-  id: '/api/explain-question',
-  path: '/api/explain-question',
+const ReferRoute = ReferRouteImport.update({
+  id: '/refer',
+  path: '/refer',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGeneratePresentationRoute = ApiGeneratePresentationRouteImport.update({
-  id: '/api/generate-presentation',
-  path: '/api/generate-presentation',
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGenerateThemeRoute = ApiGenerateThemeRouteImport.update({
-  id: '/api/generate-theme',
-  path: '/api/generate-theme',
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiRecordAttemptRoute = ApiRecordAttemptRouteImport.update({
-  id: '/api/record-attempt',
-  path: '/api/record-attempt',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiStudyRecommendationsRoute = ApiStudyRecommendationsRouteImport.update({
-  id: '/api/study-recommendations',
-  path: '/api/study-recommendations',
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BlogSlugRoute = BlogSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => BlogRoute,
+const PresentationsRoute = PresentationsRouteImport.update({
+  id: '/presentations',
+  path: '/presentations',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const CheckoutPlanRoute = CheckoutPlanRouteImport.update({
-  id: '/checkout/$plan',
-  path: '/checkout/$plan',
+const PresentationSettingsRoute = PresentationSettingsRouteImport.update({
+  id: '/presentation-settings',
+  path: '/presentation-settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeHistoryRoute = PracticeHistoryRouteImport.update({
+  id: '/practice-history',
+  path: '/practice-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeRoute = PracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PptMakerRoute = PptMakerRouteImport.update({
+  id: '/ppt-maker',
+  path: '/ppt-maker',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment-success',
+  path: '/payment-success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MockTestsRoute = MockTestsRouteImport.update({
+  id: '/mock-tests',
+  path: '/mock-tests',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MockInterviewRoute = MockInterviewRouteImport.update({
+  id: '/mock-interview',
+  path: '/mock-interview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FutureCareersRoute = FutureCareersRouteImport.update({
+  id: '/future-careers',
+  path: '/future-careers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EngineeringRoadmapsRoute = EngineeringRoadmapsRouteImport.update({
+  id: '/engineering-roadmaps',
+  path: '/engineering-roadmaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DmcaRoute = DmcaRouteImport.update({
+  id: '/dmca',
+  path: '/dmca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DisclaimerRoute = DisclaimerRouteImport.update({
+  id: '/disclaimer',
+  path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomPracticeRoute = CustomPracticeRouteImport.update({
+  id: '/custom-practice',
+  path: '/custom-practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CrackJeeRoute = CrackJeeRouteImport.update({
+  id: '/crack-jee',
+  path: '/crack-jee',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoursesRoute = CoursesRouteImport.update({
+  id: '/courses',
+  path: '/courses',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CopyrightRoute = CopyrightRouteImport.update({
+  id: '/copyright',
+  path: '/copyright',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiePolicyRoute = CookiePolicyRouteImport.update({
+  id: '/cookie-policy',
+  path: '/cookie-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompetitiveExamsRoute = CompetitiveExamsRouteImport.update({
+  id: '/competitive-exams',
+  path: '/competitive-exams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareerRoute = CareerRouteImport.update({
+  id: '/career',
+  path: '/career',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CalculatorsRoute = CalculatorsRouteImport.update({
+  id: '/calculators',
+  path: '/calculators',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingRoute = BillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiPresentationRoute = AiPresentationRouteImport.update({
+  id: '/ai-presentation',
+  path: '/ai-presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AchievementsRoute = AchievementsRouteImport.update({
+  id: '/achievements',
+  path: '/achievements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvoiceIdRoute = InvoiceIdRouteImport.update({
@@ -382,10 +310,82 @@ const InvoiceIdRoute = InvoiceIdRouteImport.update({
   path: '/invoice/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
-  id: '/.lovable/oauth/consent',
-  path: '/.lovable/oauth/consent',
+const CheckoutPlanRoute = CheckoutPlanRouteImport.update({
+  id: '/checkout/$plan',
+  path: '/checkout/$plan',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
+} as any)
+const ApiStudyRecommendationsRoute = ApiStudyRecommendationsRouteImport.update({
+  id: '/api/study-recommendations',
+  path: '/api/study-recommendations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiRecordAttemptRoute = ApiRecordAttemptRouteImport.update({
+  id: '/api/record-attempt',
+  path: '/api/record-attempt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGenerateThemeRoute = ApiGenerateThemeRouteImport.update({
+  id: '/api/generate-theme',
+  path: '/api/generate-theme',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGeneratePresentationRoute = ApiGeneratePresentationRouteImport.update({
+  id: '/api/generate-presentation',
+  path: '/api/generate-presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiExplainQuestionRoute = ApiExplainQuestionRouteImport.update({
+  id: '/api/explain-question',
+  path: '/api/explain-question',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiBlogAdminRoute = ApiBlogAdminRouteImport.update({
+  id: '/api/blog-admin',
+  path: '/api/blog-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminQuestionsRoute = AdminQuestionsRouteImport.update({
+  id: '/admin/questions',
+  path: '/admin/questions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminCampaignRoute = AdminCampaignRouteImport.update({
+  id: '/admin/campaign',
+  path: '/admin/campaign',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminBlogRoute = AdminBlogRouteImport.update({
+  id: '/admin/blog',
+  path: '/admin/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const Char91DotmcpChar93ListToolsRoute =
+  Char91DotmcpChar93ListToolsRouteImport.update({
+    id: '/.mcp/list-tools',
+    path: '/.mcp/list-tools',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const BlogCategoryCatRoute = BlogCategoryCatRouteImport.update({
+  id: '/category/$cat',
+  path: '/category/$cat',
+  getParentRoute: () => BlogRoute,
 } as any)
 const Char91DotmcpChar93InvokeToolToolRoute =
   Char91DotmcpChar93InvokeToolToolRouteImport.update({
@@ -393,10 +393,10 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
-const BlogCategoryCatRoute = BlogCategoryCatRouteImport.update({
-  id: '/category/$cat',
-  path: '/category/$cat',
-  getParentRoute: () => BlogRoute,
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksPublishScheduledRoute =
   ApiPublicHooksPublishScheduledRouteImport.update({
@@ -879,312 +879,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/achievements': {
-      id: '/achievements'
-      path: '/achievements'
-      fullPath: '/achievements'
-      preLoaderRoute: typeof AchievementsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ai-presentation': {
-      id: '/ai-presentation'
-      path: '/ai-presentation'
-      fullPath: '/ai-presentation'
-      preLoaderRoute: typeof AiPresentationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing': {
-      id: '/billing'
-      path: '/billing'
-      fullPath: '/billing'
-      preLoaderRoute: typeof BillingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/calculators': {
-      id: '/calculators'
-      path: '/calculators'
-      fullPath: '/calculators'
-      preLoaderRoute: typeof CalculatorsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/career': {
-      id: '/career'
-      path: '/career'
-      fullPath: '/career'
-      preLoaderRoute: typeof CareerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/competitive-exams': {
-      id: '/competitive-exams'
-      path: '/competitive-exams'
-      fullPath: '/competitive-exams'
-      preLoaderRoute: typeof CompetitiveExamsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/cookie-policy': {
-      id: '/cookie-policy'
-      path: '/cookie-policy'
-      fullPath: '/cookie-policy'
-      preLoaderRoute: typeof CookiePolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/copyright': {
-      id: '/copyright'
-      path: '/copyright'
-      fullPath: '/copyright'
-      preLoaderRoute: typeof CopyrightRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/courses': {
-      id: '/courses'
-      path: '/courses'
-      fullPath: '/courses'
-      preLoaderRoute: typeof CoursesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/crack-jee': {
-      id: '/crack-jee'
-      path: '/crack-jee'
-      fullPath: '/crack-jee'
-      preLoaderRoute: typeof CrackJeeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/custom-practice': {
-      id: '/custom-practice'
-      path: '/custom-practice'
-      fullPath: '/custom-practice'
-      preLoaderRoute: typeof CustomPracticeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/disclaimer': {
-      id: '/disclaimer'
-      path: '/disclaimer'
-      fullPath: '/disclaimer'
-      preLoaderRoute: typeof DisclaimerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dmca': {
-      id: '/dmca'
-      path: '/dmca'
-      fullPath: '/dmca'
-      preLoaderRoute: typeof DmcaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/engineering-roadmaps': {
-      id: '/engineering-roadmaps'
-      path: '/engineering-roadmaps'
-      fullPath: '/engineering-roadmaps'
-      preLoaderRoute: typeof EngineeringRoadmapsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/forgot-password': {
-      id: '/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof ForgotPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/future-careers': {
-      id: '/future-careers'
-      path: '/future-careers'
-      fullPath: '/future-careers'
-      preLoaderRoute: typeof FutureCareersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mock-interview': {
-      id: '/mock-interview'
-      path: '/mock-interview'
-      fullPath: '/mock-interview'
-      preLoaderRoute: typeof MockInterviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/mock-tests': {
-      id: '/mock-tests'
-      path: '/mock-tests'
-      fullPath: '/mock-tests'
-      preLoaderRoute: typeof MockTestsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/payment-success': {
-      id: '/payment-success'
-      path: '/payment-success'
-      fullPath: '/payment-success'
-      preLoaderRoute: typeof PaymentSuccessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/ppt-maker': {
-      id: '/ppt-maker'
-      path: '/ppt-maker'
-      fullPath: '/ppt-maker'
-      preLoaderRoute: typeof PptMakerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/practice': {
-      id: '/practice'
-      path: '/practice'
-      fullPath: '/practice'
-      preLoaderRoute: typeof PracticeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/practice-history': {
-      id: '/practice-history'
-      path: '/practice-history'
-      fullPath: '/practice-history'
-      preLoaderRoute: typeof PracticeHistoryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/presentation-settings': {
-      id: '/presentation-settings'
-      path: '/presentation-settings'
-      fullPath: '/presentation-settings'
-      preLoaderRoute: typeof PresentationSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/presentations': {
-      id: '/presentations'
-      path: '/presentations'
-      fullPath: '/presentations'
-      preLoaderRoute: typeof PresentationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy-policy': {
-      id: '/privacy-policy'
-      path: '/privacy-policy'
-      fullPath: '/privacy-policy'
-      preLoaderRoute: typeof PrivacyPolicyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/profile': {
-      id: '/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/refer': {
-      id: '/refer'
-      path: '/refer'
-      fullPath: '/refer'
-      preLoaderRoute: typeof ReferRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resume': {
-      id: '/resume'
-      path: '/resume'
-      fullPath: '/resume'
-      preLoaderRoute: typeof ResumeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/roadmaps': {
-      id: '/roadmaps'
-      path: '/roadmaps'
-      fullPath: '/roadmaps'
-      preLoaderRoute: typeof RoadmapsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/signup': {
-      id: '/signup'
-      path: '/signup'
-      fullPath: '/signup'
-      preLoaderRoute: typeof SignupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-service': {
@@ -1194,109 +893,312 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsOfServiceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tools': {
-      id: '/tools'
-      path: '/tools'
-      fullPath: '/tools'
-      preLoaderRoute: typeof ToolsRouteImport
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/list-tools': {
-      id: '/.mcp/list-tools'
-      path: '/.mcp/list-tools'
-      fullPath: '/.mcp/list-tools'
-      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/blog': {
-      id: '/admin/blog'
-      path: '/admin/blog'
-      fullPath: '/admin/blog'
-      preLoaderRoute: typeof AdminBlogRouteImport
+    '/roadmaps': {
+      id: '/roadmaps'
+      path: '/roadmaps'
+      fullPath: '/roadmaps'
+      preLoaderRoute: typeof RoadmapsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/campaign': {
-      id: '/admin/campaign'
-      path: '/admin/campaign'
-      fullPath: '/admin/campaign'
-      preLoaderRoute: typeof AdminCampaignRouteImport
+    '/resume': {
+      id: '/resume'
+      path: '/resume'
+      fullPath: '/resume'
+      preLoaderRoute: typeof ResumeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/questions': {
-      id: '/admin/questions'
-      path: '/admin/questions'
-      fullPath: '/admin/questions'
-      preLoaderRoute: typeof AdminQuestionsRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/blog-admin': {
-      id: '/api/blog-admin'
-      path: '/api/blog-admin'
-      fullPath: '/api/blog-admin'
-      preLoaderRoute: typeof ApiBlogAdminRouteImport
+    '/refer': {
+      id: '/refer'
+      path: '/refer'
+      fullPath: '/refer'
+      preLoaderRoute: typeof ReferRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/explain-question': {
-      id: '/api/explain-question'
-      path: '/api/explain-question'
-      fullPath: '/api/explain-question'
-      preLoaderRoute: typeof ApiExplainQuestionRouteImport
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/generate-presentation': {
-      id: '/api/generate-presentation'
-      path: '/api/generate-presentation'
-      fullPath: '/api/generate-presentation'
-      preLoaderRoute: typeof ApiGeneratePresentationRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/generate-theme': {
-      id: '/api/generate-theme'
-      path: '/api/generate-theme'
-      fullPath: '/api/generate-theme'
-      preLoaderRoute: typeof ApiGenerateThemeRouteImport
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/record-attempt': {
-      id: '/api/record-attempt'
-      path: '/api/record-attempt'
-      fullPath: '/api/record-attempt'
-      preLoaderRoute: typeof ApiRecordAttemptRouteImport
+    '/presentations': {
+      id: '/presentations'
+      path: '/presentations'
+      fullPath: '/presentations'
+      preLoaderRoute: typeof PresentationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/study-recommendations': {
-      id: '/api/study-recommendations'
-      path: '/api/study-recommendations'
-      fullPath: '/api/study-recommendations'
-      preLoaderRoute: typeof ApiStudyRecommendationsRouteImport
+    '/presentation-settings': {
+      id: '/presentation-settings'
+      path: '/presentation-settings'
+      fullPath: '/presentation-settings'
+      preLoaderRoute: typeof PresentationSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/$slug': {
-      id: '/blog/$slug'
-      path: '/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof BlogSlugRouteImport
-      parentRoute: typeof BlogRoute
+    '/practice-history': {
+      id: '/practice-history'
+      path: '/practice-history'
+      fullPath: '/practice-history'
+      preLoaderRoute: typeof PracticeHistoryRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/checkout/$plan': {
-      id: '/checkout/$plan'
-      path: '/checkout/$plan'
-      fullPath: '/checkout/$plan'
-      preLoaderRoute: typeof CheckoutPlanRouteImport
+    '/practice': {
+      id: '/practice'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ppt-maker': {
+      id: '/ppt-maker'
+      path: '/ppt-maker'
+      fullPath: '/ppt-maker'
+      preLoaderRoute: typeof PptMakerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-success': {
+      id: '/payment-success'
+      path: '/payment-success'
+      fullPath: '/payment-success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mock-tests': {
+      id: '/mock-tests'
+      path: '/mock-tests'
+      fullPath: '/mock-tests'
+      preLoaderRoute: typeof MockTestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mock-interview': {
+      id: '/mock-interview'
+      path: '/mock-interview'
+      fullPath: '/mock-interview'
+      preLoaderRoute: typeof MockInterviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/future-careers': {
+      id: '/future-careers'
+      path: '/future-careers'
+      fullPath: '/future-careers'
+      preLoaderRoute: typeof FutureCareersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/engineering-roadmaps': {
+      id: '/engineering-roadmaps'
+      path: '/engineering-roadmaps'
+      fullPath: '/engineering-roadmaps'
+      preLoaderRoute: typeof EngineeringRoadmapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dmca': {
+      id: '/dmca'
+      path: '/dmca'
+      fullPath: '/dmca'
+      preLoaderRoute: typeof DmcaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/disclaimer': {
+      id: '/disclaimer'
+      path: '/disclaimer'
+      fullPath: '/disclaimer'
+      preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/custom-practice': {
+      id: '/custom-practice'
+      path: '/custom-practice'
+      fullPath: '/custom-practice'
+      preLoaderRoute: typeof CustomPracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/crack-jee': {
+      id: '/crack-jee'
+      path: '/crack-jee'
+      fullPath: '/crack-jee'
+      preLoaderRoute: typeof CrackJeeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/courses': {
+      id: '/courses'
+      path: '/courses'
+      fullPath: '/courses'
+      preLoaderRoute: typeof CoursesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/copyright': {
+      id: '/copyright'
+      path: '/copyright'
+      fullPath: '/copyright'
+      preLoaderRoute: typeof CopyrightRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookie-policy': {
+      id: '/cookie-policy'
+      path: '/cookie-policy'
+      fullPath: '/cookie-policy'
+      preLoaderRoute: typeof CookiePolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/competitive-exams': {
+      id: '/competitive-exams'
+      path: '/competitive-exams'
+      fullPath: '/competitive-exams'
+      preLoaderRoute: typeof CompetitiveExamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/career': {
+      id: '/career'
+      path: '/career'
+      fullPath: '/career'
+      preLoaderRoute: typeof CareerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/calculators': {
+      id: '/calculators'
+      path: '/calculators'
+      fullPath: '/calculators'
+      preLoaderRoute: typeof CalculatorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing': {
+      id: '/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof BillingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-presentation': {
+      id: '/ai-presentation'
+      path: '/ai-presentation'
+      fullPath: '/ai-presentation'
+      preLoaderRoute: typeof AiPresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/achievements': {
+      id: '/achievements'
+      path: '/achievements'
+      fullPath: '/achievements'
+      preLoaderRoute: typeof AchievementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invoice/$id': {
@@ -1306,18 +1208,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InvoiceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.lovable/oauth/consent': {
-      id: '/.lovable/oauth/consent'
-      path: '/.lovable/oauth/consent'
-      fullPath: '/.lovable/oauth/consent'
-      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+    '/checkout/$plan': {
+      id: '/checkout/$plan'
+      path: '/checkout/$plan'
+      fullPath: '/checkout/$plan'
+      preLoaderRoute: typeof CheckoutPlanRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/.mcp/invoke-tool/$tool': {
-      id: '/.mcp/invoke-tool/$tool'
-      path: '/.mcp/invoke-tool/$tool'
-      fullPath: '/.mcp/invoke-tool/$tool'
-      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/api/study-recommendations': {
+      id: '/api/study-recommendations'
+      path: '/api/study-recommendations'
+      fullPath: '/api/study-recommendations'
+      preLoaderRoute: typeof ApiStudyRecommendationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/record-attempt': {
+      id: '/api/record-attempt'
+      path: '/api/record-attempt'
+      fullPath: '/api/record-attempt'
+      preLoaderRoute: typeof ApiRecordAttemptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-theme': {
+      id: '/api/generate-theme'
+      path: '/api/generate-theme'
+      fullPath: '/api/generate-theme'
+      preLoaderRoute: typeof ApiGenerateThemeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-presentation': {
+      id: '/api/generate-presentation'
+      path: '/api/generate-presentation'
+      fullPath: '/api/generate-presentation'
+      preLoaderRoute: typeof ApiGeneratePresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/explain-question': {
+      id: '/api/explain-question'
+      path: '/api/explain-question'
+      fullPath: '/api/explain-question'
+      preLoaderRoute: typeof ApiExplainQuestionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/blog-admin': {
+      id: '/api/blog-admin'
+      path: '/api/blog-admin'
+      fullPath: '/api/blog-admin'
+      preLoaderRoute: typeof ApiBlogAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/questions': {
+      id: '/admin/questions'
+      path: '/admin/questions'
+      fullPath: '/admin/questions'
+      preLoaderRoute: typeof AdminQuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/campaign': {
+      id: '/admin/campaign'
+      path: '/admin/campaign'
+      fullPath: '/admin/campaign'
+      preLoaderRoute: typeof AdminCampaignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/blog': {
+      id: '/admin/blog'
+      path: '/admin/blog'
+      fullPath: '/admin/blog'
+      preLoaderRoute: typeof AdminBlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.mcp/list-tools': {
+      id: '/.mcp/list-tools'
+      path: '/.mcp/list-tools'
+      fullPath: '/.mcp/list-tools'
+      preLoaderRoute: typeof Char91DotmcpChar93ListToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/category/$cat': {
@@ -1326,6 +1312,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/category/$cat'
       preLoaderRoute: typeof BlogCategoryCatRouteImport
       parentRoute: typeof BlogRoute
+    }
+    '/.mcp/invoke-tool/$tool': {
+      id: '/.mcp/invoke-tool/$tool'
+      path: '/.mcp/invoke-tool/$tool'
+      fullPath: '/.mcp/invoke-tool/$tool'
+      preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/hooks/publish-scheduled': {
       id: '/api/public/hooks/publish-scheduled'
