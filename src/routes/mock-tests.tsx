@@ -23,6 +23,10 @@ import {
 export const Route = createFileRoute("/mock-tests")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "JEE Main CBT Simulator — Real Mock Tests | Nexoras" },
+      { property: "og:description", content: "Production-grade JEE Main / Advanced / BITSAT / MHT CET / EAMCET CBT simulator: full-screen mode, NTA-style palette, sections, negative marking, rank prediction & AI analytics." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "JEE Main CBT Simulator — Real Mock Tests | Nexoras" },
       { name: "description", content: "Production-grade JEE Main / Advanced / BITSAT / MHT CET / EAMCET CBT simulator: full-screen mode, NTA-style palette, sections, negative marking, rank prediction & AI analytics." },
     ],

@@ -15,7 +15,12 @@ const schema = z.object({
 
 export const Route = createFileRoute("/login")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string } => ({ redirect: (s.redirect as string) || "/dashboard" }),
-  head: () => ({ meta: [{ title: "Log in — Nexoras" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Sign in to Nexoras to access your free study tools and saved progress." },
+      { property: "og:title", content: "Log in — Nexoras" },
+      { property: "og:description", content: "Sign in to Nexoras to access your free study tools and saved progress." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Log in — Nexoras" }] }),
   component: Login,
 });
 

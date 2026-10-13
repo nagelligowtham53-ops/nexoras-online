@@ -15,7 +15,12 @@ const schema = z.object({
 });
 
 export const Route = createFileRoute("/signup")({
-  head: () => ({ meta: [{ title: "Sign up — Nexoras" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Create your Nexoras account for free study tools and practice." },
+      { property: "og:title", content: "Sign up — Nexoras" },
+      { property: "og:description", content: "Create your Nexoras account for free study tools and practice." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Sign up — Nexoras" }] }),
   component: Signup,
 });
 

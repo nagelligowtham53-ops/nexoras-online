@@ -4,6 +4,8 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 export const Route = createFileRoute("/disclaimer")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Disclaimer — Nexoras" },
       { name: "description", content: "Educational disclaimer for Nexoras AI study tools, mock tests, resume builder, and career guidance content." },
       { property: "og:title", content: "Disclaimer — Nexoras" },

@@ -12,6 +12,10 @@ import { Atom, FlaskConical, Sigma, Dna, CheckCircle2, XCircle, Timer, ArrowRigh
 export const Route = createFileRoute("/practice")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "JEE & NEET Quick Practice — Nexoras" },
+      { property: "og:description", content: "Rapid single-question practice from the Nexoras question bank. Filter by subject and difficulty; get instant AI-powered explanations." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "JEE & NEET Quick Practice — Nexoras" },
       { name: "description", content: "Rapid single-question practice from the Nexoras question bank. Filter by subject and difficulty; get instant AI-powered explanations." },
     ],

@@ -7,7 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { TrendingDown, TrendingUp, Timer, Target, RotateCcw, Bookmark, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/practice-history")({
-  head: () => ({ meta: [{ title: "Practice History & Analytics — Nexoras" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Review your Nexoras practice history and performance analytics." },
+      { property: "og:title", content: "Practice History & Analytics — Nexoras" },
+      { property: "og:description", content: "Review your Nexoras practice history and performance analytics." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Practice History & Analytics — Nexoras" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <RequireAuth>
       <PracticeHistoryPage />

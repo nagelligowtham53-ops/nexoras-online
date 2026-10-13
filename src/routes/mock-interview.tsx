@@ -14,6 +14,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/mock-interview")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "AI Mock Interview — HR · Technical · Visa · Behavioral | Nexoras" },
+      { property: "og:description", content: "Practice realistic mock interviews with an AI interviewer. Technical, HR, US/student visa, behavioral and communication rounds with voice mic, live transcription and scoring." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "AI Mock Interview — HR · Technical · Visa · Behavioral | Nexoras" },
       { name: "description", content: "Practice realistic mock interviews with an AI interviewer. Technical, HR, US/student visa, behavioral and communication rounds with voice mic, live transcription and scoring." },
     ],

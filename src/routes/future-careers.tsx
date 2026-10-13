@@ -6,6 +6,10 @@ import { Brain, Code2, Bot, Shield, Database, Cloud, Palette, LineChart, Rocket,
 export const Route = createFileRoute("/future-careers")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Future Careers in the AI World — Nexoras" },
+      { property: "og:description", content: "Top careers for the AI era: salary, skills, learning roadmap and how AI will transform each field." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Future Careers in the AI World — Nexoras" },
       { name: "description", content: "Top careers for the AI era: salary, skills, learning roadmap and how AI will transform each field." },
     ],

@@ -14,6 +14,8 @@ const homePostsPreview = blogPosts.slice(0, 3);
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Nexoras — Study Smarter with AI" },
       { name: "description", content: "AI study planner, smart calculators, resume builder, interview prep & career guidance for students. The futuristic productivity OS for the next generation." },
       { property: "og:title", content: "Nexoras — Study Smarter with AI" },

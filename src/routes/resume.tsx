@@ -14,6 +14,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/resume")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "AI Resume Builder — 6 Premium Templates | Nexoras" },
+      { property: "og:description", content: "Build an ATS-friendly resume with 6 professional templates, AI suggestions, ATS score analysis, and one-click PDF export. Free for students." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "AI Resume Builder — 6 Premium Templates | Nexoras" },
       { name: "description", content: "Build an ATS-friendly resume with 6 professional templates, AI suggestions, ATS score analysis, and one-click PDF export. Free for students." },
     ],

@@ -12,7 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Nexoras" }, { name: "description", content: "Your AI-powered student dashboard." }] }),
+  head: () => ({ meta: [
+      { property: "og:title", content: "Dashboard — Nexoras" },
+      { property: "og:description", content: "Your AI-powered student dashboard." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Dashboard — Nexoras" }, { name: "description", content: "Your AI-powered student dashboard." }] }),
   component: DashboardPage,
 });
 

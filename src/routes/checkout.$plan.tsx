@@ -11,7 +11,12 @@ export const Route = createFileRoute("/checkout/$plan")({
   beforeLoad: ({ params }) => {
     if (!(params.plan in PLANS)) throw redirect({ to: "/pricing" });
   },
-  head: () => ({ meta: [{ title: "Checkout — Nexoras Pro" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Review your Nexoras checkout information." },
+      { property: "og:title", content: "Checkout — Nexoras Pro" },
+      { property: "og:description", content: "Review your Nexoras checkout information." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Checkout — Nexoras Pro" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <RequireAuth>
       <Checkout />

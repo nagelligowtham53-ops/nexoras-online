@@ -9,7 +9,11 @@ import { generateTimetable, type WeeklyTimetable } from "@/lib/timetable.functio
 import { PremiumGate } from "@/components/PremiumGate";
 
 export const Route = createFileRoute("/tools")({
-  head: () => ({ meta: [{ title: "Study Tools — Nexoras" }, { name: "description", content: "AI study planner and timetable generator." }] }),
+  head: () => ({ meta: [
+      { property: "og:title", content: "Study Tools — Nexoras" },
+      { property: "og:description", content: "AI study planner and timetable generator." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Study Tools — Nexoras" }, { name: "description", content: "AI study planner and timetable generator." }] }),
   component: () => (
     <PremiumGate feature="AI Study Planner">
       <Tools />

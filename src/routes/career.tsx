@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/career")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Career Hub — Interview Prep & Career Guidance | Nexoras" },
       { name: "description", content: "Land your first role with Nexoras: AI mock interviews, curated technical + HR question banks, personalised career roadmaps, and behavioural prep guides for students and freshers." },
       { property: "og:title", content: "Nexoras Career Hub — From Classroom to Career" },

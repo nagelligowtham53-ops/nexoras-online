@@ -4,6 +4,10 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Terms & Conditions — Nexoras" },
+      { property: "og:description", content: "The terms and conditions that govern your use of Nexoras." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Terms & Conditions — Nexoras" },
       { name: "description", content: "The terms and conditions that govern your use of Nexoras." },
     ],

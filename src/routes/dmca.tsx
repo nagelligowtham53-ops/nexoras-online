@@ -4,6 +4,8 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 export const Route = createFileRoute("/dmca")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "DMCA Policy — Nexoras" },
       { name: "description", content: "How to submit a DMCA takedown notice or counter-notice for content on Nexoras, and our response procedure." },
       { property: "og:title", content: "DMCA Policy — Nexoras" },

@@ -24,6 +24,8 @@ export const Route = createFileRoute("/blog/category/$cat")({
     const url = `https://nexoras.online/blog/category/${params.cat}`;
     return {
       meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
         { title },
         { name: "description", content: description },
         { property: "og:title", content: title },

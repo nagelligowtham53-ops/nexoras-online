@@ -4,6 +4,8 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 export const Route = createFileRoute("/copyright")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Copyright Policy — Nexoras" },
       { name: "description", content: "Copyright ownership, permitted use, attribution, and takedown procedures for content published on Nexoras." },
       { property: "og:title", content: "Copyright Policy — Nexoras" },

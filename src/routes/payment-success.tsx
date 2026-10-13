@@ -7,7 +7,12 @@ import { CheckCircle2, Sparkles, Calendar, Receipt, ArrowRight } from "lucide-re
 import { PLANS, getSubscription, fmtDate, fmtINR, type Subscription } from "@/lib/billing-mock";
 
 export const Route = createFileRoute("/payment-success")({
-  head: () => ({ meta: [{ title: "Payment successful — Nexoras Pro" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "View your Nexoras payment confirmation." },
+      { property: "og:title", content: "Payment successful — Nexoras Pro" },
+      { property: "og:description", content: "View your Nexoras payment confirmation." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Payment successful — Nexoras Pro" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <RequireAuth>
       <Success />
