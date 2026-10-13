@@ -11,6 +11,7 @@ export type TimetableDay = { day: string; blocks: TimetableBlock[] };
 export type WeeklyTimetable = { summary: string; week: TimetableDay[] };
 
 type Input = {
+  provider?: "groq" | "gemini";
   goals: string;
   subjects: string;
   deadlines: string;
@@ -22,20 +23,30 @@ export const generateTimetable = createServerFn({ method: "POST" })
   .inputValidator((data: Input) => {
     if (!data || typeof data !== "object") throw new Error("Invalid input");
     return {
+      provider: data.provider === "groq" ? "groq" as const : "gemini" as const,
       goals: String(data.goals ?? "").slice(0, 2000),
       subjects: String(data.subjects ?? "").slice(0, 1000),
       deadlines: String(data.deadlines ?? "").slice(0, 2000),
       hoursPerDay: Math.min(14, Math.max(1, Number(data.hoursPerDay) || 4)),
     };
   })
-  .handler(async ({ data }): Promise<WeeklyTimetable> => {
+  .handler(async ({ data, context }): Promise<WeeklyTimetable> => {
     const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) throw new Error("GROQ_API_KEY is not configured");
+    if (!apiKey && data.provider === "groq") throw new Error("The selected AI provider is not configured.");
 
     const system =
       "You are Nexoras, an expert AI study planner for students. Build a realistic, balanced 7-day study timetable. Distribute heavier focus to subjects with nearer deadlines. Include short breaks, revision, and at least one mock test slot. Keep blocks 45–90 minutes.";
 
     const user = `Goals:\n${data.goals || "(none specified)"}\n\nSubjects:\n${data.subjects || "(none specified)"}\n\nDeadlines:\n${data.deadlines || "(none specified)"}\n\nAvailable hours per day: ${data.hoursPerDay}`;
+
+    if (data.provider === "gemini") {
+      const { geminiJson } = await import("@/lib/gemini.server");
+      const { z } = await import("zod");
+      const schema = z.object({ summary: z.string().min(1), week: z.array(z.object({ day: z.string().min(1), blocks: z.array(z.object({ time: z.string().min(1), topic: z.string().min(1), mode: z.string().min(1), notes: z.string().optional() })).min(1).max(30) })).length(7) });
+      const result = schema.safeParse(await geminiJson(context.userId, { system: system + ' Return JSON: {"summary":string,"week":[{"day":string,"blocks":[{"time":string,"topic":string,"mode":string,"notes":string}]}]}. Exactly seven days.', contents: user }));
+      if (!result.success) throw new Error("The AI timetable was incomplete. Nothing was saved or charged.");
+      return result.data;
+    }
 
     const body = {
       model: "llama-3.3-70b-versatile",

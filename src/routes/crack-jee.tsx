@@ -7,6 +7,10 @@ import { Atom, FlaskConical, Sigma, Calendar, BookOpen, Target, AlertTriangle, L
 export const Route = createFileRoute("/crack-jee")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Crack JEE — Complete Preparation Guide | Nexoras" },
+      { property: "og:description", content: "Complete JEE Main & Advanced preparation: roadmap, study plans (30/90/365 days), subject-wise strategy, books, PYQs and pitfalls to avoid." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Crack JEE — Complete Preparation Guide | Nexoras" },
       { name: "description", content: "Complete JEE Main & Advanced preparation: roadmap, study plans (30/90/365 days), subject-wise strategy, books, PYQs and pitfalls to avoid." },
     ],

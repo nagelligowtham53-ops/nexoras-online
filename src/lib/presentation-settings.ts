@@ -17,7 +17,7 @@ const CACHE_KEY = "nx_pres_ai_cache_v1";
 const CACHE_MAX = 20;
 
 export const DEFAULT_SETTINGS: PresentationAISettings = {
-  provider: "groq",
+  provider: "gemini",
   openaiKey: "",
   anthropicKey: "",
   geminiKey: "",
@@ -31,18 +31,22 @@ function safeParse<T>(raw: string | null, fallback: T): T {
 
 export function loadSettings(): PresentationAISettings {
   if (typeof window === "undefined") return DEFAULT_SETTINGS;
-  return { ...DEFAULT_SETTINGS, ...safeParse(localStorage.getItem(SETTINGS_KEY), {}) };
+  const settings = { ...DEFAULT_SETTINGS, ...safeParse<Partial<PresentationAISettings>>(localStorage.getItem(SETTINGS_KEY), {}) };
+  // Remove legacy Gemini keys; Gemini now exclusively uses the encrypted server secret.
+  settings.geminiKey = "";
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  return settings;
 }
 
 export function saveSettings(s: PresentationAISettings) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...s, geminiKey: "" }));
 }
 
 export function activeKey(s: PresentationAISettings): string {
   if (s.provider === "openai") return s.openaiKey.trim();
   if (s.provider === "anthropic") return s.anthropicKey.trim();
-  if (s.provider === "gemini") return s.geminiKey.trim();
+  if (s.provider === "gemini") return "";
   return "";
 }
 

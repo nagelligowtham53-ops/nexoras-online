@@ -13,7 +13,7 @@ import {
 } from "@/lib/presentation-settings";
 
 export const Route = createFileRoute("/presentation-settings")({
-  head: () => ({ meta: [{ title: "Presentation AI Settings | Nexoras" }] }),
+  head: () => ({ meta: [{ title: "Presentation AI Settings | Nexoras" }, { name: "description", content: "Manage presentation providers and cached decks with secure built-in Gemini access." }, { property: "og:title", content: "Presentation AI Settings | Nexoras" }, { property: "og:description", content: "Manage Nexoras presentation providers and cached decks." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: () => (
     <PremiumGate feature="Presentation Settings">
       <SettingsPage />
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/presentation-settings")({
 
 const PROVIDERS: { id: AIProvider; name: string; sub: string; help: string }[] = [
   { id: "groq", name: "Built-in (Nexoras AI · Groq)", sub: "Free shared tier — daily limit applies", help: "No key needed. Subject to a daily rate limit." },
-  { id: "gemini", name: "Google Gemini", sub: "gemini-2.5-flash · fast & generous free tier", help: "Get a key at aistudio.google.com/app/apikey" },
+  { id: "gemini", name: "Google Gemini", sub: "Built-in Gemini · free for students", help: "Securely configured by Nexoras. No personal key needed." },
   { id: "openai", name: "OpenAI", sub: "gpt-4o-mini · reliable JSON output", help: "Get a key at platform.openai.com/api-keys" },
   { id: "anthropic", name: "Anthropic Claude", sub: "claude-3-5-haiku · great for structure", help: "Get a key at console.anthropic.com/settings/keys" },
 ];
@@ -69,7 +69,7 @@ function SettingsPage() {
           </div>
           <h1 className="mt-3 text-4xl font-bold tracking-tight">AI Settings & Usage</h1>
           <p className="mt-2 text-muted-foreground">
-            Bring your own API key for unlimited generation, switch providers, and monitor usage.
+            Choose your presentation provider and manage cached decks. Gemini requires no personal API key.
           </p>
         </header>
 
@@ -89,10 +89,11 @@ function SettingsPage() {
           <h2 className="text-lg font-semibold mb-4">AI Provider</h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {PROVIDERS.map(p => (
-              <button
+              <Button
+                variant="outline"
                 key={p.id}
                 onClick={() => pickProvider(p.id)}
-                className={`text-left rounded-xl border p-4 transition ${
+                className={`h-auto flex-col items-start whitespace-normal text-left rounded-xl border p-4 transition ${
                   s.provider === p.id
                     ? "border-primary bg-primary/5 ring-2 ring-primary/30"
                     : "border-border/60 hover:border-primary/40"
@@ -101,7 +102,7 @@ function SettingsPage() {
                 <div className="font-medium">{p.name}</div>
                 <div className="text-xs text-muted-foreground mt-0.5">{p.sub}</div>
                 <div className="text-xs mt-2 text-muted-foreground">{p.help}</div>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -112,12 +113,10 @@ function SettingsPage() {
             <KeyRound className="h-4 w-4" /> API Keys
           </h2>
           <p className="text-xs text-muted-foreground">
-            Keys are stored only in your browser (localStorage) and sent directly to the chosen provider via the Nexoras server.
+            Optional OpenAI and Anthropic keys are stored in your browser and sent via the Nexoras server. Gemini uses an encrypted server-only key.
             They are never logged or persisted on our servers.
           </p>
 
-          <KeyField label="Google Gemini API Key" placeholder="AIza..." value={s.geminiKey}
-            onChange={v => update({ geminiKey: v })} reveal={show.gemini} toggle={() => setShow(x => ({ ...x, gemini: !x.gemini }))} />
           <KeyField label="OpenAI API Key" placeholder="sk-..." value={s.openaiKey}
             onChange={v => update({ openaiKey: v })} reveal={show.openai} toggle={() => setShow(x => ({ ...x, openai: !x.openai }))} />
           <KeyField label="Anthropic API Key" placeholder="sk-ant-..." value={s.anthropicKey}

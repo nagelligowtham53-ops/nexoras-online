@@ -8,7 +8,12 @@ import { PLANS, getSubscription, fmtDate, fmtINR, type Invoice, type Subscriptio
 import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/invoice/$id")({
-  head: () => ({ meta: [{ title: "Invoice — Nexoras" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "View your Nexoras invoice information." },
+      { property: "og:title", content: "Invoice — Nexoras" },
+      { property: "og:description", content: "View your Nexoras invoice information." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Invoice — Nexoras" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <RequireAuth>
       <InvoiceView />

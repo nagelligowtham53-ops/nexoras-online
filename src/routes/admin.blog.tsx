@@ -34,6 +34,11 @@ type DbPost = {
 export const Route = createFileRoute("/admin/blog")({
   head: () => ({
     meta: [
+      { name: "description", content: "Manage protected Nexoras blog drafts and editorial content." },
+      { property: "og:title", content: "Blog admin — Nexoras" },
+      { property: "og:description", content: "Manage protected Nexoras blog drafts and editorial content." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Blog admin — Nexoras" },
       { name: "robots", content: "noindex,nofollow" },
     ],

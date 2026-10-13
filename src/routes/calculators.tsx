@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button";
 import { GraduationCap, CalendarCheck, Percent, IndianRupee, Cake } from "lucide-react";
 
 export const Route = createFileRoute("/calculators")({
-  head: () => ({ meta: [{ title: "Smart Calculator Hub — Nexoras" }, { name: "description", content: "CGPA, attendance, percentage, EMI & age calculators in one place." }] }),
+  head: () => ({ meta: [
+      { property: "og:title", content: "Smart Calculator Hub — Nexoras" },
+      { property: "og:description", content: "CGPA, attendance, percentage, EMI & age calculators in one place." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Smart Calculator Hub — Nexoras" }, { name: "description", content: "CGPA, attendance, percentage, EMI & age calculators in one place." }] }),
   component: Calculators,
 });
 

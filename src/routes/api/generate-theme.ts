@@ -1,3 +1,4 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
 
@@ -9,11 +10,11 @@ export const Route = createFileRoute("/api/generate-theme")({
         if (auth instanceof Response) return auth;
 
         const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) return Response.json({ error: "AI not configured" }, { status: 500 });
+        if (!apiKey && !process.env.GEMINI_API_KEY) return Response.json({ error: "AI not configured" }, { status: 500 });
 
-        let body: { prompt?: string };
-        try { body = await request.json(); } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+        let body: { prompt?: string; provider?: "groq" | "gemini" };
+        try { body = await readAIRequest(request) as typeof body; } catch (error) {
+          return invalidAIRequest(error);
         }
         const prompt = String(body.prompt ?? "").slice(0, 400).trim();
         if (!prompt) return Response.json({ error: "Prompt required" }, { status: 400 });
@@ -35,6 +36,12 @@ Rules:
 - Hex colors only. No rgba(), no oklch().
 - One gradient string only (no commas separating multiple background-images).`;
 
+        let content: string;
+        if (body.provider !== "groq") {
+          const { geminiText, geminiErrorResponse } = await import("@/lib/gemini.server");
+          try { content = await geminiText(auth.userId, { system: sys, contents: prompt, json: true, signal: request.signal }); }
+          catch (error) { return geminiErrorResponse(error); }
+        } else {
         let upstream: Response;
         try {
           upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
@@ -57,7 +64,8 @@ Rules:
         if (!upstream.ok) return Response.json({ error: `AI error (${upstream.status})` }, { status: 502 });
 
         const data = await upstream.json().catch(() => null) as { choices?: Array<{ message?: { content?: string } }> } | null;
-        const content = data?.choices?.[0]?.message?.content ?? "";
+        content = data?.choices?.[0]?.message?.content ?? "";
+        }
         let parsed: { name?: string; bg?: string; text?: string; accent?: string; vibe?: string };
         try { parsed = JSON.parse(content); } catch {
           return Response.json({ error: "AI returned malformed JSON" }, { status: 502 });

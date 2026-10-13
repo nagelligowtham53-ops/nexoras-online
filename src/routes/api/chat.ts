@@ -1,3 +1,4 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { requireAuthFromRequest } from "@/lib/require-auth-http";
@@ -12,24 +13,23 @@ export const Route = createFileRoute("/api/chat")({
         if (auth instanceof Response) return auth;
 
         const apiKey = process.env.GROQ_API_KEY;
-        if (!apiKey) {
+        if (!apiKey && !process.env.GEMINI_API_KEY) {
           return new Response(
             JSON.stringify({ error: "GROQ_API_KEY not configured" }),
             { status: 500, headers: { "content-type": "application/json" } },
           );
         }
 
-        let body: { messages?: ChatMessage[]; system?: string; model?: string };
+        let body: { messages?: ChatMessage[]; system?: string; model?: string; provider?: "groq" | "gemini" };
         try {
-          body = await request.json();
-        } catch {
-          return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
-            status: 400,
-            headers: { "content-type": "application/json" },
-          });
+          body = await readAIRequest(request) as typeof body;
+        } catch (error) {
+          return invalidAIRequest(error);
         }
 
         const messages = Array.isArray(body.messages) ? body.messages : [];
+        if (messages.some(m => !m || typeof m !== "object" || typeof m.content !== "string")) return Response.json({ error: "Chat messages must contain text." }, { status: 400 });
+        if (body.provider && !["gemini", "groq"].includes(body.provider)) return Response.json({ error: "Select a supported AI provider." }, { status: 400 });
         if (messages.length === 0) {
           return new Response(JSON.stringify({ error: "messages required" }), {
             status: 400,
@@ -61,6 +61,15 @@ export const Route = createFileRoute("/api/chat")({
           typeof body.model === "string" && body.model.length > 0
             ? body.model
             : "llama-3.3-70b-versatile";
+
+        if (body.provider !== "groq") {
+          const { geminiChatResponse } = await import("@/lib/gemini.server");
+          return geminiChatResponse(auth.userId, {
+            system: systemPrompt,
+            contents: safeMessages.filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+            signal: request.signal,
+          });
+        }
 
         let upstream: Response;
         try {

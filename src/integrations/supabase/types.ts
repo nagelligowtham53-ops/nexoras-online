@@ -41,6 +41,35 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_request_limits: {
+        Row: {
+          request_count: number
+          user_id: string
+          window_kind: string
+          window_start: string
+        }
+        Insert: {
+          request_count?: number
+          user_id: string
+          window_kind: string
+          window_start: string
+        }
+        Update: {
+          request_count?: number
+          user_id?: string
+          window_kind?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_request_limits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_posts: {
         Row: {
           author: string
@@ -1461,6 +1490,7 @@ export type Database = {
         Args: { session_uuid: string }
         Returns: undefined
       }
+      reserve_ai_request: { Args: { p_user_id: string }; Returns: boolean }
       user_weak_areas: {
         Args: { p_exam?: string; p_min_attempts?: number }
         Returns: {

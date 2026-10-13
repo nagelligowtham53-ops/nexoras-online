@@ -3,6 +3,10 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 export const Route = createFileRoute("/ai-presentation")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "AI Presentation Generator — Create Decks in Seconds | Nexoras" },
+      { property: "og:description", content: "Generate complete AI presentations from a topic, PDF, or document. Edit live and export to PPTX, PDF and Google Slides." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "AI Presentation Generator — Create Decks in Seconds | Nexoras" },
       { name: "description", content: "Generate complete AI presentations from a topic, PDF, or document. Edit live and export to PPTX, PDF and Google Slides." },
     ],

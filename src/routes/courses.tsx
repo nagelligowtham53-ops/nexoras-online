@@ -6,6 +6,8 @@ import { ExternalLink, Sparkles, Clock, BarChart3, Lightbulb, Layers, Timer } fr
 export const Route = createFileRoute("/courses")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Curated Online Courses & Skills for 2026 | Nexoras" },
       { name: "description", content: "Hand-picked free and premium online courses across AI/ML, web development, DSA, design, cybersecurity and cloud — with guidance on how to actually learn from them, not just enroll." },
       { property: "og:title", content: "Courses & Skills — Nexoras" },

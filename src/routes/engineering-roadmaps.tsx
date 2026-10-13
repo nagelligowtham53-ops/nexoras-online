@@ -7,6 +7,10 @@ import { Cpu, Zap, Cog, Building2, Beaker, Rocket, ArrowRight } from "lucide-rea
 export const Route = createFileRoute("/engineering-roadmaps")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Engineering Branch Roadmaps — Nexoras" },
+      { property: "og:description", content: "B.Tech branch-wise roadmaps: CSE, ECE, Mechanical, Civil, Chemical, Aerospace. Skills, projects, internships and placements." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Engineering Branch Roadmaps — Nexoras" },
       { name: "description", content: "B.Tech branch-wise roadmaps: CSE, ECE, Mechanical, Civil, Chemical, Aerospace. Skills, projects, internships and placements." },
     ],

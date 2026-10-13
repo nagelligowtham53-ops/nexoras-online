@@ -14,6 +14,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/resume")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "AI Resume Builder — 6 Premium Templates | Nexoras" },
+      { property: "og:description", content: "Build an ATS-friendly resume with 6 professional templates, AI suggestions, ATS score analysis, and one-click PDF export. Free for students." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "AI Resume Builder — 6 Premium Templates | Nexoras" },
       { name: "description", content: "Build an ATS-friendly resume with 6 professional templates, AI suggestions, ATS score analysis, and one-click PDF export. Free for students." },
     ],
@@ -684,8 +688,8 @@ function AIPanel({ data, setData }: { data: ResumeData; setData: (d: ResumeData)
       body: JSON.stringify({ system, messages: [{ role: "user", content: user }] }),
     });
     if (!res.ok || !res.body) {
-      const t = await res.text().catch(() => "");
-      throw new Error(t || `HTTP ${res.status}`);
+      const error = await res.json().catch(() => null) as { error?: string } | null;
+      throw new Error(error?.error ?? "AI is temporarily unavailable. Please try again later.");
     }
     const reader = res.body.getReader();
     const dec = new TextDecoder();
@@ -695,6 +699,7 @@ function AIPanel({ data, setData }: { data: ResumeData; setData: (d: ResumeData)
       if (done) break;
       out += dec.decode(value, { stream: true });
     }
+    if (!out.trim()) throw new Error("AI returned no usable response. Nothing was changed.");
     return out.trim();
   }
 
@@ -746,7 +751,10 @@ Keywords = up to 8 missing/recommended keywords for the target role.`,
         `Target role / JD: ${jobDesc || data.role}\n\nResume JSON: ${resumeText}`
       );
       const cleaned = out.replace(/^```json|^```|```$/gm, "").trim();
-      const parsed = JSON.parse(cleaned);
+      const { z } = await import("zod");
+      const result = z.object({ score: z.number().min(0).max(100), strengths: z.array(z.string()), gaps: z.array(z.string()), keywords: z.array(z.string()).max(8) }).safeParse(JSON.parse(cleaned));
+      if (!result.success) throw new Error("AI returned incomplete ATS feedback. Nothing was changed.");
+      const parsed = result.data;
       setAts(parsed);
       toast.success(`ATS score: ${parsed.score}/100`);
     } catch (e) { toast.error("ATS analysis failed: " + (e as Error).message); }

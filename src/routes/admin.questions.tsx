@@ -18,7 +18,12 @@ import {
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/admin/questions")({
-  head: () => ({ meta: [{ title: "Admin · Question Bank — Nexoras" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Manage the protected Nexoras question bank and import diagnostics." },
+      { property: "og:title", content: "Admin · Question Bank — Nexoras" },
+      { property: "og:description", content: "Manage the protected Nexoras question bank and import diagnostics." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Admin · Question Bank — Nexoras" }, { name: "robots", content: "noindex" }] }),
   component: () => (
     <RequireAuth>
       <AdminQuestionsPage />

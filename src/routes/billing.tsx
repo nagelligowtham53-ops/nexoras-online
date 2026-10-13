@@ -19,6 +19,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/billing")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Billing & Subscription — Nexoras" },
+      { property: "og:description", content: "Manage your Nexoras Pro subscription, view invoices, update payment method or cancel auto-pay." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Billing & Subscription — Nexoras" },
       { name: "description", content: "Manage your Nexoras Pro subscription, view invoices, update payment method or cancel auto-pay." },
       { name: "robots", content: "noindex" },

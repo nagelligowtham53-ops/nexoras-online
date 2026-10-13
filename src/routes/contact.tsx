@@ -9,6 +9,8 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Contact Nexoras — Get in Touch" },
       { name: "description", content: "Reach the Nexoras team with questions, partnership inquiries, press requests, or product feedback. We reply within 24 hours on business days." },
       { property: "og:title", content: "Contact Nexoras" },

@@ -6,6 +6,8 @@ import { Check, Sparkles, Gift, Rocket, BookOpen, Brain, ListChecks, Mic } from 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Nexoras is 100% Free — All Premium Features Unlocked" },
       { name: "description", content: "Nexoras is now completely free for every student. Unlimited mock tests, AI mock interviews (voice + text), career roadmaps, study planners, resume tools — no plans, no payments." },
       { property: "og:title", content: "Nexoras — Now Free for Everyone" },

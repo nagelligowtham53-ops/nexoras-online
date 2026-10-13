@@ -22,6 +22,10 @@ import {
 export const Route = createFileRoute("/custom-practice")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Custom JEE & NEET Practice — Nexoras" },
+      { property: "og:description", content: "Build personalized JEE & NEET practice tests from a curated question bank. Filter by chapter, difficulty, PYQ. Full analytics and AI explanations." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Custom JEE & NEET Practice — Nexoras" },
       { name: "description", content: "Build personalized JEE & NEET practice tests from a curated question bank. Filter by chapter, difficulty, PYQ. Full analytics and AI explanations." },
     ],

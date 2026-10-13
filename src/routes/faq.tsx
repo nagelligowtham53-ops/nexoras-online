@@ -47,6 +47,8 @@ const FAQS: { q: string; a: string }[] = [
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "FAQ — Nexoras" },
       { name: "description", content: "Answers to common questions about Nexoras: exams supported, pricing, AI features, data privacy, and support." },
       { property: "og:title", content: "FAQ — Nexoras" },

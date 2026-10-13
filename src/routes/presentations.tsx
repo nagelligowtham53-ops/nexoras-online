@@ -24,6 +24,8 @@ import { Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/presentations")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "AI Presentation Studio — Create Stunning Decks in Seconds | Nexoras" },
       { name: "description", content: "Generate beautiful AI presentations for college, business and research. Edit live, export to PPTX, PDF, and Google Slides." },
       { property: "og:title", content: "Nexoras AI Presentation Studio" },

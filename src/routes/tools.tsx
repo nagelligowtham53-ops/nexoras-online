@@ -9,7 +9,11 @@ import { generateTimetable, type WeeklyTimetable } from "@/lib/timetable.functio
 import { PremiumGate } from "@/components/PremiumGate";
 
 export const Route = createFileRoute("/tools")({
-  head: () => ({ meta: [{ title: "Study Tools — Nexoras" }, { name: "description", content: "AI study planner and timetable generator." }] }),
+  head: () => ({ meta: [
+      { property: "og:title", content: "Study Tools — Nexoras" },
+      { property: "og:description", content: "AI study planner and timetable generator." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Study Tools — Nexoras" }, { name: "description", content: "AI study planner and timetable generator." }] }),
   component: () => (
     <PremiumGate feature="AI Study Planner">
       <Tools />
@@ -25,16 +29,20 @@ function Tools() {
   const [hours, setHours] = useState(4);
   const [plan, setPlan] = useState<WeeklyTimetable | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function onGenerate() {
     setLoading(true);
     setPlan(null);
+    setError(null);
     try {
       const result = await generate({ data: { goals, subjects, deadlines, hoursPerDay: hours } });
       setPlan(result);
       toast.success("Weekly timetable generated");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to generate timetable");
+      const message = e instanceof Error ? e.message : "The AI timetable is temporarily unavailable. Please try again later.";
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -91,6 +99,7 @@ function Tools() {
                 {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                 {loading ? "Generating with AI…" : "Generate AI Plan"}
               </Button>
+              {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             </div>
           </div>
 

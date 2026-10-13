@@ -1,8 +1,8 @@
+import { readAIRequest, invalidAIRequest } from "@/lib/ai-request";
 import "@tanstack/react-start";
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { ADMIN_EMAILS } from "@/lib/premium";
+
 
 type Action =
   | { action: "list" }
@@ -28,7 +28,7 @@ type PostInput = {
   scheduled_for?: string | null;
 };
 
-async function requireAdmin(request: Request): Promise<{ email: string } | Response> {
+async function requireAdmin(request: Request): Promise<{ email: string; userId: string } | Response> {
   const SUPABASE_URL = process.env.SUPABASE_URL;
   const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
@@ -41,16 +41,18 @@ async function requireAdmin(request: Request): Promise<{ email: string } | Respo
   const token = auth.slice(7).trim();
   const sb = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const { data, error } = await sb.auth.getUser(token);
   if (error || !data.user?.email) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   const email = data.user.email.toLowerCase();
-  if (!ADMIN_EMAILS.includes(email)) {
+  const { data: isAdmin, error: roleError } = await sb.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+  if (roleError || !isAdmin) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
   }
-  return { email };
+  return { email, userId: data.user.id };
 }
 
 function slugify(s: string) {
@@ -64,12 +66,11 @@ function slugify(s: string) {
 async function generateArticle(
   topic: string | undefined,
   category: string | undefined,
+  userId: string,
 ): Promise<PostInput | { error: string; status: number }> {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) return { error: "AI not configured", status: 500 };
   const cat = category || "Exams";
   const seedTopic =
-    topic ||
+    topic?.slice(0, 500) ||
     "trending Indian competitive exam preparation strategy for the upcoming month";
   const prompt = `Write a high-quality, original SEO blog article for Nexoras (an AI-powered exam-prep and career platform for Indian and international students).
 
@@ -102,30 +103,15 @@ Rules:
 - Naturally weave 1-2 internal links by mentioning Nexoras pages: /mock-tests, /mock-interview, /roadmaps, /competitive-exams, /resume — as plain text references like "(see /mock-tests)" inside paragraphs.
 - No images. No HTML. No code fences. JSON only.`;
 
-  const upstream = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-    method: "POST",
-    headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an expert education SEO writer. Output JSON only, no prose.",
-        },
-        { role: "user", content: prompt },
-      ],
-      response_format: { type: "json_object" },
-    }),
-  }).catch(() => null);
-  if (!upstream || !upstream.ok) {
-    const status = upstream?.status ?? 502;
-    return { error: `AI error (${status})`, status };
+  let content: string;
+  try {
+    const { geminiText } = await import("@/lib/gemini.server");
+    content = await geminiText(userId, { system: "You are an education editor. Output valid JSON only. Never invent founder facts, credentials, official exam rules, or current news.", contents: prompt, json: true });
+  } catch (error) {
+    const { safeAIError } = await import("@/lib/ai-errors");
+    const safe = safeAIError(error);
+    return { error: safe.message, status: safe.status };
   }
-  const j = (await upstream.json().catch(() => null)) as
-    | { choices?: Array<{ message?: { content?: string } }> }
-    | null;
-  const content = j?.choices?.[0]?.message?.content ?? "";
   let parsed: Partial<PostInput> & { content?: unknown } = {};
   try {
     parsed = JSON.parse(content);
@@ -142,6 +128,12 @@ Rules:
   if (!parsed.title || !parsed.content) {
     return { error: "AI returned malformed article", status: 502 };
   }
+  const { z } = await import("zod");
+  const blocks = z.array(z.union([
+    z.object({ type: z.enum(["p", "h2", "h3", "quote"]), text: z.string().min(1).max(12000) }),
+    z.object({ type: z.literal("ul"), items: z.array(z.string().min(1).max(2000)).min(1).max(30) }),
+  ])).min(5).max(120).safeParse(parsed.content);
+  if (!blocks.success) return { error: "The AI article was incomplete. Nothing was saved or charged.", status: 502 };
   const slug = slugify(parsed.slug || parsed.title);
   return {
     slug,
@@ -151,7 +143,7 @@ Rules:
     author: "Nexoras Team",
     read_time: String(parsed.read_time ?? "6 min").slice(0, 12),
     cover: null,
-    content: parsed.content,
+    content: blocks.data,
     meta_title: parsed.meta_title ? String(parsed.meta_title).slice(0, 70) : null,
     meta_description: parsed.meta_description
       ? String(parsed.meta_description).slice(0, 180)
@@ -168,11 +160,13 @@ export const Route = createFileRoute("/api/blog-admin")({
         const admin = await requireAdmin(request);
         if (admin instanceof Response) return admin;
 
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
         let body: Action;
         try {
-          body = (await request.json()) as Action;
-        } catch {
-          return Response.json({ error: "Invalid JSON" }, { status: 400 });
+          body = await readAIRequest(request) as Action;
+        } catch (error) {
+          return invalidAIRequest(error);
         }
 
         if (body.action === "list") {
@@ -233,7 +227,7 @@ export const Route = createFileRoute("/api/blog-admin")({
         }
 
         if (body.action === "generate") {
-          const result = await generateArticle(body.topic, body.category);
+          const result = await generateArticle(body.topic, body.category, admin.userId);
           if ("error" in result)
             return Response.json({ error: result.error }, { status: result.status });
           return Response.json({ draft: result });

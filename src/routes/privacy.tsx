@@ -4,6 +4,10 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Privacy Policy — Nexoras" },
+      { property: "og:description", content: "How Nexoras collects, uses, stores, and protects your personal data, including third-party advertising and analytics." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Privacy Policy — Nexoras" },
       { name: "description", content: "How Nexoras collects, uses, stores, and protects your personal data, including third-party advertising and analytics." },
     ],

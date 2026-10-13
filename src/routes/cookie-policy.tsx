@@ -4,6 +4,8 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 export const Route = createFileRoute("/cookie-policy")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Cookie Policy — Nexoras" },
       { name: "description", content: "How Nexoras uses cookies and similar technologies, including third-party advertising cookies from Google AdSense." },
       { property: "og:title", content: "Cookie Policy — Nexoras" },

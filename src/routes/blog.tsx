@@ -7,6 +7,8 @@ import { fetchAllPosts, ALL_CATEGORIES } from "@/lib/blog-store";
 export const Route = createFileRoute("/blog")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Blog & Resources — Nexoras" },
       { name: "description", content: "Long-form guides on AI study tools, exam preparation, productivity, resume building, automation, and student careers — written and curated by the Nexoras team." },
       { property: "og:title", content: "Nexoras Blog — Guides for Students & Early Careers" },

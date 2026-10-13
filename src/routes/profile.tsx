@@ -9,7 +9,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "Profile — Nexoras" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Manage your Nexoras student profile and account details." },
+      { property: "og:title", content: "Profile — Nexoras" },
+      { property: "og:description", content: "Manage your Nexoras student profile and account details." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Profile — Nexoras" }] }),
   component: () => (
     <RequireAuth>
       <Profile />

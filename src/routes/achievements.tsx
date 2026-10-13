@@ -10,6 +10,10 @@ import { Trophy, Flame, Sparkles, Target, Lock, CheckCircle2 } from "lucide-reac
 export const Route = createFileRoute("/achievements")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Achievements & XP — Nexoras" },
+      { property: "og:description", content: "Track your XP, study streak, mock-test history and unlocked badges." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Achievements & XP — Nexoras" },
       { name: "description", content: "Track your XP, study streak, mock-test history and unlocked badges." },
     ],

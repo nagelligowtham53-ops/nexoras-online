@@ -14,6 +14,10 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/mock-interview")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "AI Mock Interview — HR · Technical · Visa · Behavioral | Nexoras" },
+      { property: "og:description", content: "Practice realistic mock interviews with an AI interviewer. Technical, HR, US/student visa, behavioral and communication rounds with voice mic, live transcription and scoring." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "AI Mock Interview — HR · Technical · Visa · Behavioral | Nexoras" },
       { name: "description", content: "Practice realistic mock interviews with an AI interviewer. Technical, HR, US/student visa, behavioral and communication rounds with voice mic, live transcription and scoring." },
     ],
@@ -250,7 +254,7 @@ function MockInterviewPage() {
       }),
     });
     if (!res.ok || !res.body) {
-      let err = `Request failed (${res.status})`;
+      let err = "AI is temporarily unavailable. Please try again later.";
       try { const j = await res.json(); if (j?.error) err = j.error; } catch { /* ignore */ }
       throw new Error(err);
     }
@@ -325,7 +329,10 @@ function MockInterviewPage() {
           messages: [{ role: "user", content: `Transcript:\n${transcript}\n\nReturn the JSON now.` }],
         }),
       });
-      if (!res.ok || !res.body) throw new Error(`Failed (${res.status})`);
+      if (!res.ok || !res.body) {
+        const error = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(error?.error ?? "AI feedback is temporarily unavailable. Please try again later.");
+      }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let acc = "";
@@ -336,7 +343,11 @@ function MockInterviewPage() {
       }
       const match = acc.match(/\{[\s\S]*\}/);
       if (!match) throw new Error("Could not parse feedback");
-      const parsed: Feedback = JSON.parse(match[0]);
+      const { z } = await import("zod");
+      const score = z.number().min(0).max(100);
+      const result = z.object({ communication: score, confidence: score, technical: score, overall: score, strengths: z.array(z.string()).min(1), improvements: z.array(z.string()).min(1), summary: z.string().min(1) }).safeParse(JSON.parse(match[0]));
+      if (!result.success) throw new Error("AI feedback was incomplete. Nothing was saved.");
+      const parsed: Feedback = result.data;
       setFeedback(parsed);
       setPhase("feedback");
       try {

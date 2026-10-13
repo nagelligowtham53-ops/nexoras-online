@@ -8,6 +8,10 @@ import { ArrowRight, GraduationCap, IndianRupee, BookOpen, Trophy, Briefcase, Gl
 export const Route = createFileRoute("/roadmaps")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Career Roadmaps — Nexoras" },
+      { property: "og:description", content: "Stream-based career roadmaps: MPC, BiPC, MEC, CEC, Arts, Diploma & Polytechnic. Skills, salary, colleges, certifications & step-by-step paths." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Career Roadmaps — Nexoras" },
       { name: "description", content: "Stream-based career roadmaps: MPC, BiPC, MEC, CEC, Arts, Diploma & Polytechnic. Skills, salary, colleges, certifications & step-by-step paths." },
     ],

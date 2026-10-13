@@ -9,7 +9,12 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/reset-password")({
-  head: () => ({ meta: [{ title: "Set new password — Nexoras" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Set a new password for your Nexoras account." },
+      { property: "og:title", content: "Set new password — Nexoras" },
+      { property: "og:description", content: "Set a new password for your Nexoras account." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Set new password — Nexoras" }] }),
   component: ResetPassword,
 });
 

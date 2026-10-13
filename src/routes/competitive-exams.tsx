@@ -6,6 +6,8 @@ import { GraduationCap, Trophy, FileText, ArrowRight, CalendarClock, Target } fr
 export const Route = createFileRoute("/competitive-exams")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Competitive Exams in India — JEE, NEET, BITSAT, EAMCET, GATE, CAT, UPSC | Nexoras" },
       { name: "description", content: "Comprehensive guides to India's top competitive exams. Eligibility, syllabus highlights, prep timeline, and ideal starting points for JEE Main, JEE Advanced, NEET, BITSAT, EAMCET, MHT CET, GATE, CAT, UPSC, CLAT and more." },
       { property: "og:title", content: "Competitive Exams in India — Nexoras" },
