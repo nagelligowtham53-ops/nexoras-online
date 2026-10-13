@@ -30,6 +30,8 @@ export const Route = createFileRoute("/api/chat")({
         }
 
         const messages = Array.isArray(body.messages) ? body.messages : [];
+        if (messages.some(m => !m || typeof m !== "object" || typeof m.content !== "string")) return Response.json({ error: "Chat messages must contain text." }, { status: 400 });
+        if (body.provider && !["gemini", "groq"].includes(body.provider)) return Response.json({ error: "Select a supported AI provider." }, { status: 400 });
         if (messages.length === 0) {
           return new Response(JSON.stringify({ error: "messages required" }), {
             status: 400,

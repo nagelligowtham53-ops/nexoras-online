@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/generate-presentation")({
         const type = String(body.type ?? "College Seminar").slice(0, 60);
         const audience = String(body.audience ?? "College Students").slice(0, 60);
         const goal = String(body.goal ?? "Inform").slice(0, 40);
-        const slideCount = Math.max(3, Math.min(40, Number(body.slides) || 10));
+        const slideCount = Math.max(3, Math.min(40, Math.floor(Number(body.slides) || 10)));
         const depth = String(body.depth ?? "Medium Detail").slice(0, 30);
         const language = String(body.language ?? "English").slice(0, 30);
         const includeNotes = body.includeNotes !== false;

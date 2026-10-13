@@ -92,7 +92,7 @@ function ChatPage() {
       });
 
       if (!res.ok || !res.body) {
-        let err = `Request failed (${res.status})`;
+        let err = "AI is temporarily unavailable. Please try again later.";
         try {
           const j = await res.json();
           if (j?.error) err = j.error;
@@ -121,9 +121,9 @@ function ChatPage() {
         );
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Something went wrong";
+      const msg = controller.signal.aborted ? "AI generation was stopped." : e instanceof Error && e.message !== "Failed to fetch" ? e.message : "The AI connection was interrupted. Please try again later.";
       toast.error(msg);
-      setMessages((prev) => prev.filter((m) => m.id !== assistantId));
+      setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: m.content ? `${m.content}\n\n_Response interrupted. Please try again later._` : msg } : m));
     } finally {
       setIsStreaming(false);
       abortRef.current = null;

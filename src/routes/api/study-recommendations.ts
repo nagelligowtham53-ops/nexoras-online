@@ -24,10 +24,13 @@ export const Route = createFileRoute("/api/study-recommendations")({
         }
 
         const exam = String(body.exam ?? "JEE/NEET").slice(0, 60);
-        const weak = (body.weak ?? []).slice(0, 10);
-        const strong = (body.strong ?? []).slice(0, 10);
+        if ((body.weak !== undefined && !Array.isArray(body.weak)) || (body.strong !== undefined && !Array.isArray(body.strong))) return Response.json({ error: "Performance data must contain chapter lists." }, { status: 400 });
+        const sanitizeChapters = (chapters: typeof body.weak) => (chapters ?? []).slice(0, 10).filter(c => c && typeof c === "object").map(c => ({ chapter: String(c.chapter ?? "").slice(0, 100), subject: String(c.subject ?? "").slice(0, 60), accuracy: Number.isFinite(Number(c.accuracy)) ? Math.min(1, Math.max(0, Number(c.accuracy))) : 0 }));
+        const weak = sanitizeChapters(body.weak);
+        const strong = sanitizeChapters(body.strong);
         const score = Number(body.score ?? 0);
         const total = Number(body.total ?? 0);
+        if (!Number.isFinite(score) || !Number.isFinite(total) || total < 0) return Response.json({ error: "Test scores must be valid numbers." }, { status: 400 });
 
         const prompt = `A student just finished a ${exam} custom practice test scoring ${score}/${total}.
 Weak chapters (low accuracy):

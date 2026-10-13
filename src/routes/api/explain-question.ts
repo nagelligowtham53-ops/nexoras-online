@@ -34,6 +34,7 @@ export const Route = createFileRoute("/api/explain-question")({
         const chapter = String(body.chapter ?? "").slice(0, 100);
         const userAnswer = String(body.userAnswer ?? "").slice(0, 400);
         const mode = body.mode ?? "explain";
+        if (!["explain", "hint", "alt-method", "mistake"].includes(mode)) return Response.json({ error: "Select a valid explanation mode." }, { status: 400 });
 
         const modeInstruction = {
           explain: "Give a clear step-by-step solution (numbered steps), followed by the underlying concept and one NCERT reference (chapter/topic).",

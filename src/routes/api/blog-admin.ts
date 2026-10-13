@@ -66,11 +66,9 @@ async function generateArticle(
   category: string | undefined,
   userId: string,
 ): Promise<PostInput | { error: string; status: number }> {
-  const apiKey = process.env.GROQ_API_KEY;
-
   const cat = category || "Exams";
   const seedTopic =
-    topic ||
+    topic?.slice(0, 500) ||
     "trending Indian competitive exam preparation strategy for the upcoming month";
   const prompt = `Write a high-quality, original SEO blog article for Nexoras (an AI-powered exam-prep and career platform for Indian and international students).
 
