@@ -1,25 +1,35 @@
 import { createServerOnlyFn } from '@tanstack/react-start';
 import { GoogleGenAI, type Content } from '@google/genai';
-import { SafeAIError, safeAIError } from './ai-errors';
+import { SafeAIError, safeAIError, inspectGeminiError, isTransientGeminiError, backoffDelayMs } from './ai-errors';
 
 // Explicit server configuration; never silently fall back to another model/provider.
-export const GEMINI_MODEL = 'gemini-3.8-flash';
+// gemini-3.8-flash was switched off after verified daily free-tier exhaustion (429) and repeated 503 demand spikes.
+export const GEMINI_MODEL = 'gemini-3.5-flash';
+/** Total attempts per request (1 initial + 2 retries), only before any output is streamed. */
+export const GEMINI_MAX_ATTEMPTS = 3;
 
 export const prepareGemini = createServerOnlyFn(async (userId: string) => {
   const key = process.env['GEMINI_API_KEY'];
-  if (!key) throw new SafeAIError(503, 'Gemini is not configured. The site owner must add the Gemini API key securely.');
+  if (!key) throw new SafeAIError(503, 'AI is not configured yet. The site owner must add the AI key securely.');
   const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
   const { data, error } = await supabaseAdmin.rpc('reserve_ai_request', { p_user_id: userId });
   if (error) throw new SafeAIError(503, 'AI request limits could not be checked. Please try again later.');
-  if (!data) throw new SafeAIError(429, 'You have reached the AI request limit. Please try again later.');
+  if (!data) throw new SafeAIError(429, 'You have reached your AI request limit. Please try again later.');
   return new GoogleGenAI({ apiKey: key, httpOptions: { timeout: 90000, retryOptions: { attempts: 1 } } });
 });
 
 type Input = { system: string; contents: string | Content[]; json?: boolean; signal?: AbortSignal };
 
+function sleep(ms: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const t = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => { clearTimeout(t); reject(Object.assign(new Error('aborted'), { name: 'AbortError' })); }, { once: true });
+  });
+}
+
 async function* generate(ai: GoogleGenAI, input: Input): AsyncGenerator<string> {
   let emitted = false;
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < GEMINI_MAX_ATTEMPTS; attempt++) {
     try {
       const stream = await ai.models.generateContentStream({
         model: GEMINI_MODEL,
@@ -36,16 +46,17 @@ async function* generate(ai: GoogleGenAI, input: Input): AsyncGenerator<string> 
         if (text.length > 250000) throw new SafeAIError(502, 'The AI response was too large. Please request a smaller result.');
         if (delta) { emitted = true; yield delta; }
       }
-      if (!text.trim()) throw new SafeAIError(502, 'Gemini returned no usable response. Please try a new request later.');
+      if (!text.trim()) throw new SafeAIError(502, 'Gemini returned no usable response. Please try again.');
       return;
     } catch (error) {
-      const status = typeof error === 'object' && error !== null && 'status' in error ? Number(error.status) : 0;
-      // Never replay partial responses, refusals, denied access, invalid requests, or quota exhaustion.
-      if (!emitted && attempt === 0 && [500, 502, 503, 504].includes(status) && !(error instanceof SafeAIError) && !input.signal?.aborted) {
-        await new Promise(resolve => setTimeout(resolve, 1500 + Math.random() * 1000));
+      // Sanitized diagnostics only: HTTP status, Google status, quota id, retry delay. Never keys or prompts.
+      const info = inspectGeminiError(error);
+      const canRetry = !emitted && attempt < GEMINI_MAX_ATTEMPTS - 1 && !input.signal?.aborted && isTransientGeminiError(error);
+      console.warn('[gemini] attempt failed', { model: GEMINI_MODEL, attempt: attempt + 1, status: info.status, googleStatus: info.googleStatus, quotaId: info.quotaId, retryDelayMs: info.retryDelayMs, willRetry: canRetry });
+      if (canRetry) {
+        await sleep(backoffDelayMs(attempt, info.retryDelayMs), input.signal);
         continue;
       }
-      console.warn('[gemini] request failed', { model: GEMINI_MODEL, status: safeAIError(error).status });
       throw safeAIError(error);
     }
   }
