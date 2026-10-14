@@ -85,19 +85,32 @@ export type EvaluationResult = {
 /** Coerces whatever the database returned into a canonical key, or null. */
 export function toCorrectKey(raw: unknown): CorrectKey | null {
   if (raw === null || raw === undefined) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
   const o = raw as Record<string, unknown>;
   const type = String(o["type"] ?? "");
   if (type === "single" && (typeof o["value"] === "number" || typeof o["value"] === "string")) {
     return { type: "single", value: o["value"] as number | string };
   }
   if (type === "multiple" && Array.isArray(o["values"])) {
-    return { type: "multiple", values: (o["values"] as unknown[]).map((v) => v as number | string) };
+    if (o["values"].length === 0 || o["values"].some((v) => typeof v !== "string" && typeof v !== "number")) return null;
+    return { type: "multiple", values: o["values"] as (number | string)[] };
   }
   if (type === "numeric") {
+    if ((typeof o["value"] !== "number" && typeof o["value"] !== "string") || String(o["value"]).trim() === "") return null;
     const n = Number(o["value"]);
     if (!Number.isFinite(n)) return null;
     const tol = Number(o["tolerance"]);
-    return { type: "numeric", value: n, ...(Number.isFinite(tol) ? { tolerance: tol } : {}) };
+    if (o["tolerance"] !== undefined && (!Number.isFinite(tol) || tol < 0)) return null;
+    const range = o["acceptedRange"];
+    if (range !== undefined && (!Array.isArray(range) || range.length !== 2 || !range.every((v) => typeof v === "number" && Number.isFinite(v)) || range[0] > range[1])) return null;
+    const places = o["decimalPlaces"];
+    if (places !== undefined && (typeof places !== "number" || !Number.isInteger(places) || places < 0 || places > 10)) return null;
+    if (o["rounding"] !== undefined && o["rounding"] !== "round" && o["rounding"] !== "truncate") return null;
+    return { type: "numeric", value: n, ...(Number.isFinite(tol) ? { tolerance: tol } : {}),
+      ...(Array.isArray(range) ? { acceptedRange: range as [number, number] } : {}),
+      ...(typeof places === "number" ? { decimalPlaces: places } : {}),
+      ...(o["rounding"] === "round" || o["rounding"] === "truncate" ? { rounding: o["rounding"] } : {}),
+    };
   }
   if (type === "text" && o["value"] !== undefined) {
     return { type: "text", value: String(o["value"]) };
@@ -137,13 +150,15 @@ function schemeFor(q: EvaluableQuestion, base: ExamMarkingScheme): ExamMarkingSc
 }
 
 export function evaluateTest(input: EvaluateInput): EvaluationResult {
+  if (input.answers.length !== input.questions.length) throw new Error("Answer count does not match the paper.");
+  if (new Set(input.questions.map((q) => q.id)).size !== input.questions.length) throw new Error("Duplicate questions cannot be graded twice.");
   const grades = input.grades ?? {};
   const ungraded_ids: string[] = [];
 
   const submissions = input.questions.map((q, i) => {
     const scheme = schemeFor(q, input.marking);
     const grade = grades[q.id];
-    const key = grade ? toCorrectKey(grade.correct_answer) : (q.local_key ?? null);
+    const key = grade?.question_id === q.id ? toCorrectKey(grade.correct_answer) : (q.local_key ?? null);
     const selected = resolveSelection(q, input.answers[i]);
 
     const sub = scoreSubmission({
@@ -153,7 +168,7 @@ export function evaluateTest(input: EvaluateInput): EvaluationResult {
       question_type: q.question_type,
       selected,
       correct_key: key,
-      marking: { positive: scheme.positive, negative: scheme.negative },
+      marking: { positive: scheme.positive, negative: scheme.negative, partialCredit: scheme.partialCredit },
       marked_for_review: input.markedForReview?.[i] ?? false,
       time_spent_seconds: input.timePerQuestion?.[i] ?? 0,
       subject: q.subject,
