@@ -1,5 +1,14 @@
 # Roadmap
 
+## Examination engine restoration (uploaded master requirements)
+- [ ] Audit configuration, retrieval, bank readiness, grading and persistence; retain existing working features
+- [ ] Repair immediate missing-grade root cause and canonical numeric/partial-credit scoring; execute regressions
+- [ ] Add immutable configuration versions, exam-specific sections and server-owned atomic submissions
+- [ ] Verify supplied patterns against official bulletins for all 14 requested exams
+- [ ] Audit and validate exam/year/paper/section/syllabus question coverage; block incomplete full-length papers
+- [ ] Connect section timers, grouped questions, autosave, answer controls and reconciled saved results
+- [ ] Execute supplied acceptance tests and authenticated desktop/mobile exam flows; release validated exams only
+
 ## Secure Gemini integration
 - [x] Audit existing AI features and application credit wallet
 - [x] Configure GEMINI_API_KEY securely; verify gemini-3.8-flash with a useful direct response
