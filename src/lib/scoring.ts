@@ -16,7 +16,7 @@
 export type CorrectKey =
   | { type: "single"; value: number | string }
   | { type: "multiple"; values: (number | string)[] }
-  | { type: "numeric"; value: number; tolerance?: number }
+  | { type: "numeric"; value: number; tolerance?: number; acceptedRange?: [number, number]; decimalPlaces?: number; rounding?: "round" | "truncate" }
   | { type: "text"; value: string };
 
 export type MarkingScheme = {
@@ -24,6 +24,8 @@ export type MarkingScheme = {
   positive: number;
   /** Penalty magnitude for a wrong answer. Stored/applied as a negative. */
   negative: number;
+  /** Opt-in only: supplied JEE Advanced multiple-correct section rules. */
+  partialCredit?: "jee_advanced";
 };
 
 export type SubmissionInput = {
@@ -57,6 +59,7 @@ export type Submission = {
   /** null = key unavailable, deliberately not counted as wrong. */
   is_correct: boolean | null;
   graded: boolean;
+  is_partially_correct?: boolean;
   marked_for_review: boolean;
   positive_marks: number;
   negative_marks: number;
@@ -88,8 +91,10 @@ export function normalizeChoice(value: unknown): string | null {
 }
 
 function normalizeNumeric(value: unknown): number | null {
-  if (value === null || value === undefined || value === "") return null;
-  const n = typeof value === "number" ? value : parseFloat(String(value).trim());
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  const raw = String(value).trim();
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(raw)) return null;
+  const n = Number(raw);
   return Number.isFinite(n) ? n : null;
 }
 
@@ -141,7 +146,23 @@ export function isAnswerCorrect(selected: unknown, key: CorrectKey | null | unde
       if (a === null) return false;
       if (b === null) return null;
       const tol = key.tolerance ?? NUMERIC_TOLERANCE;
-      return Math.abs(a - b) <= Math.abs(tol);
+      if (!Number.isFinite(tol) || tol < 0) return null;
+      const epsilon = Number.EPSILON * Math.max(1, Math.abs(a), Math.abs(b)) * 8;
+      if (key.acceptedRange) {
+        const [min, max] = key.acceptedRange;
+        if (!Number.isFinite(min) || !Number.isFinite(max) || min > max) return null;
+        return a >= min - epsilon && a <= max + epsilon;
+      }
+      const places = key.decimalPlaces;
+      if (places !== undefined) {
+        if (!Number.isInteger(places) || places < 0 || places > 10) return null;
+        const factor = 10 ** places;
+        const transform = (n: number) => key.rounding === "truncate"
+          ? Math.trunc(n * factor) / factor
+          : Math.round((n + Math.sign(n) * Number.EPSILON) * factor) / factor;
+        return Math.abs(transform(a) - transform(b)) <= tol + epsilon;
+      }
+      return Math.abs(a - b) <= tol + epsilon;
     }
     case "text": {
       const a = normalizeText(selected);
@@ -169,13 +190,23 @@ export function scoreSubmission(input: SubmissionInput): Submission {
 
   let marks_awarded = 0;
   let negative_marks = 0;
+  let partial = false;
 
   if (attempted && correctness === true) {
     marks_awarded = positive;
     negative_marks = 0;
   } else if (attempted && correctness === false) {
-    marks_awarded = 0;
-    negative_marks = -penalty;
+    const key = input.correct_key;
+    if (input.marking.partialCredit === "jee_advanced" && key?.type === "multiple" && Array.isArray(input.selected)) {
+      const selected = [...new Set(input.selected.map(normalizeChoice))];
+      const correct = new Set(key.values.map(normalizeChoice));
+      const cleanSubset = selected.every((v) => v !== null && correct.has(v));
+      if (cleanSubset && correct.size === 4 && selected.length === 3) marks_awarded = 3;
+      else if (cleanSubset && correct.size >= 3 && selected.length === 2) marks_awarded = 2;
+      else if (cleanSubset && correct.size >= 2 && selected.length === 1) marks_awarded = 1;
+      partial = marks_awarded > 0;
+    }
+    negative_marks = partial ? 0 : -penalty;
   }
   // attempted but ungradable, or unattempted -> both stay 0.
 
@@ -193,6 +224,7 @@ export function scoreSubmission(input: SubmissionInput): Submission {
     is_attempted: attempted,
     is_correct: correctness,
     graded: correctness !== null || !attempted,
+    is_partially_correct: partial,
     marked_for_review: Boolean(input.marked_for_review),
     positive_marks: positive,
     negative_marks,
