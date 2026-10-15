@@ -198,8 +198,8 @@ export function evaluateTest(input: EvaluateInput): EvaluationResult {
 export function markBreakdown(subs: Submission[]) {
   const correct = subs.filter((s) => s.is_correct === true);
   const wrong = subs.filter((s) => s.is_attempted && s.is_correct === false);
-  const positive = correct.reduce((a, s) => a + s.marks_awarded, 0);
-  const negative = wrong.reduce((a, s) => a + s.negative_marks, 0);
+  const positive = subs.reduce((a, s) => a + s.marks_awarded, 0);
+  const negative = subs.reduce((a, s) => a + s.negative_marks, 0);
   return {
     correct: correct.length,
     wrong: wrong.length,

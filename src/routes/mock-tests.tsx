@@ -403,6 +403,8 @@ function MockTestsPage() {
     submittingRef.current = true;
     exitFullscreen();
     const duration = Math.round((Date.now() - startedAtRef.current) / 1000);
+    const frozenTimes = timePerQ.map((time, i) => i === current && phase === "running"
+      ? time + Math.round((Date.now() - lastTickRef.current) / 1000) : time);
 
     // Server-side grading for every DB-backed answered question. The client never
     // sees the correct key until after submission.
@@ -449,7 +451,7 @@ function MockTestsPage() {
         solution: grade.solution,
         explanation: grade.explanation,
       }])),
-      timePerQuestion: timePerQ,
+      timePerQuestion: frozenTimes,
       markedForReview: marked,
     });
     setEvaluation(result);
