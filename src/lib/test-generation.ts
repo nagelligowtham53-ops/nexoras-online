@@ -19,8 +19,8 @@ const SUBJECT_DB_MAP: Record<string, string | null> = {
   Mathematics: "Mathematics",
   Maths: "Mathematics",
   Biology: "Biology",
-  Botany: "Biology",
-  Zoology: "Biology",
+  Botany: "Botany",
+  Zoology: "Zoology",
 };
 
 const BANNED_PATTERNS = [
@@ -96,14 +96,16 @@ function normalizeText(t: string) {
 type Row = Record<string, unknown>;
 
 function isUsable(row: Row): boolean {
+  if (row.active !== true || row.verified !== true || !row.chapter_id) return false;
   const text = String(row.question_text ?? "").trim();
   if (text.length < 15) return false;
   if (BANNED_PATTERNS.some((re) => re.test(text))) return false;
   const type = String(row.question_type ?? "");
   const options = Array.isArray(row.options) ? row.options.map((o) => String(o ?? "").trim()) : [];
-  const objective = type === "single_correct" || type === "multiple_correct" || type === "assertion_reason";
+  if (!["single_correct", "integer", "numerical"].includes(type)) return false;
+  const objective = type === "single_correct";
   if (objective) {
-    if (options.length < 4) return false;
+    if (options.length !== 4) return false;
     if (options.some((o) => o.length === 0)) return false;
     if (new Set(options.map(normalizeText)).size !== options.length) return false;
   }
@@ -214,10 +216,13 @@ async function fetchPool(
   let q = supabase
     .from(VIEW as never)
     .select(
-      "id,exams,class_level,subject,chapter,chapter_id,difficulty,question_type,year,source_type,is_pyq,marks,negative_marks,question_text,options",
+      "id,exams,class_level,subject,chapter,chapter_id,difficulty,question_type,year,source_type,is_pyq,marks,negative_marks,question_text,options,active,verified",
     )
     .overlaps("exams", [config.dbExam])
     .eq("subject", dbSubject)
+    .eq("active", true)
+    .eq("verified", true)
+    .in("question_type", config.questionTypes)
     .limit(Math.min(1000, Math.max(requested * 8, 120)));
 
   const diff = difficultyFilter(opts.difficulty);
@@ -255,9 +260,10 @@ async function fetchPool(
 
 function sectionQuotas(config: ExamConfig, opts: GenerationOptions) {
   const total = opts.totalOverride ?? config.totalQuestions;
-  const slots = config.subjectDistribution.length
-    ? config.subjectDistribution
-    : [{ name: "Physics", count: total }];
+  const slots = config.subjectDistribution;
+  if (slots.length === 0 || !Number.isInteger(total) || total < 1) {
+    throw new TestGenerationError("invalid_config", "This paper needs a valid subject blueprint before a test can start.");
+  }
 
   if (opts.onlySection) {
     return [{ name: opts.onlySection, count: total }];
@@ -293,19 +299,35 @@ function summarize(config: ExamConfig, opts: GenerationOptions, pools: Pool[]): 
   const sections = pools.map((p) => p.section);
   const unmapped = sections.filter((s) => !s.dbSubject).map((s) => s.sectionName);
 
-  // Usable pool respecting per-section quotas, then any spare capacity from
-  // other sections (a test is still valid if one subject carries more).
+  // Never substitute another subject for a missing section.
   const perSection = sections.map((s) => Math.min(s.requested, s.usable));
-  let usable = perSection.reduce((a, n) => a + n, 0);
-  const spare = sections.reduce((a, s) => a + Math.max(0, s.usable - s.requested), 0);
-  usable = Math.min(requested, usable + spare);
+  const usable = perSection.reduce((a, n) => a + n, 0);
+  const unsupported = config.examKey === "jee-adv"
+    ? "JEE Advanced requires a verified section-level marking blueprint. This generic paper is not available for scored tests."
+    : null;
+  const numericReady = config.examKey !== "jee-main" || pools.every((p) => {
+    const numerical = p.rows.filter((r) => ["integer", "numerical"].includes(String(r.question_type))).length;
+    const required = opts.totalOverride !== undefined ? Math.floor(p.section.requested / 5) : 5;
+    return numerical >= required && p.rows.length - numerical >= p.section.requested - required;
+  });
 
   const sizeLadder = [10, 15, 20, 25, 30, 45, 50, 60, 75, 90, 120, 150, 180];
-  const suggested = sizeLadder.filter((n) => n <= usable && n < requested).slice(-3);
+  const suggested = unsupported ? [] : sizeLadder.filter((n) => n < requested &&
+    sectionQuotas(config, { ...opts, totalOverride: n }).every((quota) => {
+      const pool = pools.find((p) => p.section.sectionName === quota.name);
+      if (!pool || pool.section.usable < quota.count) return false;
+      if (config.examKey !== "jee-main") return true;
+      const numeric = pool.rows.filter((r) => ["integer", "numerical"].includes(String(r.question_type))).length;
+      return numeric >= Math.floor(quota.count / 5) && pool.rows.length - numeric >= quota.count - Math.floor(quota.count / 5);
+    })).slice(-3);
 
   const failed = sections.filter((s) => s.error);
   let reason: string | null = null;
-  if (!config.dbExam) {
+  if (unsupported) {
+    reason = unsupported;
+  } else if (!numericReady) {
+    reason = "The JEE Main bank cannot supply the required MCQ and numerical split for every selected subject. No substitute questions will be used.";
+  } else if (!config.dbExam) {
     reason = `${config.examName} is not linked to the question bank yet, so no questions can be selected for it.`;
   } else if (failed.length) {
     reason = `The question bank is temporarily unreachable for ${failed
@@ -340,7 +362,7 @@ function summarize(config: ExamConfig, opts: GenerationOptions, pools: Pool[]): 
     usable,
     sections,
     unmappedSections: unmapped,
-    ready: usable >= requested,
+    ready: !unsupported && numericReady && sections.length > 0 && sections.every((s) => !s.error && s.dbSubject !== null && s.usable >= s.requested),
     suggestedSizes: suggested,
     reason,
   };
@@ -362,6 +384,10 @@ export async function generateTest(
 ): Promise<{ questions: GeneratedQuestion[]; report: AvailabilityReport }> {
   const { pools } = await buildPools(config, opts);
   const report = summarize(config, opts, pools);
+
+  if (!report.ready) {
+    throw new TestGenerationError("incomplete_blueprint", report.reason ?? "The bank cannot deliver this complete paper. Select an available shorter practice test.");
+  }
 
   if (report.usable === 0) {
     const allFailed = report.sections.every((s) => !s.dbSubject || s.error);
@@ -389,7 +415,7 @@ export async function generateTest(
       .slice(0, 8)
       .join(" ")}`;
 
-  const take = (pool: Pool, quota: number, conceptCap: number) => {
+  const take = (pool: Pool, quota: number, conceptCap: number, numeric?: boolean) => {
     const conceptCounts = new Map<string, number>();
     for (const p of picked) {
       /* seed caps from already-picked questions of this section */
@@ -401,7 +427,9 @@ export async function generateTest(
     const fresh = shuffle(pool.rows.filter((r) => !usedIds.has(String(r.id)) && !seen.has(String(r.id))));
     const repeats = shuffle(pool.rows.filter((r) => !usedIds.has(String(r.id)) && seen.has(String(r.id))));
     for (const row of [...fresh, ...repeats]) {
-      if (picked.filter((p) => p.sectionName === pool.section.sectionName).length >= quota) break;
+      const isNumeric = ["integer", "numerical"].includes(String(row.question_type));
+      if (numeric !== undefined && isNumeric !== numeric) continue;
+      if (picked.filter((p) => p.sectionName === pool.section.sectionName && (numeric === undefined || (p.type === "numerical") === numeric)).length >= quota) break;
       const textKey = normalizeText(String(row.question_text));
       if (usedTexts.has(textKey)) continue;
       const nearKey = conceptKey(row);
@@ -416,22 +444,24 @@ export async function generateTest(
     }
   };
 
-  // Pass 1: spread across chapters (max ~1/4 of a section from one chapter).
-  for (const pool of pools) take(pool, pool.section.requested, Math.max(2, Math.ceil(pool.section.requested / 4)));
-  // Pass 2: relax the chapter cap if a section is still short.
-  for (const pool of pools) take(pool, pool.section.requested, 0);
-
-  // Backfill from spare capacity so the paper reaches the target length.
-  if (picked.length < report.usable) {
-    for (const pool of pools) {
-      const remaining = report.usable - picked.length;
-      if (remaining <= 0) break;
-      take(pool, pool.section.requested + remaining, 0);
+  for (const pool of pools) {
+    if (config.examKey === "jee-main") {
+      const numeric = opts.totalOverride !== undefined ? Math.floor(pool.section.requested / 5) : 5;
+      for (const cap of [Math.max(2, Math.ceil(pool.section.requested / 4)), 0]) {
+        take(pool, pool.section.requested - numeric, cap, false);
+        take(pool, numeric, cap, true);
+      }
+    } else {
+      take(pool, pool.section.requested, Math.max(2, Math.ceil(pool.section.requested / 4)));
+      take(pool, pool.section.requested, 0);
     }
   }
 
 
   const ordered = pools.flatMap((p) => picked.filter((q) => q.sectionName === p.section.sectionName));
+  if (ordered.length !== report.requested || pools.some((p) => ordered.filter((q) => q.sectionName === p.section.sectionName).length !== p.section.requested)) {
+    throw new TestGenerationError("insufficient_distinct_questions", "There are not enough distinct, valid questions for every section. This test has not started.");
+  }
   rememberServed(config.examKey, ordered.map((q) => q.dbId));
 
   return { questions: ordered, report: { ...report, usable: ordered.length } };

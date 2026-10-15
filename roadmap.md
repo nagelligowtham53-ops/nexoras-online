@@ -1,13 +1,16 @@
 # Roadmap
 
 ## Examination engine restoration (uploaded master requirements)
-- [ ] Audit configuration, retrieval, bank readiness, grading and persistence; retain existing working features
-- [ ] Repair immediate missing-grade root cause and canonical numeric/partial-credit scoring; execute regressions
+- [x] Audit configuration, retrieval, bank readiness, grading and persistence; identify hardcoded/config drift, cross-subject backfill, unsupported formats and client-count persistence
+- [x] Repair authenticated grade_answers caller mismatch, strict numeric parsing and explicit partial-credit scoring; 301 automated regressions passed
 - [ ] Add immutable configuration versions, exam-specific sections and server-owned atomic submissions
 - [ ] Verify supplied patterns against official bulletins for all 14 requested exams
-- [ ] Audit and validate exam/year/paper/section/syllabus question coverage; block incomplete full-length papers
+- [x] Block incomplete subject quotas, fake JEE Main MCQ-only full papers, generic JEE Advanced scoring, unmapped Botany/Zoology and unconfigured exam starts; remove invented rank predictions
+- [ ] Complete answer-key/explanation and syllabus validation: bank currently has only single-correct records (Physics 355, Chemistry 119, Mathematics 117, Biology 35), not readiness certification
 - [ ] Connect section timers, grouped questions, autosave, answer controls and reconciled saved results
 - [ ] Execute supplied acceptance tests and authenticated desktop/mobile exam flows; release validated exams only
+- [x] Verify signed-in 25-question COMEDK Physics practice starts, accepts an answer, grades in the UI without ungraded errors, applies zero wrong-answer penalty and saves 0/25 through the existing path
+- [ ] Replace legacy client-count attempt recording with atomic server-owned manifests and idempotent grading; existing save verification is not proof against forged counts
 
 ## Secure Gemini integration
 - [x] Audit existing AI features and application credit wallet
