@@ -24,11 +24,11 @@ export const Route = createFileRoute("/mock-tests")({
   head: () => ({
     meta: [
       { property: "og:title", content: "JEE Main CBT Simulator — Real Mock Tests | Nexoras" },
-      { property: "og:description", content: "Production-grade JEE Main / Advanced / BITSAT / MHT CET / EAMCET CBT simulator: full-screen mode, NTA-style palette, sections, negative marking, rank prediction & AI analytics." },
+      { property: "og:description", content: "Practice with syllabus-mapped questions, configured marking rules, answer review and honest question-bank availability." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { title: "JEE Main CBT Simulator — Real Mock Tests | Nexoras" },
-      { name: "description", content: "Production-grade JEE Main / Advanced / BITSAT / MHT CET / EAMCET CBT simulator: full-screen mode, NTA-style palette, sections, negative marking, rank prediction & AI analytics." },
+      { name: "description", content: "Practice with syllabus-mapped questions, configured marking rules, answer review and honest question-bank availability." },
     ],
   }),
   component: () => (
@@ -188,6 +188,7 @@ function MockTestsPage() {
   const startedAtRef = useRef<number>(0);
   const lastTickRef = useRef<number>(0);
   const examRootRef = useRef<HTMLDivElement>(null);
+  const submittingRef = useRef(false);
 
   // ---- Timer
   useEffect(() => {
@@ -398,7 +399,8 @@ function MockTestsPage() {
   }
 
   async function finish(auto = false) {
-    if (phase !== "running" && phase !== "summary") return;
+    if (submittingRef.current || (phase !== "running" && phase !== "summary")) return;
+    submittingRef.current = true;
     exitFullscreen();
     const duration = Math.round((Date.now() - startedAtRef.current) / 1000);
 
@@ -407,14 +409,20 @@ function MockTestsPage() {
     const toGrade: { question: DbQuestion; userAnswer: unknown }[] = [];
     questions.forEach((q, i) => {
       const ans = answers[i];
-      if (!q.dbId || ans === null || ans === "") return;
+      if (!q.dbId) return;
       const stub = { id: q.dbId, question_type: q.type === "mcq" ? "single_correct" : "numerical" } as unknown as DbQuestion;
-      toGrade.push({ question: stub, userAnswer: q.type === "mcq" ? Number(ans) : parseFloat(ans) });
+      toGrade.push({ question: stub, userAnswer: ans === null || ans === "" ? null : q.type === "mcq" ? Number(ans) : ans });
     });
     let freshGraded: Record<string, GradeResult> = {};
     try {
       if (toGrade.length > 0) freshGraded = await gradeAnswers(toGrade);
-    } catch (e) { console.error("[mock-tests] gradeAnswers failed", e); }
+    } catch (e) {
+      console.error("[mock-tests] gradeAnswers failed", e);
+      setError("Your answers could not be graded. Return to the test and retry submission; no result or reward has been saved.");
+      setPhase("summary");
+      submittingRef.current = false;
+      return;
+    }
     setGradedMap(freshGraded);
 
     const evaluable: EvaluableQuestion[] = questions.map((q, i) => ({
@@ -454,6 +462,10 @@ function MockTestsPage() {
       // small UX: nothing extra; result page will indicate auto-submit via badge.
     }
     if (user) {
+      if (result.summary.ungraded > 0) {
+        submittingRef.current = false;
+        return;
+      }
       try {
         const r = await recordAttemptAndAwardXP(user.id, {
           exam_key: exam.key, exam_name: exam.name,
@@ -463,6 +475,7 @@ function MockTestsPage() {
         setReward({ earnedXp: r.earnedXp, newBadges: r.newBadges });
       } catch (e) { console.error("save attempt failed", e); }
     }
+    submittingRef.current = false;
   }
 
   function reset() {
@@ -499,7 +512,6 @@ function MockTestsPage() {
     if (phase !== "result" || !evaluation) return null;
     const { correct, incorrect: wrong, attempted, unanswered: skipped, score, max_score, accuracy } = evaluation.summary;
     const percent = Math.max(0, Math.round((score / Math.max(1, max_score)) * 100));
-    const rank = Math.max(1, Math.round((100 - percent) * 1500));
     const subs = evaluation.summary.bySubject.map((subject) => ({
       subject: subject.label, correct: subject.correct, total: subject.total, time: subject.time,
       pct: subject.accuracy, avg: subject.total ? Math.round(subject.time / subject.total) : 0,
@@ -517,7 +529,7 @@ function MockTestsPage() {
     if (evaluation.summary.ungraded > 0) suggestions.push(`${evaluation.summary.ungraded} answer${evaluation.summary.ungraded === 1 ? " was" : "s were"} not graded and received zero marks, with no penalty.`);
     if (strongest && strongest.pct >= 80) suggestions.push(`${strongest.subject} is your strength (${strongest.pct}%). Maintain it with weekly revision.`);
     if (suggestions.length === 0) suggestions.push("Great consistency across sections — push to the next difficulty tier next time.");
-    return { correct, wrong, attempted, skipped, ungraded: evaluation.summary.ungraded, score, max_score, percent, accuracy, rank, subs, weakest, strongest, totalTime, avgPerQ, suggestions };
+    return { correct, wrong, attempted, skipped, ungraded: evaluation.summary.ungraded, score, max_score, percent, accuracy, subs, weakest, strongest, totalTime, avgPerQ, suggestions };
   }, [phase, questions, evaluation]);
 
   // ============== RENDER ==============
@@ -557,6 +569,8 @@ function MockTestsPage() {
           />
         )}
         {phase === "summary" && (
+          <>
+          {error && <div role="alert" className="mx-auto max-w-3xl px-4 pt-4 text-sm text-destructive">{error}</div>}
           <SummaryView
             exam={exam}
             counts={counts}
@@ -565,6 +579,7 @@ function MockTestsPage() {
             onBack={() => setPhase("running")}
             onSubmit={() => void finish(false)}
           />
+          </>
         )}
       </div>
     );
@@ -590,7 +605,8 @@ function MockTestsPage() {
             )}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {EXAMS.map((e) => {
-                const total = e.subjects.reduce((a, s) => a + s.count, 0);
+                const config = papersFor(configs, e.key)[0];
+                const total = config?.totalQuestions;
                 return (
                   <div key={e.key} className="glass group relative overflow-hidden rounded-2xl p-6 transition-all hover:border-accent/40 hover:shadow-glow">
                     <div className="absolute right-3 top-3 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent">{e.short}</div>
@@ -599,17 +615,17 @@ function MockTestsPage() {
                     </div>
                     <h3 className="mt-3 font-display text-lg font-semibold">{e.name}</h3>
                     <p className="mt-1 text-xs text-muted-foreground">{e.pattern}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{e.desc}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{config ? `${config.examYear} · ${config.paperName}` : "Pattern not configured"}</p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      {e.subjects.map((s) => (
+                      {(config?.subjectDistribution ?? []).map((s) => (
                         <span key={s.name} className="rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
                           {s.name} · {s.count}
                         </span>
                       ))}
                     </div>
-                    <p className="mt-3 text-[11px] text-muted-foreground">Total: {total} questions · {e.duration_min} min</p>
-                    <Button onClick={() => openInstructions(e)} className="mt-4 w-full bg-gradient-primary text-primary-foreground">
-                      <Sparkles className="h-4 w-4" /> Start mock test
+                    <p className="mt-3 text-[11px] text-muted-foreground">{config ? `${total} questions · ${config.durationMinutes} min · Bank readiness checked before starting` : "This exam is awaiting a validated paper configuration."}</p>
+                    <Button disabled={!config} onClick={() => openInstructions(e)} className="mt-4 w-full bg-gradient-primary text-primary-foreground">
+                      <Sparkles className="h-4 w-4" /> {config ? "View test availability" : "Not available yet"}
                     </Button>
                   </div>
                 );
@@ -689,7 +705,7 @@ function InstructionsView(props: {
     ? 30
     : Math.max(10, Math.round((config.durationMinutes * total) / Math.max(1, config.totalQuestions)));
   const usable = availability?.usable ?? 0;
-  const canBegin = agreed && !checkingAvailability && usable > 0;
+  const canBegin = agreed && !checkingAvailability && availability?.ready === true;
 
 
 
@@ -1112,7 +1128,7 @@ function SummaryView(props: { exam: ExamSpec; counts: { answered: number; notAns
 type ResultStats = {
   correct: number; wrong: number; attempted: number; skipped: number;
   ungraded: number;
-  score: number; max_score: number; percent: number; accuracy: number; rank: number;
+  score: number; max_score: number; percent: number; accuracy: number;
   subs: { subject: string; correct: number; total: number; time: number; pct: number; avg: number }[];
   weakest: { subject: string; pct: number } | undefined;
   strongest: { subject: string; pct: number } | undefined;
@@ -1135,9 +1151,6 @@ function ResultView(props: {
           <p className="mt-2 font-display text-6xl font-bold text-gradient">{stats.score}</p>
           <p className="text-sm text-muted-foreground">out of {stats.max_score} marks · {stats.percent}%</p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs">
-              <Trophy className="h-3 w-3 text-accent" /> Predicted rank: ~{stats.rank.toLocaleString()}
-            </span>
             <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs">
               Accuracy {stats.accuracy}%
             </span>
@@ -1220,7 +1233,7 @@ function ResultView(props: {
 
       <div className="glass rounded-2xl p-6">
         <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-accent">
-          <Brain className="h-4 w-4" /> AI Improvement Suggestions
+          <Brain className="h-4 w-4" /> Performance Suggestions
         </div>
         <ul className="mt-3 space-y-2 text-sm">
           {stats.suggestions.map((s, i) => (

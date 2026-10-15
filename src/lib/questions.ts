@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { gradeAnswersServer } from "./grade-answers.functions";
 
 export type QuestionType =
   | "single_correct" | "multiple_correct" | "integer" | "numerical"
@@ -343,15 +344,13 @@ export type GradeResult = {
 };
 
 function normalizeUserAnswer(q: DbQuestion, userAnswer: unknown): unknown {
-  if (userAnswer === null || userAnswer === undefined) return null;
+  if (userAnswer === null || userAnswer === undefined || userAnswer === "") return null;
   if (q.question_type === "multiple_correct") {
     const values = Array.isArray(userAnswer) ? (userAnswer as unknown[]).map(String) : [];
     return { values };
   }
   if (q.question_type === "numerical" || q.question_type === "integer") {
-    const n = Number(userAnswer);
-    if (Number.isNaN(n)) return null;
-    return { value: n };
+    return { value: String(userAnswer).trim() };
   }
   // single_correct / text-like
   if (typeof userAnswer === "number") return { value: String(userAnswer) };
@@ -364,7 +363,6 @@ export async function gradeAnswers(
   if (pairs.length === 0) return {};
   const q_ids = pairs.map((p) => p.question.id);
   const user_answers = pairs.map((p) => normalizeUserAnswer(p.question, p.userAnswer));
-  const { gradeAnswersServer } = await import("./grade-answers.functions");
   const rows = (await gradeAnswersServer({ data: { q_ids, user_answers } })) as GradeResult[];
   const map: Record<string, GradeResult> = {};
   for (const row of rows) map[row.question_id] = row;
