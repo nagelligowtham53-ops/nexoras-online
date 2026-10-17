@@ -1,5 +1,16 @@
 # Roadmap
 
+## Complete all-exam engine repair (uploaded spec, Oct 17 2026)
+- [ ] Audit all 14 exam configs, readiness validation, bank queries, generation, sessions, scoring, explanations, tests
+- [ ] One authoritative config per exam+year; flag unverified configs; no invented values
+- [ ] Repair question-bank retrieval/validation: no cross-subject/exam substitution, no fake counts, dedupe
+- [ ] Full-length readiness gate: exact paper or disabled with specific shortage report; shorter tests only explicit+labelled
+- [ ] Fix JEE Main "75 available" vs MCQ/numerical split mismatch at the query/config level
+- [ ] Server-authoritative grading per exam config; idempotent submissions; totals reconcile; score ≤ max
+- [ ] Repair AI explanation endpoint 404s; friendly failure; score unaffected
+- [ ] Exam-by-exam verification suite for all 14 exams (automated + representative E2E)
+- [ ] Per-exam release gate status report; report gaps, never fabricate
+
 ## Examination engine restoration (uploaded master requirements)
 - [x] Audit configuration, retrieval, bank readiness, grading and persistence; identify hardcoded/config drift, cross-subject backfill, unsupported formats and client-count persistence
 - [x] Repair authenticated grade_answers caller mismatch, strict numeric parsing and explicit partial-credit scoring; 301 automated regressions passed
