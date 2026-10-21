@@ -213,19 +213,33 @@ function MockTestsPage() {
     })();
   }, []);
 
+  /** One card per exam name, built only from database configurations. */
+  const examCards = useMemo(() => {
+    const byName = new Map<string, ExamConfig[]>();
+    for (const c of configs) {
+      const list = byName.get(c.examName) ?? [];
+      list.push(c);
+      byName.set(c.examName, list);
+    }
+    return [...byName.values()].map((list) => {
+      const latestYear = Math.max(...list.map((c) => c.examYear));
+      const latest = list.filter((c) => c.examYear === latestYear);
+      return { key: latest[0].examKey, name: latest[0].examName, papers: latest };
+    });
+  }, [configs]);
+
   const papers = useMemo(() => papersFor(configs, exam.key), [configs, exam.key]);
   const activeConfig: ExamConfig = useMemo(() => {
     const found = papers.find((p) => p.paperName === paperName) ?? papers[0];
     if (found) return found;
-    // Exam has no database pattern yet — surface it honestly instead of guessing.
+    // No database pattern — an inert config that can never launch a test.
     return {
-      id: `local-${exam.key}`, examKey: exam.key, examName: exam.name, examYear: new Date().getFullYear(),
+      id: `unconfigured-${exam.key}`, examKey: exam.key, examName: exam.name, examYear: new Date().getFullYear(),
       paperName: "Paper 1", dbExam: null,
-      totalQuestions: exam.subjects.reduce((a, s) => a + s.count, 0),
-      durationMinutes: exam.duration_min, marksPerCorrect: exam.marking.correct,
-      negativeMarks: exam.marking.wrong, questionTypes: ["single_correct"],
-      subjectDistribution: exam.subjects, patternNote: exam.pattern,
-      difficultyProfile: "mixed", active: true,
+      totalQuestions: 0, durationMinutes: 0, marksPerCorrect: 0,
+      negativeMarks: 0, questionTypes: [],
+      subjectDistribution: [], patternNote: "Pattern not configured",
+      difficultyProfile: "mixed", active: false,
     };
   }, [papers, paperName, exam]);
 
@@ -569,33 +583,41 @@ function MockTestsPage() {
               </div>
             )}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {EXAMS.map((e) => {
-                const config = papersFor(configs, e.key)[0];
-                const total = config?.totalQuestions;
+              {examCards.map((card) => {
+                const config = card.papers[0];
+                const spec = specFromConfig(config);
+                const launchable = Boolean(config.dbExam);
                 return (
-                  <div key={e.key} className="glass group relative overflow-hidden rounded-2xl p-6 transition-all hover:border-accent/40 hover:shadow-glow">
-                    <div className="absolute right-3 top-3 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent">{e.short}</div>
+                  <div key={card.name} className="glass group relative overflow-hidden rounded-2xl p-6 transition-all hover:border-accent/40 hover:shadow-glow">
+                    <div className="absolute right-3 top-3 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-accent">{spec.short}</div>
                     <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
                       <Trophy className="h-5 w-5 text-primary-foreground" />
                     </div>
-                    <h3 className="mt-3 font-display text-lg font-semibold">{e.name}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">{e.pattern}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{config ? `${config.examYear} · ${config.paperName}` : "Pattern not configured"}</p>
+                    <h3 className="mt-3 font-display text-lg font-semibold">{card.name}</h3>
+                    <p className="mt-1 text-xs text-muted-foreground">{spec.pattern}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{config.examYear} · {card.papers.length > 1 ? `${card.papers.length} papers` : config.paperName}</p>
                     <div className="mt-3 flex flex-wrap gap-1.5">
-                      {(config?.subjectDistribution ?? []).map((s) => (
+                      {config.subjectDistribution.map((s) => (
                         <span key={s.name} className="rounded-full bg-secondary/60 px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
                           {s.name} · {s.count}
                         </span>
                       ))}
                     </div>
-                    <p className="mt-3 text-[11px] text-muted-foreground">{config ? `${total} questions · ${config.durationMinutes} min · Bank readiness checked before starting` : "This exam is awaiting a validated paper configuration."}</p>
-                    <Button disabled={!config} onClick={() => openInstructions(e)} className="mt-4 w-full bg-gradient-primary text-primary-foreground">
-                      <Sparkles className="h-4 w-4" /> {config ? "View test availability" : "Not available yet"}
+                    <p className="mt-3 text-[11px] text-muted-foreground">
+                      {launchable
+                        ? `${config.totalQuestions} questions · ${config.durationMinutes} min · Bank readiness checked before starting`
+                        : "Question bank not linked yet — this exam cannot be started."}
+                    </p>
+                    <Button disabled={!launchable} onClick={() => openInstructions(spec)} className="mt-4 w-full bg-gradient-primary text-primary-foreground">
+                      <Sparkles className="h-4 w-4" /> {launchable ? "View test availability" : "Not available yet"}
                     </Button>
                   </div>
                 );
               })}
             </div>
+            {!configError && configs.length === 0 && (
+              <p className="mt-6 text-center text-sm text-muted-foreground">Loading exam configurations…</p>
+            )}
           </section>
         </>
       )}
