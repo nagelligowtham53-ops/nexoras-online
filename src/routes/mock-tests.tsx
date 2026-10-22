@@ -4,7 +4,7 @@ import { PageShell, PageHeader } from "@/components/PageShell";
 import { PremiumGate } from "@/components/PremiumGate";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { recordAttemptAndAwardXP, type SubjectStat } from "@/lib/gamification";
+import { authedFetch } from "@/lib/authed-fetch";
 import { gradeAnswers, type DbQuestion, type GradeResult } from "@/lib/questions";
 import { evaluateTest, type EvaluationResult, type EvaluableQuestion } from "@/lib/evaluation";
 import { fetchExamConfigs, papersFor, type ExamConfig } from "@/lib/exam-config";
@@ -149,6 +149,7 @@ function MockTestsPage() {
   const [evaluation, setEvaluation] = useState<EvaluationResult | null>(null);
 
   const startedAtRef = useRef<number>(0);
+  const submissionTokenRef = useRef<string>("");
   const lastTickRef = useRef<number>(0);
   const examRootRef = useRef<HTMLDivElement>(null);
   const submittingRef = useRef(false);
@@ -434,10 +435,6 @@ function MockTestsPage() {
       markedForReview: marked,
     });
     setEvaluation(result);
-    const { attempted, correct, incorrect: wrong, score, max_score } = result.summary;
-    const subject_breakdown: SubjectStat[] = result.summary.bySubject.map((subject) => ({
-      subject: subject.label, correct: subject.correct, total: subject.total,
-    }));
     setPhase("result");
     if (auto) {
       // small UX: nothing extra; result page will indicate auto-submit via badge.
