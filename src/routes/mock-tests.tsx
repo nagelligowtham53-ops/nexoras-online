@@ -318,6 +318,8 @@ function MockTestsPage() {
       setMarked(Array(qs.length).fill(false));
       setVisited(Array(qs.length).fill(false).map((_, i) => i === 0));
       setTimePerQ(Array(qs.length).fill(0));
+      // One idempotency token per test start — retries never double-save.
+      submissionTokenRef.current = crypto.randomUUID();
       setCurrent(0);
       setActiveSection(qs[0].subject);
       const fullMinutes = activeConfig.durationMinutes;
@@ -445,14 +447,35 @@ function MockTestsPage() {
         submittingRef.current = false;
         return;
       }
-      try {
-        const r = await recordAttemptAndAwardXP(user.id, {
-          exam_key: exam.key, exam_name: exam.name,
-          total_questions: questions.length, attempted, correct, wrong, score, max_score,
-          duration_seconds: duration, subject_breakdown,
-        });
-        setReward({ earnedXp: r.earnedXp, newBadges: r.newBadges });
-      } catch (e) { console.error("save attempt failed", e); }
+      // Server-authoritative persistence: the client sends only question IDs
+      // and selected answers; the server re-grades, scores, and saves. A retry
+      // with the same submission token returns the stored result.
+      const allDbBacked = questions.every((q) => q.dbId);
+      if (allDbBacked) {
+        try {
+          const res = await authedFetch("/api/submit-attempt", {
+            method: "POST",
+            body: JSON.stringify({
+              submission_token: submissionTokenRef.current,
+              exam_key: activeConfig.examKey,
+              total_questions: questions.length,
+              duration_seconds: duration,
+              answers: questions.map((q, i) => ({
+                question_id: q.dbId,
+                answer: answers[i] === null || answers[i] === "" ? null
+                  : q.type === "mcq" ? Number(answers[i]) : String(answers[i]),
+              })),
+            }),
+          });
+          const payload = await res.json().catch(() => ({}));
+          if (res.ok) {
+            setReward({ earnedXp: payload.earnedXp ?? 0, newBadges: payload.newBadges ?? [] });
+          } else {
+            console.error("[mock-tests] submit-attempt failed", { status: res.status, error: payload?.error });
+            setError("Your result is shown below, but it could not be saved to your history. Please retry submission.");
+          }
+        } catch (e) { console.error("save attempt failed", e); }
+      }
     }
     submittingRef.current = false;
   }
