@@ -975,6 +975,7 @@ export type Database = {
       }
       test_attempts: {
         Row: {
+          answers: Json | null
           attempted: number
           correct: number
           created_at: string
@@ -985,11 +986,13 @@ export type Database = {
           max_score: number
           score: number
           subject_breakdown: Json
+          submission_token: string | null
           total_questions: number
           user_id: string
           wrong: number
         }
         Insert: {
+          answers?: Json | null
           attempted?: number
           correct?: number
           created_at?: string
@@ -1000,11 +1003,13 @@ export type Database = {
           max_score?: number
           score?: number
           subject_breakdown?: Json
+          submission_token?: string | null
           total_questions: number
           user_id: string
           wrong?: number
         }
         Update: {
+          answers?: Json | null
           attempted?: number
           correct?: number
           created_at?: string
@@ -1015,6 +1020,7 @@ export type Database = {
           max_score?: number
           score?: number
           subject_breakdown?: Json
+          submission_token?: string | null
           total_questions?: number
           user_id?: string
           wrong?: number

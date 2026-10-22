@@ -8,6 +8,13 @@
       "when": 1791907658740,
       "tag": "0000_gemini_request_rate_limits",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792655665393,
+      "tag": "0001_attempt_submission_token",
+      "breakpoints": true
     }
   ]
 }
