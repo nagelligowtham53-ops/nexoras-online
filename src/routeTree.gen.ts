@@ -67,6 +67,7 @@ import { Route as ApiGeneratePresentationRouteImport } from './routes/api/genera
 import { Route as ApiGenerateThemeRouteImport } from './routes/api/generate-theme'
 import { Route as ApiRecordAttemptRouteImport } from './routes/api/record-attempt'
 import { Route as ApiStudyRecommendationsRouteImport } from './routes/api/study-recommendations'
+import { Route as ApiSubmitAttemptRouteImport } from './routes/api/submit-attempt'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as CheckoutPlanRouteImport } from './routes/checkout.$plan'
 import { Route as InvoiceIdRouteImport } from './routes/invoice.$id'
@@ -367,6 +368,11 @@ const ApiStudyRecommendationsRoute = ApiStudyRecommendationsRouteImport.update({
   path: '/api/study-recommendations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSubmitAttemptRoute = ApiSubmitAttemptRouteImport.update({
+  id: '/api/submit-attempt',
+  path: '/api/submit-attempt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -464,6 +470,7 @@ export interface FileRoutesByFullPath {
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
+  '/api/submit-attempt': typeof ApiSubmitAttemptRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -531,6 +538,7 @@ export interface FileRoutesByTo {
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
+  '/api/submit-attempt': typeof ApiSubmitAttemptRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -599,6 +607,7 @@ export interface FileRoutesById {
   '/api/generate-theme': typeof ApiGenerateThemeRoute
   '/api/record-attempt': typeof ApiRecordAttemptRoute
   '/api/study-recommendations': typeof ApiStudyRecommendationsRoute
+  '/api/submit-attempt': typeof ApiSubmitAttemptRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/checkout/$plan': typeof CheckoutPlanRoute
   '/invoice/$id': typeof InvoiceIdRoute
@@ -668,6 +677,7 @@ export interface FileRouteTypes {
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
+    | '/api/submit-attempt'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -735,6 +745,7 @@ export interface FileRouteTypes {
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
+    | '/api/submit-attempt'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -802,6 +813,7 @@ export interface FileRouteTypes {
     | '/api/generate-theme'
     | '/api/record-attempt'
     | '/api/study-recommendations'
+    | '/api/submit-attempt'
     | '/blog/$slug'
     | '/checkout/$plan'
     | '/invoice/$id'
@@ -870,6 +882,7 @@ export interface RootRouteChildren {
   ApiGenerateThemeRoute: typeof ApiGenerateThemeRoute
   ApiRecordAttemptRoute: typeof ApiRecordAttemptRoute
   ApiStudyRecommendationsRoute: typeof ApiStudyRecommendationsRoute
+  ApiSubmitAttemptRoute: typeof ApiSubmitAttemptRoute
   CheckoutPlanRoute: typeof CheckoutPlanRoute
   InvoiceIdRoute: typeof InvoiceIdRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -1285,6 +1298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStudyRecommendationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/submit-attempt': {
+      id: '/api/submit-attempt'
+      path: '/api/submit-attempt'
+      fullPath: '/api/submit-attempt'
+      preLoaderRoute: typeof ApiSubmitAttemptRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/$slug': {
       id: '/blog/$slug'
       path: '/$slug'
@@ -1409,6 +1429,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGenerateThemeRoute: ApiGenerateThemeRoute,
   ApiRecordAttemptRoute: ApiRecordAttemptRoute,
   ApiStudyRecommendationsRoute: ApiStudyRecommendationsRoute,
+  ApiSubmitAttemptRoute: ApiSubmitAttemptRoute,
   CheckoutPlanRoute: CheckoutPlanRoute,
   InvoiceIdRoute: InvoiceIdRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
