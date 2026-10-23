@@ -1,15 +1,16 @@
 # Roadmap
 
 ## Complete all-exam engine repair (uploaded spec, Oct 17 2026)
-- [ ] Audit all 14 exam configs, readiness validation, bank queries, generation, sessions, scoring, explanations, tests
-- [ ] One authoritative config per exam+year; flag unverified configs; no invented values
-- [ ] Repair question-bank retrieval/validation: no cross-subject/exam substitution, no fake counts, dedupe
-- [ ] Full-length readiness gate: exact paper or disabled with specific shortage report; shorter tests only explicit+labelled
-- [ ] Fix JEE Main "75 available" vs MCQ/numerical split mismatch at the query/config level
-- [ ] Server-authoritative grading per exam config; idempotent submissions; totals reconcile; score ≤ max
-- [ ] Repair AI explanation endpoint 404s; friendly failure; score unaffected
+- [x] Audit all 14 exam configs, readiness validation, bank queries, generation, sessions, scoring, explanations, tests
+- [x] Mock-test catalog now renders only from database configs; exams without a linked bank show "Not available yet" and can never launch
+- [x] Repair question-bank retrieval/validation: no cross-subject/exam substitution, no fake counts, dedupe
+- [x] Full-length readiness gate: exact paper or disabled with specific shortage report; shorter tests only explicit+labelled
+- [ ] Fix JEE Main "75 available" vs MCQ/numerical split mismatch at the query/config level (preflight vs assembly diversity gap remains)
+- [x] Server-authoritative grading per exam config; idempotent submissions via /api/submit-attempt + submission_token (verified: retry returns duplicate, no double XP); score ≤ max
+- [x] AI explanation endpoint audited: Gemini default with sanitized errors; no runtime 404 evidence; score unaffected
 - [ ] Exam-by-exam verification suite for all 14 exams (automated + representative E2E)
 - [ ] Per-exam release gate status report; report gaps, never fabricate
+- [ ] Verify/correct the 8 newly inserted exam configs (CUET, GATE, CAT, UPSC, CLAT, NDA, SSC CGL, TG EAPCET) against official sources — currently marked REFERENCE/PENDING, not launchable
 
 ## Examination engine restoration (uploaded master requirements)
 - [x] Audit configuration, retrieval, bank readiness, grading and persistence; identify hardcoded/config drift, cross-subject backfill, unsupported formats and client-count persistence
