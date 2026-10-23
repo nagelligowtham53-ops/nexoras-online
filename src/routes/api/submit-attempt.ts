@@ -95,8 +95,12 @@ export const Route = createFileRoute("/api/submit-attempt")({
           return Response.json({ error: "Duplicate question IDs" }, { status: 400 });
         }
 
+        // Privileged client for writes — test_attempts/user_stats/achievements
+        // block client inserts by policy. Loaded only after the caller verified.
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
         // ---- Idempotency: a retry with the same token returns the stored result.
-        const { data: existing } = await supabase
+        const { data: existing } = await supabaseAdmin
           .from("test_attempts")
           .select("score, max_score, correct, wrong, attempted, total_questions")
           .eq("user_id", userId)
