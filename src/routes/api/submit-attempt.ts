@@ -237,7 +237,7 @@ export const Route = createFileRoute("/api/submit-attempt")({
         const earned = BADGES.filter((b) => b.check(ctx));
         const newBadges: { key: string; name: string; description: string }[] = [];
         if (earned.length) {
-          const { data: have } = await supabase.from("achievements").select("badge_key").eq("user_id", userId);
+          const { data: have } = await supabaseAdmin.from("achievements").select("badge_key").eq("user_id", userId);
           const haveSet = new Set((have ?? []).map((r) => r.badge_key));
           for (const b of earned) {
             if (!haveSet.has(b.key)) {
