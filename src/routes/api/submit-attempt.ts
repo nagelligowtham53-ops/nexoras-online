@@ -189,7 +189,7 @@ export const Route = createFileRoute("/api/submit-attempt")({
         if (insErr) {
           // Unique-token race: another request inserted first — return that result.
           if (insErr.code === "23505") {
-            const { data: raced } = await supabase
+            const { data: raced } = await supabaseAdmin
               .from("test_attempts")
               .select("score, max_score, correct, wrong, attempted, total_questions")
               .eq("user_id", userId)
@@ -203,7 +203,7 @@ export const Route = createFileRoute("/api/submit-attempt")({
 
         // ---- XP / streaks / badges from the server-computed result.
         const earnedXp = Math.min(500, Math.max(5, 10 + correct * 5 - wrong * 2));
-        const { data: existingStats } = await supabase
+        const { data: existingStats } = await supabaseAdmin
           .from("user_stats").select("*").eq("user_id", userId).maybeSingle();
         const today = todayStr();
         let newStreak = 1;
