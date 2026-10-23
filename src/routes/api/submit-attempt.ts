@@ -95,8 +95,12 @@ export const Route = createFileRoute("/api/submit-attempt")({
           return Response.json({ error: "Duplicate question IDs" }, { status: 400 });
         }
 
+        // Privileged client for writes — test_attempts/user_stats/achievements
+        // block client inserts by policy. Loaded only after the caller verified.
+        const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
         // ---- Idempotency: a retry with the same token returns the stored result.
-        const { data: existing } = await supabase
+        const { data: existing } = await supabaseAdmin
           .from("test_attempts")
           .select("score, max_score, correct, wrong, attempted, total_questions")
           .eq("user_id", userId)
@@ -167,7 +171,7 @@ export const Route = createFileRoute("/api/submit-attempt")({
         // Subject breakdown from the graded rows is not available without the
         // question subjects; store an empty breakdown rather than trusting the
         // client's version.
-        const { error: insErr } = await supabase.from("test_attempts").insert({
+        const { error: insErr } = await supabaseAdmin.from("test_attempts").insert({
           user_id: userId,
           exam_key: body.exam_key,
           exam_name: config.exam_name,
@@ -185,7 +189,7 @@ export const Route = createFileRoute("/api/submit-attempt")({
         if (insErr) {
           // Unique-token race: another request inserted first — return that result.
           if (insErr.code === "23505") {
-            const { data: raced } = await supabase
+            const { data: raced } = await supabaseAdmin
               .from("test_attempts")
               .select("score, max_score, correct, wrong, attempted, total_questions")
               .eq("user_id", userId)
@@ -199,7 +203,7 @@ export const Route = createFileRoute("/api/submit-attempt")({
 
         // ---- XP / streaks / badges from the server-computed result.
         const earnedXp = Math.min(500, Math.max(5, 10 + correct * 5 - wrong * 2));
-        const { data: existingStats } = await supabase
+        const { data: existingStats } = await supabaseAdmin
           .from("user_stats").select("*").eq("user_id", userId).maybeSingle();
         const today = todayStr();
         let newStreak = 1;
@@ -217,12 +221,12 @@ export const Route = createFileRoute("/api/submit-attempt")({
         const newXp = (existingStats?.xp ?? 0) + earnedXp;
         const newTests = (existingStats?.tests_taken ?? 0) + 1;
         if (existingStats) {
-          await supabase.from("user_stats").update({
+          await supabaseAdmin.from("user_stats").update({
             xp: newXp, current_streak: newStreak, longest_streak: longest,
             tests_taken: newTests, last_active_date: today,
           }).eq("user_id", userId);
         } else {
-          await supabase.from("user_stats").insert({
+          await supabaseAdmin.from("user_stats").insert({
             user_id: userId, xp: newXp, current_streak: newStreak,
             longest_streak: longest, tests_taken: newTests, last_active_date: today,
           });
@@ -233,11 +237,11 @@ export const Route = createFileRoute("/api/submit-attempt")({
         const earned = BADGES.filter((b) => b.check(ctx));
         const newBadges: { key: string; name: string; description: string }[] = [];
         if (earned.length) {
-          const { data: have } = await supabase.from("achievements").select("badge_key").eq("user_id", userId);
+          const { data: have } = await supabaseAdmin.from("achievements").select("badge_key").eq("user_id", userId);
           const haveSet = new Set((have ?? []).map((r) => r.badge_key));
           for (const b of earned) {
             if (!haveSet.has(b.key)) {
-              await supabase.from("achievements").insert({
+              await supabaseAdmin.from("achievements").insert({
                 user_id: userId, badge_key: b.key, badge_name: b.name, badge_description: b.description,
               });
               newBadges.push({ key: b.key, name: b.name, description: b.description });
