@@ -840,11 +840,22 @@ function InstructionsView(props: {
                 {availability.sections.length > 0 && (
                   <ul className="mt-2 grid gap-1 sm:grid-cols-2">
                     {availability.sections.map((s) => (
-                      <li key={s.sectionName} className="flex items-center justify-between gap-2 text-muted-foreground">
-                        <span>{s.sectionName}</span>
-                        <span className={s.dbSubject === null ? "text-destructive" : s.usable >= s.requested ? "text-emerald-300" : "text-amber-300"}>
-                          {s.dbSubject === null ? "not in bank" : `${Math.min(s.usable, s.requested)} / ${s.requested}`}
-                        </span>
+                      <li key={s.sectionName} className="text-muted-foreground">
+                        <div className="flex items-center justify-between gap-2">
+                          <span>{s.sectionName}</span>
+                          <span className={s.dbSubject === null ? "text-destructive" : s.usable >= s.requested ? "text-emerald-300" : "text-amber-300"}>
+                            {s.dbSubject === null ? "not in bank" : `${Math.min(s.usable, s.requested)} / ${s.requested}`}
+                          </span>
+                        </div>
+                        {s.dbSubject !== null && s.byType.some((t) => t.kind !== "any") && (
+                          <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px]">
+                            {s.byType.map((t) => (
+                              <span key={t.kind} className={t.available >= t.required ? "text-emerald-300/80" : "text-amber-300"}>
+                                {t.kind === "mcq" ? "MCQ" : "Numerical"}: need {t.required}, valid {t.available}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>

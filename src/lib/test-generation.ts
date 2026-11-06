@@ -8,6 +8,11 @@ import type { ExamConfig } from "@/lib/exam-config";
  * test build, so the numbers shown on the instructions screen are the numbers
  * the generator will really use. Every failure carries a specific, honest
  * reason — never a generic "try again later".
+ *
+ * Eligibility is decided once, per subject AND per question type, in
+ * fetchPool. Readiness counts those pools against the type blueprint, and the
+ * assembler draws from the same pools with the same blueprint, so a "ready"
+ * report always assembles and a question never fills a slot of another type.
  */
 
 const VIEW = "questions_public";
@@ -52,13 +57,27 @@ export type GeneratedQuestion = {
   year: number | null;
 };
 
+/** Question-type family a paper section must supply. "any" = no split required. */
+export type TypeKind = "mcq" | "numerical" | "any";
+
+export type TypeRequirement = {
+  kind: TypeKind;
+  /** questions.question_type values that may fill this slot. */
+  dbTypes: string[];
+  required: number;
+  /** Valid, eligible, de-duplicated questions of this type in the bank. */
+  available: number;
+};
+
 export type SectionReport = {
   sectionName: string;
   dbSubject: string | null;
   requested: number;
+  /** Sum over types of min(required, available) — never counts a wrong-type question. */
   usable: number;
   rejectedInvalid: number;
   rejectedDuplicate: number;
+  byType: TypeRequirement[];
   /** Set only when this subject's query itself failed — never blocks other subjects. */
   error?: string | null;
 };
@@ -194,7 +213,50 @@ export type GenerationOptions = {
   pyqOnly?: boolean;
 };
 
-type Pool = { section: SectionReport; rows: Row[] };
+/* ---------------- section type blueprint ---------------- */
+
+const MCQ_TYPES = ["single_correct"];
+const NUMERIC_TYPES = ["integer", "numerical"];
+
+function kindOf(questionType: unknown): Exclude<TypeKind, "any"> | null {
+  const t = String(questionType ?? "");
+  if (MCQ_TYPES.includes(t)) return "mcq";
+  if (NUMERIC_TYPES.includes(t)) return "numerical";
+  return null;
+}
+
+/**
+ * The per-section question-type split a paper requires. Readiness and assembly
+ * both read this — a question only counts toward the slot of its own type.
+ *
+ * JEE Main: each subject is Section A (MCQ) + Section B (numerical value),
+ * 20 + 5 in the full paper; shorter tests keep the same 4:1 ratio (floor).
+ */
+export function typeBlueprint(config: ExamConfig, count: number): Omit<TypeRequirement, "available">[] {
+  const allowed = (types: string[]) => types.filter((t) => config.questionTypes.includes(t));
+  if (config.examKey === "jee-main") {
+    const numerical = Math.floor(count / 5);
+    const plan: Omit<TypeRequirement, "available">[] = [
+      { kind: "mcq", dbTypes: allowed(MCQ_TYPES), required: count - numerical },
+    ];
+    if (numerical > 0) plan.push({ kind: "numerical", dbTypes: allowed(NUMERIC_TYPES), required: numerical });
+    return plan;
+  }
+  return [{ kind: "any", dbTypes: allowed([...MCQ_TYPES, ...NUMERIC_TYPES]), required: count }];
+}
+
+type Pool = { section: SectionReport; rowsByKind: Map<TypeKind, Row[]> };
+
+/** Concept signature: chapter + first meaningful words, used to avoid near-duplicates. */
+const conceptKey = (row: Row) =>
+  `${String(row.chapter_id ?? row.chapter ?? "")}::${normalizeText(String(row.question_text))
+    .replace(/[0-9.]+/g, "#")
+    .split(" ")
+    .slice(0, 8)
+    .join(" ")}`;
+
+const SELECT_COLUMNS =
+  "id,exams,class_level,subject,chapter,chapter_id,difficulty,question_type,year,source_type,is_pyq,marks,negative_marks,question_text,options,active,verified";
 
 async function fetchPool(
   config: ExamConfig,
@@ -203,6 +265,7 @@ async function fetchPool(
   opts: GenerationOptions,
 ): Promise<Pool> {
   const dbSubject = SUBJECT_DB_MAP[sectionName] ?? null;
+  const plan = typeBlueprint(config, requested);
   const report: SectionReport = {
     sectionName,
     dbSubject,
@@ -210,52 +273,71 @@ async function fetchPool(
     usable: 0,
     rejectedInvalid: 0,
     rejectedDuplicate: 0,
+    byType: plan.map((p) => ({ ...p, available: 0 })),
   };
-  if (!dbSubject || !config.dbExam) return { section: report, rows: [] };
+  const rowsByKind = new Map<TypeKind, Row[]>(plan.map((p) => [p.kind, []]));
+  if (!dbSubject || !config.dbExam) return { section: report, rowsByKind };
 
-  let q = supabase
-    .from(VIEW as never)
-    .select(
-      "id,exams,class_level,subject,chapter,chapter_id,difficulty,question_type,year,source_type,is_pyq,marks,negative_marks,question_text,options,active,verified",
-    )
-    .overlaps("exams", [config.dbExam])
-    .eq("subject", dbSubject)
-    .eq("active", true)
-    .eq("verified", true)
-    .in("question_type", config.questionTypes)
-    .limit(Math.min(1000, Math.max(requested * 8, 120)));
-
+  // One query per type slot so a large MCQ pool can never crowd numerical
+  // questions out of the row limit.
   const diff = difficultyFilter(opts.difficulty);
-  if (diff) q = q.in("difficulty", diff);
-  if (opts.pyqOnly) q = q.eq("is_pyq", true);
+  const results = await Promise.all(
+    plan.map(async (slot) => {
+      if (slot.dbTypes.length === 0) return { slot, data: [] as Row[], error: null };
+      let q = supabase
+        .from(VIEW as never)
+        .select(SELECT_COLUMNS)
+        .overlaps("exams", [config.dbExam as string])
+        .eq("subject", dbSubject)
+        .eq("active", true)
+        .eq("verified", true)
+        .in("question_type", slot.dbTypes)
+        .limit(Math.min(1000, Math.max(slot.required * 8, 120)));
+      if (diff) q = q.in("difficulty", diff);
+      if (opts.pyqOnly) q = q.eq("is_pyq", true);
+      const { data, error } = await q;
+      return { slot, data: (data ?? []) as Row[], error };
+    }),
+  );
 
-  const { data, error } = await q;
-  if (error) {
+  const failed = results.find((r) => r.error);
+  if (failed?.error) {
     // A subject-level query failure must never abort the whole paper: record it
     // precisely and let the other subjects be validated independently.
-    console.error("[test-generation] query failed", { section: sectionName, dbSubject, error });
-    report.error = error.message;
-    return { section: report, rows: [] };
+    console.error("[test-generation] query failed", { section: sectionName, dbSubject, error: failed.error });
+    report.error = failed.error.message;
+    return { section: report, rowsByKind };
   }
 
-
+  // Shared eligibility: valid, right subject, right type, distinct text and stem.
+  const seenIds = new Set<string>();
   const seenTexts = new Set<string>();
-  const rows: Row[] = [];
-  for (const raw of (data ?? []) as Row[]) {
-    if (!isUsable(raw)) {
-      report.rejectedInvalid++;
-      continue;
+  const seenConcepts = new Set<string>();
+  for (const { slot, data } of results) {
+    const bucket = rowsByKind.get(slot.kind)!;
+    for (const raw of data) {
+      const id = String(raw.id);
+      if (seenIds.has(id)) continue;
+      seenIds.add(id);
+      const kind = kindOf(raw.question_type);
+      if (raw.subject !== dbSubject || !kind || !slot.dbTypes.includes(String(raw.question_type)) || !isUsable(raw)) {
+        report.rejectedInvalid++;
+        continue;
+      }
+      const textKey = normalizeText(String(raw.question_text));
+      const ck = conceptKey(raw);
+      if (seenTexts.has(textKey) || seenConcepts.has(ck)) {
+        report.rejectedDuplicate++;
+        continue;
+      }
+      seenTexts.add(textKey);
+      seenConcepts.add(ck);
+      bucket.push(raw);
     }
-    const key = normalizeText(String(raw.question_text));
-    if (seenTexts.has(key)) {
-      report.rejectedDuplicate++;
-      continue;
-    }
-    seenTexts.add(key);
-    rows.push(raw);
   }
-  report.usable = rows.length;
-  return { section: report, rows };
+  report.byType = report.byType.map((t) => ({ ...t, available: rowsByKind.get(t.kind)?.length ?? 0 }));
+  report.usable = report.byType.reduce((a, t) => a + Math.min(t.required, t.available), 0);
+  return { section: report, rowsByKind };
 }
 
 function sectionQuotas(config: ExamConfig, opts: GenerationOptions) {
@@ -294,39 +376,48 @@ async function buildPools(config: ExamConfig, opts: GenerationOptions) {
   return { quotas, pools };
 }
 
+const KIND_LABEL: Record<TypeKind, string> = { mcq: "MCQ", numerical: "numerical", any: "" };
+
+/** Exact per-type shortfalls, e.g. "Physics needs 5 numerical (has 0)". */
+function shortfalls(sections: SectionReport[]): string[] {
+  return sections.flatMap((s) =>
+    s.byType
+      .filter((t) => t.available < t.required)
+      .map((t) =>
+        t.dbTypes.length === 0
+          ? `${s.sectionName} needs ${t.required} ${KIND_LABEL[t.kind]} questions but this paper's configuration does not allow that type`
+          : `${s.sectionName} needs ${t.required}${KIND_LABEL[t.kind] ? ` ${KIND_LABEL[t.kind]}` : ""} (has ${t.available})`,
+      ),
+  );
+}
+
 function summarize(config: ExamConfig, opts: GenerationOptions, pools: Pool[]): AvailabilityReport {
   const requested = opts.totalOverride ?? config.totalQuestions;
   const sections = pools.map((p) => p.section);
   const unmapped = sections.filter((s) => !s.dbSubject).map((s) => s.sectionName);
 
-  // Never substitute another subject for a missing section.
-  const perSection = sections.map((s) => Math.min(s.requested, s.usable));
-  const usable = perSection.reduce((a, n) => a + n, 0);
+  // Never substitute another subject or another question type for a missing slot.
+  const usable = sections.reduce((a, s) => a + s.usable, 0);
   const unsupported = config.examKey === "jee-adv"
     ? "JEE Advanced requires a verified section-level marking blueprint. This generic paper is not available for scored tests."
     : null;
-  const numericReady = config.examKey !== "jee-main" || pools.every((p) => {
-    const numerical = p.rows.filter((r) => ["integer", "numerical"].includes(String(r.question_type))).length;
-    const required = opts.totalOverride !== undefined ? Math.floor(p.section.requested / 5) : 5;
-    return numerical >= required && p.rows.length - numerical >= p.section.requested - required;
-  });
 
+  const availableFor = (sectionName: string, kind: TypeKind) =>
+    pools.find((p) => p.section.sectionName === sectionName)?.rowsByKind.get(kind)?.length ?? 0;
   const sizeLadder = [10, 15, 20, 25, 30, 45, 50, 60, 75, 90, 120, 150, 180];
   const suggested = unsupported ? [] : sizeLadder.filter((n) => n < requested &&
     sectionQuotas(config, { ...opts, totalOverride: n }).every((quota) => {
       const pool = pools.find((p) => p.section.sectionName === quota.name);
-      if (!pool || pool.section.usable < quota.count) return false;
-      if (config.examKey !== "jee-main") return true;
-      const numeric = pool.rows.filter((r) => ["integer", "numerical"].includes(String(r.question_type))).length;
-      return numeric >= Math.floor(quota.count / 5) && pool.rows.length - numeric >= quota.count - Math.floor(quota.count / 5);
+      if (!pool || !pool.section.dbSubject || pool.section.error) return false;
+      return typeBlueprint(config, quota.count).every((t) => t.dbTypes.length > 0 && availableFor(quota.name, t.kind) >= t.required);
     })).slice(-3);
 
   const failed = sections.filter((s) => s.error);
+  const missing = shortfalls(sections.filter((s) => s.dbSubject && !s.error));
+  const typeShort = sections.some((s) => s.dbSubject && !s.error && s.byType.some((t) => t.kind !== "any" && t.available < t.required));
   let reason: string | null = null;
   if (unsupported) {
     reason = unsupported;
-  } else if (!numericReady) {
-    reason = "The JEE Main bank cannot supply the required MCQ and numerical split for every selected subject. No substitute questions will be used.";
   } else if (!config.dbExam) {
     reason = `${config.examName} is not linked to the question bank yet, so no questions can be selected for it.`;
   } else if (failed.length) {
@@ -345,26 +436,24 @@ function summarize(config: ExamConfig, opts: GenerationOptions, pools: Pool[]): 
       opts.difficulty === "mixed"
         ? `No verified ${config.examName} questions are available for this configuration yet (${detail}).`
         : `No verified ${opts.difficulty} questions are available for ${config.examName} right now (${detail}). Try the Mixed difficulty.`;
-  } else if (usable < requested) {
-    const short = sections
-      .filter((s) => s.dbSubject && s.usable < s.requested)
-      .map(
-        (s) =>
-          `${s.sectionName} question bank currently has ${s.usable} valid question${s.usable === 1 ? "" : "s"} for this configuration (needs ${s.requested})`,
-      )
-      .join(" · ");
-    reason = `Only ${usable} of ${requested} questions can be selected. ${short}.`;
+  } else if (missing.length || unmapped.length) {
+    const parts = [...missing, ...unmapped.map((n) => `${n} is not in the question bank`)];
+    reason = typeShort
+      ? `The ${config.examName} bank cannot supply the required question-type split, so the full paper stays disabled and no substitutes are used: ${parts.join(" · ")}.`
+      : `Only ${usable} of ${requested} questions can be selected. ${parts.join(" · ")}.`;
   }
 
+  const ready = !unsupported && !!config.dbExam && sections.length > 0 &&
+    sections.every((s) => !s.error && s.dbSubject !== null && s.byType.every((t) => t.dbTypes.length > 0 && t.available >= t.required));
 
   return {
     requested,
     usable,
     sections,
     unmappedSections: unmapped,
-    ready: !unsupported && numericReady && sections.length > 0 && sections.every((s) => !s.error && s.dbSubject !== null && s.usable >= s.requested),
+    ready,
     suggestedSizes: suggested,
-    reason,
+    reason: ready ? null : reason,
   };
 }
 
@@ -377,7 +466,7 @@ export async function checkAvailability(
   return summarize(config, opts, pools);
 }
 
-/** Builds the actual paper. Throws TestGenerationError with a specific reason. */
+/** Builds the actual paper from the same pools and type blueprint the readiness check used. */
 export async function generateTest(
   config: ExamConfig,
   opts: GenerationOptions,
@@ -386,83 +475,59 @@ export async function generateTest(
   const report = summarize(config, opts, pools);
 
   if (!report.ready) {
+    if (report.usable === 0) {
+      const allFailed = report.sections.every((s) => !s.dbSubject || s.error);
+      throw new TestGenerationError(
+        allFailed && report.sections.some((s) => s.error)
+          ? "bank_unavailable"
+          : config.dbExam
+            ? "no_questions"
+            : "exam_unmapped",
+        report.reason ?? "No questions are available for this configuration.",
+        report.sections.map((s) => s.error).filter(Boolean).join(" | "),
+      );
+    }
     throw new TestGenerationError("incomplete_blueprint", report.reason ?? "The bank cannot deliver this complete paper. Select an available shorter practice test.");
-  }
-
-  if (report.usable === 0) {
-    const allFailed = report.sections.every((s) => !s.dbSubject || s.error);
-    throw new TestGenerationError(
-      allFailed && report.sections.some((s) => s.error)
-        ? "bank_unavailable"
-        : config.dbExam
-          ? "no_questions"
-          : "exam_unmapped",
-      report.reason ?? "No questions are available for this configuration.",
-      report.sections.map((s) => s.error).filter(Boolean).join(" | "),
-    );
   }
 
   const seen = recentlyServed(config.examKey);
   const picked: GeneratedQuestion[] = [];
-  const usedIds = new Set<string>();
-  const usedTexts = new Set<string>();
-
-  /** Concept signature: chapter + first meaningful words, used to avoid near-duplicates. */
-  const conceptKey = (row: Row) =>
-    `${String(row.chapter_id ?? row.chapter ?? "")}::${normalizeText(String(row.question_text))
-      .replace(/[0-9.]+/g, "#")
-      .split(" ")
-      .slice(0, 8)
-      .join(" ")}`;
-
-  const take = (pool: Pool, quota: number, conceptCap: number, numeric?: boolean) => {
-    const conceptCounts = new Map<string, number>();
-    for (const p of picked) {
-      /* seed caps from already-picked questions of this section */
-      if (p.sectionName === pool.section.sectionName) {
-        const k = `${p.chapterId ?? p.chapter}`;
-        conceptCounts.set(k, (conceptCounts.get(k) ?? 0) + 1);
-      }
-    }
-    const fresh = shuffle(pool.rows.filter((r) => !usedIds.has(String(r.id)) && !seen.has(String(r.id))));
-    const repeats = shuffle(pool.rows.filter((r) => !usedIds.has(String(r.id)) && seen.has(String(r.id))));
-    for (const row of [...fresh, ...repeats]) {
-      const isNumeric = ["integer", "numerical"].includes(String(row.question_type));
-      if (numeric !== undefined && isNumeric !== numeric) continue;
-      if (picked.filter((p) => p.sectionName === pool.section.sectionName && (numeric === undefined || (p.type === "numerical") === numeric)).length >= quota) break;
-      const textKey = normalizeText(String(row.question_text));
-      if (usedTexts.has(textKey)) continue;
-      const nearKey = conceptKey(row);
-      if ((conceptCounts.get(nearKey) ?? 0) >= 1) continue; // no near-duplicate stems
-      const chapterKey = String(row.chapter_id ?? row.chapter ?? "");
-      if (conceptCap > 0 && (conceptCounts.get(chapterKey) ?? 0) >= conceptCap) continue;
-      usedIds.add(String(row.id));
-      usedTexts.add(textKey);
-      conceptCounts.set(nearKey, 1);
-      conceptCounts.set(chapterKey, (conceptCounts.get(chapterKey) ?? 0) + 1);
-      picked.push(toQuestion(row, pool.section.sectionName));
-    }
-  };
 
   for (const pool of pools) {
-    if (config.examKey === "jee-main") {
-      const numeric = opts.totalOverride !== undefined ? Math.floor(pool.section.requested / 5) : 5;
+    const chapterCounts = new Map<string, number>();
+    for (const slot of pool.section.byType) {
+      const rows = pool.rowsByKind.get(slot.kind) ?? [];
+      const ordered = [
+        ...shuffle(rows.filter((r) => !seen.has(String(r.id)))),
+        ...shuffle(rows.filter((r) => seen.has(String(r.id)))),
+      ];
+      const chosen = new Set<string>();
+      // Pass 1 spreads chapters; pass 2 (no cap) fills from the same eligible
+      // rows, so a ready report always assembles.
       for (const cap of [Math.max(2, Math.ceil(pool.section.requested / 4)), 0]) {
-        take(pool, pool.section.requested - numeric, cap, false);
-        take(pool, numeric, cap, true);
+        for (const row of ordered) {
+          if (chosen.size >= slot.required) break;
+          const id = String(row.id);
+          if (chosen.has(id)) continue;
+          const chapterKey = String(row.chapter_id ?? row.chapter ?? "");
+          if (cap > 0 && (chapterCounts.get(chapterKey) ?? 0) >= cap) continue;
+          chosen.add(id);
+          chapterCounts.set(chapterKey, (chapterCounts.get(chapterKey) ?? 0) + 1);
+          picked.push(toQuestion(row, pool.section.sectionName));
+        }
       }
-    } else {
-      take(pool, pool.section.requested, Math.max(2, Math.ceil(pool.section.requested / 4)));
-      take(pool, pool.section.requested, 0);
     }
   }
 
-
-  const ordered = pools.flatMap((p) => picked.filter((q) => q.sectionName === p.section.sectionName));
-  if (ordered.length !== report.requested || pools.some((p) => ordered.filter((q) => q.sectionName === p.section.sectionName).length !== p.section.requested)) {
+  const countOf = (sectionName: string, kind: TypeKind) =>
+    picked.filter((q) => q.sectionName === sectionName && (kind === "any" || q.type === kind)).length;
+  if (
+    picked.length !== report.requested ||
+    pools.some((p) => p.section.byType.some((t) => countOf(p.section.sectionName, t.kind) !== t.required))
+  ) {
     throw new TestGenerationError("insufficient_distinct_questions", "There are not enough distinct, valid questions for every section. This test has not started.");
   }
-  rememberServed(config.examKey, ordered.map((q) => q.dbId));
+  rememberServed(config.examKey, picked.map((q) => q.dbId));
 
-  return { questions: ordered, report: { ...report, usable: ordered.length } };
+  return { questions: picked, report: { ...report, usable: picked.length } };
 }
